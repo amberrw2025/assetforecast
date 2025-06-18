@@ -40,10 +40,13 @@ def get_yahoo_data(start_date, end_date):
             'Volume': 'Volume'
         })
         
+        # Set Date as index
+        df.set_index('Date', inplace=True)
+        
         # Only keep necessary columns
-        df = df[['Date', 'Open', 'High', 'Low', 'Close', 'Volume']]
+        df = df[['Open', 'High', 'Low', 'Close', 'Volume']]
         print(f"Debug: Final DataFrame shape: {df.shape}")
-        print(f"Debug: Date range in data: {df['Date'].min()} to {df['Date'].max()}")
+        print(f"Debug: Date range in data: {df.index.min()} to {df.index.max()}")
         return df
         
     except Exception as e:

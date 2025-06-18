@@ -1,0 +1,91 @@
+# WATTS.green Comprehensive Analysis Report
+
+## Fund Performance and Structure (as of Q4 2024)
+
+WATTS.green Renewable Energy Fund I SCSp, SICAV-RAIF has demonstrated significant growth since its inception, with total commitments reaching €134 million following its second closing in Q4 2024. The fund's capital deployment strategy has been aggressive, with five capital calls executed since launch, totaling 34% of committed capital (€38.7 million). The fund maintains a strategic reserve of €31.2 million (27.5% of total commitments) for future opportunities.
+
+### Investment Portfolio Composition
+The fund's current portfolio represents a balanced mix of development stages and technologies:
+- Onshore Wind (RTB): 27% of portfolio
+- Onshore Wind (Repowering): 33% of portfolio
+- Solar PV Projects: 40% of portfolio
+
+### Capital Deployment Details
+The fund has made four strategic investments to date:
+1. Two onshore wind permitting projects
+2. Two AgriSolar development platforms
+3. Three operational onshore wind projects
+
+Total capital called for investments as of December 31, 2024:
+- Jans Lan: €10.0 million (8.8%)
+- Galia Sol: €10.9 million (9.6%)
+- Orient Platform: €10.3 million (9.0%)
+- Green Neon: €24.9 million (21.9%)
+- Agrisolar PV: €65.9 million (58.0%)
+- Reserved Capital: €9.8 million (8.6%)
+
+## Market Position and Strategy
+
+### Geographic Focus
+The fund maintains a strong focus on core European markets:
+- Primary markets: France, Spain, and Benelux (80% of investments)
+- Secondary markets: Other European Union countries (20% of investments)
+
+### Investment Timeline
+- Fund Launch: Q4 2023
+- Second Closing: Q4 2024
+- Target Final Closing: Q1 2025
+- Investment Period: 5 years from First Closing Date (October 3, 2023)
+
+### Fund Structure
+- Vehicle Type: SICAV-RAIF (Luxembourg) – Special Limited Partnership (SCSp)
+- Target Size: €500 million
+- Minimum Commitment: At General Partner's discretion
+- General Partner Contribution: 1.75% of Total Commitments (minimum €1 million)
+- Fund Term: 10 years from Final Closing (with possibility of two one-year extensions)
+- Management Fee: 2% per annum of Total Commitments
+- Carried Interest: 20% with 7% hurdle rate and catch-up
+
+## Pipeline and Market Opportunity
+
+### French Market Potential
+The French renewable energy market presents significant opportunities:
+- Onshore Wind Capacity (Q3 2022): 20.4 GW
+- Target Capacity by 2028: 33-35 GW
+- Required Annual Installation Rate: 1.9 GW
+- Historical Installation Rate: 1-1.5 GW per year
+
+### Solar Market Development
+The French solar market shows strong growth potential:
+- Current Capacity (Q3 2022): 15.8 GW
+- 2028 Target: 35.1-44 GW
+- Ground-mount Target: 20.6-25 GW
+- Required Annual Installation: 3 GW
+- 2021 Achievement: 2.8 GW
+- 2022 Projection: 2.5 GW
+
+### European Repowering Opportunity
+The fund has identified a significant opportunity in European wind repowering:
+- Total Opportunity: 52 GW (turbines > 20 years old)
+- EU Transition Investment Required: €1 trillion by 2030
+
+## Team and Governance
+
+The fund is led by six Founding Partners with extensive experience:
+- Clément Lainé: Developed over 60 renewable energy projects since 2005
+- Hervé Van den Abeele: 10+ years in renewable energy fund deployment
+- Fiona Groetaers: Key roles in multiple renewable energy funds
+- Constantin Delhaute: Significant experience in energy infrastructure
+- Jacques de T'Serclaes: 17 years of financial experience in energy and investments
+- Vincent le Hodey: Strategic development advisor to private asset managers
+
+## Contact Information
+
+For further information, please contact:
+Vincent le Hodey
+Email: vincent@watts.green
+Phone: +44 7855 5123
+
+Hervé Van den Abeele
+Email: herve@watts.green
+Phone: +32 478 491 177 

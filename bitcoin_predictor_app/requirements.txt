@@ -6,4 +6,5 @@ numpy==1.26.4
 plotly==5.18.0
 yfinance
 python-dateutil>=2.8.2
-pytz>=2024.1 
+pytz>=2024.1
+xgboost==2.0.3 
