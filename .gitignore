@@ -1,0 +1,357 @@
+# Forecast Assessment Model - .gitignore
+
+# ============================================================================
+# Python
+# ============================================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# PEP 582
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# ============================================================================
+# Data Science & Machine Learning
+# ============================================================================
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Data files
+*.csv
+*.xlsx
+*.xls
+*.json
+*.parquet
+*.h5
+*.hdf5
+*.pkl
+*.pickle
+
+# Model files (you may want to version control some of these)
+*.joblib
+*.model
+*.h5
+*.pb
+*.ckpt
+*.weights
+
+# TensorFlow
+*.tfrecord
+*.tfevents.*
+logs/tensorboard/
+
+# PyTorch
+*.pth
+*.pt
+
+# Scikit-learn
+*.pkl
+
+# MLflow
+mlruns/
+mlartifacts/
+
+# DVC
+.dvc/tmp
+.dvcignore
+
+# ============================================================================
+# Project Specific
+# ============================================================================
+# Data directories
+data/raw/
+data/processed/
+data/external/
+data/interim/
+data/temp/
+
+# Model artifacts
+models/*.joblib
+models/*.pkl
+models/*.h5
+models/*.model
+models/checkpoints/
+
+# Logs
+logs/
+*.log
+log_*.txt
+
+# Temporary files
+temp/
+tmp/
+scratch/
+
+# API keys and secrets
+.env
+.env.local
+.env.production
+config/secrets.json
+secrets/
+api_keys.txt
+credentials.json
+
+# Uploaded files (web app)
+uploads/
+uploads/*
+!uploads/.gitkeep
+
+# Cache directories
+.cache/
+cache/
+__pycache__/
+
+# ============================================================================
+# Web Application
+# ============================================================================
+# Flask
+instance/
+.webassets-cache
+static/uploads/
+
+# Node.js (if using any frontend tools)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ============================================================================
+# IDEs and Editors
+# ============================================================================
+# VSCode
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# PyCharm
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# Sublime Text
+*.sublime-workspace
+*.sublime-project
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# ============================================================================
+# Operating System
+# ============================================================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.tmp
+*.temp
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ============================================================================
+# Project Output
+# ============================================================================
+# Reports and visualizations
+reports/
+plots/
+figures/
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+*.pdf
+
+# Backup files
+*.bak
+*.backup
+*_backup.*
+backup_*
+
+# ============================================================================
+# Configuration
+# ============================================================================
+# Local configuration files
+config_local.py
+local_config.json
+.env.local
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# ============================================================================
+# Temporary and Testing
+# ============================================================================
+# Test outputs
+test_outputs/
+test_results/
+.pytest_cache/
+
+# Temporary Python files
+*.pyc
+*.pyo
+*.pyd
+*~ 
