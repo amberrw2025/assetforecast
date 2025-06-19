@@ -1,0 +1,30 @@
+# Example environment file for the Forecast Accuracy Assessment Model Pipeline
+# Copy this file to .env and fill in your actual API keys
+
+# FRED API (Federal Reserve Economic Data)
+# Get your free API key at: https://fred.stlouisfed.org/docs/api/api_key.html
+FRED_API_KEY=your_fred_api_key_here
+
+# Twitter API v1.1 (for sentiment data)
+# Get your API keys at: https://developer.twitter.com/en/portal/dashboard
+TWITTER_API_KEY=your_twitter_api_key_here
+TWITTER_API_SECRET=your_twitter_api_secret_here
+TWITTER_ACCESS_TOKEN=your_twitter_access_token_here
+TWITTER_ACCESS_TOKEN_SECRET=your_twitter_access_token_secret_here
+
+# Reddit API (for sentiment data)
+# Get your API keys at: https://www.reddit.com/prefs/apps
+REDDIT_CLIENT_ID=your_reddit_client_id_here
+REDDIT_CLIENT_SECRET=your_reddit_client_secret_here
+REDDIT_USER_AGENT=ForecastModel/1.0
+
+# EIA API (Energy Information Administration) - Optional
+# Get your API key at: https://www.eia.gov/opendata/documentation.php
+EIA_API_KEY=your_eia_api_key_here
+
+# ProPublica Congress API - Optional
+# Get your API key at: https://www.propublica.org/datastore/api/propublica-congress-api
+PROPUBLICA_API_KEY=your_propublica_api_key_here
+
+# Note: yfinance and pytrends do not require API keys
+# Note: Companies House and SEC EDGAR data may require additional setup 

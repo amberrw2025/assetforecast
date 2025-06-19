@@ -1,0 +1,218 @@
+date,text,user_followers,retweet_count,favorite_count,keyword,source,sentiment_score,sentiment_category
+2024-08-11,Interesting developments in inflation,9839,38,449,inflation,Twitter (Sample),0.0,neutral
+2023-08-12,Interesting developments in inflation,9982,16,359,inflation,Twitter (Sample),0.0,neutral
+2023-08-11,Concerned about inflation trends,4643,87,364,inflation,Twitter (Sample),0.0,neutral
+2024-11-05,inflation showing positive momentum,5452,95,481,inflation,Twitter (Sample),0.0,neutral
+2025-04-10,Market analysis on inflation,671,78,221,inflation,Twitter (Sample),0.0,neutral
+2023-02-06,Interesting developments in inflation,377,67,403,inflation,Twitter (Sample),0.0,neutral
+2025-05-13,Market analysis on inflation,1365,67,218,inflation,Twitter (Sample),0.0,neutral
+2023-07-11,Great news about inflation!,9209,16,393,inflation,Twitter (Sample),0.0,neutral
+2025-06-04,Great news about inflation!,8313,89,119,inflation,Twitter (Sample),0.0,neutral
+2023-07-29,Concerned about inflation trends,7537,63,174,inflation,Twitter (Sample),0.0,neutral
+2023-10-12,Market analysis on inflation,9054,98,435,inflation,Twitter (Sample),0.0,neutral
+2024-01-16,Market analysis on inflation,5226,28,394,inflation,Twitter (Sample),0.0,neutral
+2023-02-02,inflation showing positive momentum,9745,97,284,inflation,Twitter (Sample),0.0,neutral
+2024-05-30,Great news about inflation!,7366,12,488,inflation,Twitter (Sample),0.0,neutral
+2023-02-08,Interesting developments in inflation,1198,31,129,inflation,Twitter (Sample),0.0,neutral
+2024-11-17,Market analysis on inflation,3193,74,26,inflation,Twitter (Sample),0.0,neutral
+2024-12-07,Great news about inflation!,1088,20,302,inflation,Twitter (Sample),0.0,neutral
+2025-05-18,inflation showing positive momentum,4279,5,146,inflation,Twitter (Sample),0.0,neutral
+2024-03-28,inflation showing positive momentum,5726,0,57,inflation,Twitter (Sample),0.0,neutral
+2025-06-10,Concerned about inflation trends,2080,34,319,inflation,Twitter (Sample),0.0,neutral
+2025-03-03,Market analysis on inflation,5490,79,26,inflation,Twitter (Sample),0.0,neutral
+2024-08-06,Market analysis on inflation,6673,88,144,inflation,Twitter (Sample),0.0,neutral
+2024-08-27,Interesting developments in inflation,8811,78,26,inflation,Twitter (Sample),0.0,neutral
+2024-01-22,Interesting developments in recession,1059,43,180,recession,Twitter (Sample),0.0,neutral
+2024-06-19,Market analysis on recession,4573,2,403,recession,Twitter (Sample),0.0,neutral
+2024-07-11,Great news about recession!,1975,99,8,recession,Twitter (Sample),0.0,neutral
+2024-11-08,Great news about recession!,7199,62,213,recession,Twitter (Sample),0.0,neutral
+2024-05-15,Interesting developments in recession,2533,87,71,recession,Twitter (Sample),0.0,neutral
+2024-01-30,Interesting developments in recession,4267,20,273,recession,Twitter (Sample),0.0,neutral
+2023-11-16,Concerned about recession trends,1489,94,165,recession,Twitter (Sample),0.0,neutral
+2024-06-27,recession showing positive momentum,5520,88,288,recession,Twitter (Sample),0.0,neutral
+2023-04-12,Great news about recession!,878,85,178,recession,Twitter (Sample),0.0,neutral
+2023-03-29,Great news about recession!,6831,45,159,recession,Twitter (Sample),0.0,neutral
+2024-04-07,Market analysis on recession,2820,73,423,recession,Twitter (Sample),0.0,neutral
+2023-08-30,Market analysis on recession,8132,1,224,recession,Twitter (Sample),0.0,neutral
+2025-03-11,Great news about recession!,2049,32,76,recession,Twitter (Sample),0.0,neutral
+2023-04-26,Concerned about recession trends,1017,65,165,recession,Twitter (Sample),0.0,neutral
+2025-05-20,Concerned about recession trends,1809,14,481,recession,Twitter (Sample),0.0,neutral
+2023-04-16,Market analysis on recession,1995,74,316,recession,Twitter (Sample),0.0,neutral
+2024-09-26,Great news about interest rates!,7017,72,358,interest rates,Twitter (Sample),0.0,neutral
+2023-08-11,Great news about interest rates!,9007,7,327,interest rates,Twitter (Sample),0.0,neutral
+2024-11-20,Market analysis on interest rates,3489,83,317,interest rates,Twitter (Sample),0.0,neutral
+2023-04-21,interest rates showing positive momentum,2530,6,458,interest rates,Twitter (Sample),0.0,neutral
+2023-03-25,Market analysis on interest rates,121,25,382,interest rates,Twitter (Sample),0.0,neutral
+2024-05-29,Great news about interest rates!,7967,13,458,interest rates,Twitter (Sample),0.0,neutral
+2023-01-12,Market analysis on interest rates,1660,44,242,interest rates,Twitter (Sample),0.0,neutral
+2023-05-02,interest rates showing positive momentum,3738,99,172,interest rates,Twitter (Sample),0.0,neutral
+2025-01-02,Interesting developments in interest rates,4890,31,306,interest rates,Twitter (Sample),0.0,neutral
+2025-03-22,Concerned about interest rates trends,7157,82,149,interest rates,Twitter (Sample),0.0,neutral
+2024-07-02,Great news about interest rates!,9374,2,411,interest rates,Twitter (Sample),0.0,neutral
+2024-12-14,interest rates showing positive momentum,6336,53,446,interest rates,Twitter (Sample),0.0,neutral
+2023-12-19,Market analysis on oil prices,7105,84,158,oil prices,Twitter (Sample),0.0,neutral
+2023-01-24,Market analysis on oil prices,9679,19,443,oil prices,Twitter (Sample),0.0,neutral
+2023-06-01,Concerned about oil prices trends,1812,50,95,oil prices,Twitter (Sample),0.0,neutral
+2024-09-08,Market analysis on oil prices,9565,97,227,oil prices,Twitter (Sample),0.0,neutral
+2024-07-31,Concerned about oil prices trends,1494,57,245,oil prices,Twitter (Sample),0.0,neutral
+2024-09-28,Market analysis on oil prices,3814,17,39,oil prices,Twitter (Sample),0.0,neutral
+2023-01-21,Great news about oil prices!,3691,99,239,oil prices,Twitter (Sample),0.0,neutral
+2024-04-22,Concerned about oil prices trends,9231,13,333,oil prices,Twitter (Sample),0.0,neutral
+2023-01-02,Interesting developments in oil prices,4748,61,315,oil prices,Twitter (Sample),0.0,neutral
+2024-01-16,Great news about oil prices!,3255,1,230,oil prices,Twitter (Sample),0.0,neutral
+2025-04-17,Great news about oil prices!,8319,65,162,oil prices,Twitter (Sample),0.0,neutral
+2023-08-17,Interesting developments in oil prices,5643,75,439,oil prices,Twitter (Sample),0.0,neutral
+2024-11-06,Interesting developments in oil prices,7162,46,286,oil prices,Twitter (Sample),0.0,neutral
+2024-01-30,Concerned about oil prices trends,729,13,79,oil prices,Twitter (Sample),0.0,neutral
+2024-08-27,Concerned about oil prices trends,3532,0,132,oil prices,Twitter (Sample),0.0,neutral
+2023-10-03,oil prices showing positive momentum,7215,0,312,oil prices,Twitter (Sample),0.0,neutral
+2024-07-29,Market analysis on oil prices,9599,36,174,oil prices,Twitter (Sample),0.0,neutral
+2023-07-23,Interesting developments in oil prices,3668,43,311,oil prices,Twitter (Sample),0.0,neutral
+2023-06-05,Market analysis on oil prices,1374,60,403,oil prices,Twitter (Sample),0.0,neutral
+2025-05-31,Concerned about oil prices trends,1068,36,19,oil prices,Twitter (Sample),0.0,neutral
+2023-10-09,Interesting developments in oil prices,6362,34,197,oil prices,Twitter (Sample),0.0,neutral
+2024-04-29,Interesting developments in oil prices,5278,68,160,oil prices,Twitter (Sample),0.0,neutral
+2024-11-21,Market analysis on oil prices,4685,19,180,oil prices,Twitter (Sample),0.0,neutral
+2023-08-30,oil prices showing positive momentum,225,97,216,oil prices,Twitter (Sample),0.0,neutral
+2023-07-04,unemployment showing positive momentum,3349,22,427,unemployment,Twitter (Sample),0.0,neutral
+2023-10-21,Market analysis on unemployment,6394,44,307,unemployment,Twitter (Sample),0.0,neutral
+2023-12-02,Concerned about unemployment trends,991,7,497,unemployment,Twitter (Sample),0.0,neutral
+2023-12-07,Great news about unemployment!,9306,7,156,unemployment,Twitter (Sample),0.0,neutral
+2023-12-18,Interesting developments in unemployment,9810,85,174,unemployment,Twitter (Sample),0.0,neutral
+2025-03-12,Great news about unemployment!,5338,89,426,unemployment,Twitter (Sample),0.0,neutral
+2024-02-18,Concerned about unemployment trends,7805,7,302,unemployment,Twitter (Sample),0.0,neutral
+2025-01-13,Great news about unemployment!,1086,71,344,unemployment,Twitter (Sample),0.0,neutral
+2025-03-24,Market analysis on unemployment,3172,18,286,unemployment,Twitter (Sample),0.0,neutral
+2024-10-15,Interesting developments in unemployment,9619,68,360,unemployment,Twitter (Sample),0.0,neutral
+2024-08-24,Market analysis on unemployment,4133,63,453,unemployment,Twitter (Sample),0.0,neutral
+2024-07-28,Great news about unemployment!,7948,88,175,unemployment,Twitter (Sample),0.0,neutral
+2025-02-19,Great news about unemployment!,3928,76,158,unemployment,Twitter (Sample),0.0,neutral
+2024-05-03,unemployment showing positive momentum,9639,97,380,unemployment,Twitter (Sample),0.0,neutral
+2023-04-12,Market analysis on unemployment,9929,18,453,unemployment,Twitter (Sample),0.0,neutral
+2024-04-26,Concerned about unemployment trends,1100,22,338,unemployment,Twitter (Sample),0.0,neutral
+2023-12-31,unemployment showing positive momentum,3812,87,309,unemployment,Twitter (Sample),0.0,neutral
+2024-03-30,Great news about unemployment!,2872,14,64,unemployment,Twitter (Sample),0.0,neutral
+2023-03-17,Concerned about unemployment trends,4906,14,404,unemployment,Twitter (Sample),0.0,neutral
+2025-04-07,Interesting developments in unemployment,5692,32,304,unemployment,Twitter (Sample),0.0,neutral
+2025-01-05,Great news about unemployment!,6159,89,266,unemployment,Twitter (Sample),0.0,neutral
+2025-05-16,Concerned about unemployment trends,9253,45,264,unemployment,Twitter (Sample),0.0,neutral
+2023-01-03,Interesting developments in unemployment,6571,47,449,unemployment,Twitter (Sample),0.0,neutral
+2024-03-29,Market analysis on unemployment,1277,24,11,unemployment,Twitter (Sample),0.0,neutral
+2023-05-13,Concerned about unemployment trends,4499,36,462,unemployment,Twitter (Sample),0.0,neutral
+2023-10-27,Market analysis on unemployment,8334,47,342,unemployment,Twitter (Sample),0.0,neutral
+2023-11-22,Concerned about unemployment trends,6670,20,406,unemployment,Twitter (Sample),0.0,neutral
+2024-09-10,Interesting developments in unemployment,5343,14,280,unemployment,Twitter (Sample),0.0,neutral
+2025-03-14,unemployment showing positive momentum,4246,14,323,unemployment,Twitter (Sample),0.0,neutral
+2025-02-27,Interesting developments in unemployment,4982,33,333,unemployment,Twitter (Sample),0.0,neutral
+2025-06-11,Market analysis on unemployment,7251,51,493,unemployment,Twitter (Sample),0.0,neutral
+2024-06-22,Interesting developments in unemployment,6994,27,290,unemployment,Twitter (Sample),0.0,neutral
+2024-10-09,Concerned about unemployment trends,5639,29,145,unemployment,Twitter (Sample),0.0,neutral
+2023-01-02,Great news about unemployment!,6887,89,344,unemployment,Twitter (Sample),0.0,neutral
+2023-12-16,unemployment showing positive momentum,1386,94,107,unemployment,Twitter (Sample),0.0,neutral
+2024-08-08,Interesting developments in unemployment,3754,62,311,unemployment,Twitter (Sample),0.0,neutral
+2023-08-29,Concerned about unemployment trends,8736,41,439,unemployment,Twitter (Sample),0.0,neutral
+2023-02-05,Market analysis on unemployment,9767,6,309,unemployment,Twitter (Sample),0.0,neutral
+2023-06-21,Interesting developments in stock market,6384,21,117,stock market,Twitter (Sample),0.0,neutral
+2023-10-04,Market analysis on stock market,3197,8,270,stock market,Twitter (Sample),0.0,neutral
+2023-01-10,Concerned about stock market trends,5852,41,71,stock market,Twitter (Sample),0.0,neutral
+2023-06-01,Great news about stock market!,3325,90,292,stock market,Twitter (Sample),0.0,neutral
+2024-08-02,Concerned about stock market trends,6907,18,99,stock market,Twitter (Sample),0.0,neutral
+2023-03-01,Concerned about stock market trends,7100,17,402,stock market,Twitter (Sample),0.0,neutral
+2024-11-06,Concerned about stock market trends,3140,54,241,stock market,Twitter (Sample),0.0,neutral
+2024-08-03,Great news about stock market!,582,97,160,stock market,Twitter (Sample),0.0,neutral
+2024-09-22,Interesting developments in stock market,8953,47,292,stock market,Twitter (Sample),0.0,neutral
+2024-10-16,stock market showing positive momentum,1087,70,159,stock market,Twitter (Sample),0.0,neutral
+2024-10-11,Great news about economy!,1200,56,253,economy,Twitter (Sample),0.0,neutral
+2025-02-08,economy showing positive momentum,4458,84,145,economy,Twitter (Sample),0.0,neutral
+2025-04-14,Concerned about economy trends,6880,38,424,economy,Twitter (Sample),0.0,neutral
+2025-01-22,economy showing positive momentum,2449,18,67,economy,Twitter (Sample),0.0,neutral
+2023-08-06,Concerned about economy trends,9482,35,231,economy,Twitter (Sample),0.0,neutral
+2025-01-10,Great news about economy!,7943,2,72,economy,Twitter (Sample),0.0,neutral
+2024-10-09,Great news about economy!,5289,40,486,economy,Twitter (Sample),0.0,neutral
+2024-12-08,Interesting developments in economy,6804,59,129,economy,Twitter (Sample),0.0,neutral
+2024-05-31,Market analysis on economy,3710,31,148,economy,Twitter (Sample),0.0,neutral
+2025-02-14,Concerned about economy trends,8358,43,380,economy,Twitter (Sample),0.0,neutral
+2023-02-27,economy showing positive momentum,8633,69,129,economy,Twitter (Sample),0.0,neutral
+2024-12-27,Market analysis on economy,2917,80,290,economy,Twitter (Sample),0.0,neutral
+2023-12-20,Market analysis on economy,761,43,441,economy,Twitter (Sample),0.0,neutral
+2024-07-01,Interesting developments in economy,3474,54,207,economy,Twitter (Sample),0.0,neutral
+2024-09-09,Great news about economy!,3183,16,399,economy,Twitter (Sample),0.0,neutral
+2024-10-09,Market analysis on economy,1779,29,236,economy,Twitter (Sample),0.0,neutral
+2023-10-06,Market analysis on economy,6870,4,467,economy,Twitter (Sample),0.0,neutral
+2025-05-21,Market analysis on economy,2468,29,148,economy,Twitter (Sample),0.0,neutral
+2023-03-25,Concerned about economy trends,4995,32,271,economy,Twitter (Sample),0.0,neutral
+2024-04-04,Market analysis on economy,2885,13,291,economy,Twitter (Sample),0.0,neutral
+2024-10-24,Concerned about GDP trends,9893,84,257,GDP,Twitter (Sample),0.0,neutral
+2025-01-30,Great news about GDP!,2596,74,322,GDP,Twitter (Sample),0.0,neutral
+2023-06-29,Concerned about GDP trends,3367,81,310,GDP,Twitter (Sample),0.0,neutral
+2023-09-19,GDP showing positive momentum,8697,42,142,GDP,Twitter (Sample),0.0,neutral
+2023-12-08,Market analysis on GDP,8535,11,238,GDP,Twitter (Sample),0.0,neutral
+2024-07-14,Concerned about GDP trends,8885,44,290,GDP,Twitter (Sample),0.0,neutral
+2023-06-07,Concerned about GDP trends,7729,5,66,GDP,Twitter (Sample),0.0,neutral
+2025-04-27,Market analysis on GDP,7793,72,398,GDP,Twitter (Sample),0.0,neutral
+2024-02-09,GDP showing positive momentum,6821,90,129,GDP,Twitter (Sample),0.0,neutral
+2024-04-10,Market analysis on GDP,6197,9,24,GDP,Twitter (Sample),0.0,neutral
+2025-03-03,Interesting developments in GDP,4359,94,269,GDP,Twitter (Sample),0.0,neutral
+2025-04-12,Interesting developments in GDP,2630,40,389,GDP,Twitter (Sample),0.0,neutral
+2023-01-25,Interesting developments in GDP,2629,7,404,GDP,Twitter (Sample),0.0,neutral
+2024-06-20,Market analysis on GDP,7440,59,11,GDP,Twitter (Sample),0.0,neutral
+2025-03-10,Market analysis on GDP,8834,77,19,GDP,Twitter (Sample),0.0,neutral
+2024-10-19,Interesting developments in GDP,6047,62,389,GDP,Twitter (Sample),0.0,neutral
+2024-11-02,Interesting developments in GDP,4449,1,59,GDP,Twitter (Sample),0.0,neutral
+2024-10-24,GDP showing positive momentum,6530,4,466,GDP,Twitter (Sample),0.0,neutral
+2025-02-16,Great news about GDP!,4837,10,177,GDP,Twitter (Sample),0.0,neutral
+2023-09-10,Great news about GDP!,5178,82,392,GDP,Twitter (Sample),0.0,neutral
+2023-04-09,Interesting developments in GDP,5548,27,189,GDP,Twitter (Sample),0.0,neutral
+2024-05-08,GDP showing positive momentum,6506,79,399,GDP,Twitter (Sample),0.0,neutral
+2025-02-02,Great news about GDP!,1738,39,272,GDP,Twitter (Sample),0.0,neutral
+2023-04-11,Market analysis on GDP,9111,92,307,GDP,Twitter (Sample),0.0,neutral
+2024-02-24,Market analysis on GDP,4617,49,62,GDP,Twitter (Sample),0.0,neutral
+2024-04-29,Market analysis on GDP,7970,61,255,GDP,Twitter (Sample),0.0,neutral
+2024-04-27,GDP showing positive momentum,1649,70,228,GDP,Twitter (Sample),0.0,neutral
+2024-08-20,Interesting developments in GDP,4581,61,218,GDP,Twitter (Sample),0.0,neutral
+2024-02-09,Interesting developments in GDP,6893,86,313,GDP,Twitter (Sample),0.0,neutral
+2025-06-06,Interesting developments in GDP,6456,89,241,GDP,Twitter (Sample),0.0,neutral
+2024-05-07,Interesting developments in GDP,2485,44,159,GDP,Twitter (Sample),0.0,neutral
+2023-06-13,Great news about GDP!,4692,59,394,GDP,Twitter (Sample),0.0,neutral
+2024-12-03,Interesting developments in GDP,2455,54,116,GDP,Twitter (Sample),0.0,neutral
+2025-03-04,Market analysis on GDP,8837,51,111,GDP,Twitter (Sample),0.0,neutral
+2025-02-02,Concerned about GDP trends,4939,98,232,GDP,Twitter (Sample),0.0,neutral
+2025-01-02,Market analysis on GDP,3593,41,20,GDP,Twitter (Sample),0.0,neutral
+2024-07-07,Interesting developments in GDP,2772,63,16,GDP,Twitter (Sample),0.0,neutral
+2023-04-30,Great news about GDP!,8716,0,129,GDP,Twitter (Sample),0.0,neutral
+2024-07-25,Interesting developments in GDP,9412,9,241,GDP,Twitter (Sample),0.0,neutral
+2025-04-05,Market analysis on GDP,2379,20,283,GDP,Twitter (Sample),0.0,neutral
+2024-12-15,Concerned about GDP trends,875,58,213,GDP,Twitter (Sample),0.0,neutral
+2023-07-19,Great news about GDP!,178,16,443,GDP,Twitter (Sample),0.0,neutral
+2025-05-05,Interesting developments in employment,7183,64,86,employment,Twitter (Sample),0.0,neutral
+2023-04-11,Interesting developments in employment,3371,86,42,employment,Twitter (Sample),0.0,neutral
+2024-01-20,Interesting developments in employment,8699,98,151,employment,Twitter (Sample),0.0,neutral
+2023-01-17,Interesting developments in employment,247,20,231,employment,Twitter (Sample),0.0,neutral
+2025-04-05,Market analysis on employment,9966,51,398,employment,Twitter (Sample),0.0,neutral
+2023-07-30,employment showing positive momentum,8854,57,260,employment,Twitter (Sample),0.0,neutral
+2025-02-11,Concerned about employment trends,9865,95,367,employment,Twitter (Sample),0.0,neutral
+2023-08-08,Great news about employment!,1346,7,255,employment,Twitter (Sample),0.0,neutral
+2023-12-26,Great news about employment!,2476,65,462,employment,Twitter (Sample),0.0,neutral
+2024-07-14,Market analysis on employment,7079,77,104,employment,Twitter (Sample),0.0,neutral
+2023-06-18,Great news about employment!,8669,61,254,employment,Twitter (Sample),0.0,neutral
+2024-01-05,Concerned about employment trends,2296,35,139,employment,Twitter (Sample),0.0,neutral
+2025-05-08,Concerned about employment trends,880,52,159,employment,Twitter (Sample),0.0,neutral
+2023-12-17,Market analysis on employment,8814,9,270,employment,Twitter (Sample),0.0,neutral
+2023-09-30,Concerned about employment trends,5884,58,333,employment,Twitter (Sample),0.0,neutral
+2023-05-04,Concerned about employment trends,7228,21,499,employment,Twitter (Sample),0.0,neutral
+2024-02-18,Market analysis on employment,785,20,482,employment,Twitter (Sample),0.0,neutral
+2023-05-02,Great news about employment!,4975,46,17,employment,Twitter (Sample),0.0,neutral
+2023-05-29,Interesting developments in employment,7265,20,125,employment,Twitter (Sample),0.0,neutral
+2023-10-29,Market analysis on employment,8889,21,234,employment,Twitter (Sample),0.0,neutral
+2023-12-11,Market analysis on employment,3637,1,28,employment,Twitter (Sample),0.0,neutral
+2023-08-01,Market analysis on employment,8574,49,94,employment,Twitter (Sample),0.0,neutral
+2024-04-07,employment showing positive momentum,4283,43,460,employment,Twitter (Sample),0.0,neutral
+2023-10-05,employment showing positive momentum,1824,96,183,employment,Twitter (Sample),0.0,neutral
+2024-05-29,employment showing positive momentum,122,28,29,employment,Twitter (Sample),0.0,neutral
+2025-03-17,Market analysis on employment,9596,7,361,employment,Twitter (Sample),0.0,neutral
+2023-07-05,Great news about employment!,6095,4,2,employment,Twitter (Sample),0.0,neutral
+2024-03-24,Market analysis on employment,5443,63,361,employment,Twitter (Sample),0.0,neutral
+2025-05-15,employment showing positive momentum,2620,9,404,employment,Twitter (Sample),0.0,neutral
+2025-06-14,employment showing positive momentum,9214,65,424,employment,Twitter (Sample),0.0,neutral
+2023-04-22,Interesting developments in employment,2647,35,85,employment,Twitter (Sample),0.0,neutral
+2023-08-22,Concerned about employment trends,8605,53,11,employment,Twitter (Sample),0.0,neutral

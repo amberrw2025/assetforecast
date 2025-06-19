@@ -1,0 +1,704 @@
+2025-06-19 10:39:55 | ERROR | data_acquisition.economic_data:get_fred_data:65 | fredapi not installed. Please install with: pip install fredapi
+2025-06-19 10:39:55 | INFO | data_processing.data_cleaner:handle_missing_values:39 | Handling missing values with strategy: auto
+2025-06-19 10:39:55 | INFO | data_processing.data_cleaner:handle_missing_values:43 | Missing value percentages:
+Series([], dtype: float64)
+2025-06-19 10:39:55 | INFO | data_processing.data_cleaner:handle_missing_values:80 | Missing values handled. Remaining missing values: 0
+2025-06-19 10:43:01 | INFO | __main__:main:93 | Running complete pipeline
+2025-06-19 10:43:01 | INFO | main_pipeline:run_complete_pipeline:293 | Starting complete forecast model pipeline
+2025-06-19 10:43:01 | INFO | main_pipeline:run_data_acquisition:49 | Starting data acquisition phase
+2025-06-19 10:43:01 | INFO | main_pipeline:run_data_acquisition:53 | Collecting financial data...
+2025-06-19 10:43:01 | INFO | data_acquisition.financial_data:collect_all_companies_data:154 | Collecting data for ftse100 top_performers: ['AAL.L', 'ABF.L', 'ADM.L', 'AHT.L', 'ANTO.L']
+2025-06-19 10:43:09 | INFO | data_acquisition.financial_data:collect_all_companies_data:154 | Collecting data for ftse100 bottom_performers: ['BARC.L', 'BDEV.L', 'BKG.L', 'BLND.L', 'BT-A.L']
+2025-06-19 10:43:15 | INFO | data_acquisition.financial_data:collect_all_companies_data:154 | Collecting data for sp500 top_performers: ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA']
+2025-06-19 10:43:21 | INFO | data_acquisition.financial_data:collect_all_companies_data:154 | Collecting data for sp500 bottom_performers: ['XOM', 'CVX', 'KO', 'PEP', 'WMT']
+2025-06-19 10:43:27 | INFO | data_acquisition.financial_data:collect_all_companies_data:183 | Successfully collected data for 19 companies
+2025-06-19 10:43:27 | INFO | main_pipeline:run_data_acquisition:58 | Financial data collected: 11759 records
+2025-06-19 10:43:27 | INFO | main_pipeline:run_data_acquisition:63 | Collecting economic data...
+2025-06-19 10:43:27 | INFO | data_acquisition.economic_data:collect_all_economic_data:285 | Collecting FRED economic data...
+2025-06-19 10:43:27 | ERROR | data_acquisition.economic_data:get_fred_data:65 | fredapi not installed. Please install with: pip install fredapi
+2025-06-19 10:43:27 | ERROR | data_acquisition.economic_data:get_fred_data:65 | fredapi not installed. Please install with: pip install fredapi
+2025-06-19 10:43:27 | ERROR | data_acquisition.economic_data:get_fred_data:65 | fredapi not installed. Please install with: pip install fredapi
+2025-06-19 10:43:27 | INFO | data_acquisition.economic_data:collect_all_economic_data:302 | Collecting EIA energy data...
+2025-06-19 10:43:28 | WARNING | data_acquisition.economic_data:get_eia_data:163 | EIA API failed for RBRTE. Using sample data.
+2025-06-19 10:43:28 | INFO | data_acquisition.economic_data:_generate_sample_eia_data:210 | Generated sample EIA data for RBRTE
+2025-06-19 10:43:28 | INFO | data_acquisition.economic_data:collect_all_economic_data:319 | Collecting Google Trends data...
+2025-06-19 10:43:28 | ERROR | data_acquisition.economic_data:get_google_trends_data:269 | pytrends not installed. Please install with: pip install pytrends
+2025-06-19 10:43:28 | INFO | data_acquisition.economic_data:collect_all_economic_data:326 | Economic data collection completed. Sources: ['eia']
+2025-06-19 10:43:28 | INFO | main_pipeline:run_data_acquisition:69 | Economic data collected: 901 records across 1 sources
+2025-06-19 10:43:28 | INFO | main_pipeline:run_data_acquisition:74 | Collecting sentiment data...
+2025-06-19 10:43:28 | INFO | data_acquisition.sentiment_data:collect_all_sentiment_data:338 | Collecting Twitter sentiment data...
+2025-06-19 10:43:28 | ERROR | data_acquisition.sentiment_data:get_twitter_sentiment:94 | tweepy not installed. Please install with: pip install tweepy
+2025-06-19 10:43:28 | INFO | data_acquisition.sentiment_data:_generate_sample_twitter_data:145 | Generated sample Twitter data for 9 keywords
+2025-06-19 10:43:28 | WARNING | data_acquisition.sentiment_data:calculate_sentiment_scores:314 | TextBlob not installed. Skipping sentiment analysis.
+2025-06-19 10:43:28 | INFO | data_acquisition.sentiment_data:collect_all_sentiment_data:346 | Collecting Reddit sentiment data...
+2025-06-19 10:43:28 | ERROR | data_acquisition.sentiment_data:get_reddit_sentiment:214 | praw not installed. Please install with: pip install praw
+2025-06-19 10:43:28 | INFO | data_acquisition.sentiment_data:_generate_sample_reddit_data:278 | Generated sample Reddit data for 5 subreddits and 9 keywords
+2025-06-19 10:43:28 | WARNING | data_acquisition.sentiment_data:calculate_sentiment_scores:314 | TextBlob not installed. Skipping sentiment analysis.
+2025-06-19 10:43:28 | INFO | data_acquisition.sentiment_data:collect_all_sentiment_data:354 | Sentiment data collection completed. Sources: ['twitter', 'reddit']
+2025-06-19 10:43:28 | INFO | main_pipeline:run_data_acquisition:80 | Sentiment data collected: 758 records across 2 sources
+2025-06-19 10:43:28 | INFO | main_pipeline:_save_raw_data:198 | Raw financial data saved to /Users/amberwitheridge/Documents/internship/asset forcast/fste_and_sandp_forcaster/data/raw/financial_data.csv
+2025-06-19 10:43:28 | INFO | main_pipeline:_save_raw_data:198 | Raw eia data saved to /Users/amberwitheridge/Documents/internship/asset forcast/fste_and_sandp_forcaster/data/raw/eia_data.csv
+2025-06-19 10:43:28 | INFO | main_pipeline:_save_raw_data:198 | Raw twitter data saved to /Users/amberwitheridge/Documents/internship/asset forcast/fste_and_sandp_forcaster/data/raw/twitter_data.csv
+2025-06-19 10:43:28 | INFO | main_pipeline:_save_raw_data:198 | Raw reddit data saved to /Users/amberwitheridge/Documents/internship/asset forcast/fste_and_sandp_forcaster/data/raw/reddit_data.csv
+2025-06-19 10:43:28 | INFO | main_pipeline:run_data_acquisition:87 | Data acquisition phase completed successfully
+2025-06-19 10:43:28 | INFO | main_pipeline:run_data_cleaning:102 | Starting data cleaning phase
+2025-06-19 10:43:28 | INFO | data_processing.data_cleaner:clean_and_prepare_data:357 | Starting complete data cleaning and preparation pipeline
+2025-06-19 10:43:28 | INFO | data_processing.data_cleaner:clean_and_prepare_data:362 | Cleaning dataset: financial
+2025-06-19 10:43:28 | INFO | data_processing.data_cleaner:handle_missing_values:39 | Handling missing values with strategy: auto
+2025-06-19 10:43:28 | INFO | data_processing.data_cleaner:handle_missing_values:43 | Missing value percentages:
+operating_income       0.105621
+total_liabilities      1.000000
+total_equity           1.000000
+operating_cash_flow    0.052811
+pe_ratio               0.052811
+dtype: float64
+2025-06-19 10:43:28 | INFO | data_processing.data_cleaner:handle_missing_values:50 | Dropping columns with >30.0% missing values: ['total_liabilities', 'total_equity']
+2025-06-19 10:43:28 | INFO | data_processing.data_cleaner:handle_missing_values:80 | Missing values handled. Remaining missing values: 0
+2025-06-19 10:43:28 | INFO | data_processing.data_cleaner:clean_and_prepare_data:362 | Cleaning dataset: eia
+2025-06-19 10:43:28 | INFO | data_processing.data_cleaner:handle_missing_values:39 | Handling missing values with strategy: auto
+2025-06-19 10:43:28 | INFO | data_processing.data_cleaner:handle_missing_values:43 | Missing value percentages:
+Series([], dtype: float64)
+2025-06-19 10:43:28 | INFO | data_processing.data_cleaner:handle_missing_values:80 | Missing values handled. Remaining missing values: 0
+2025-06-19 10:43:28 | INFO | data_processing.data_cleaner:clean_and_prepare_data:362 | Cleaning dataset: twitter
+2025-06-19 10:43:28 | INFO | data_processing.data_cleaner:handle_missing_values:39 | Handling missing values with strategy: auto
+2025-06-19 10:43:28 | INFO | data_processing.data_cleaner:handle_missing_values:43 | Missing value percentages:
+Series([], dtype: float64)
+2025-06-19 10:43:28 | INFO | data_processing.data_cleaner:handle_missing_values:80 | Missing values handled. Remaining missing values: 0
+2025-06-19 10:43:28 | INFO | data_processing.data_cleaner:clean_and_prepare_data:362 | Cleaning dataset: reddit
+2025-06-19 10:43:28 | INFO | data_processing.data_cleaner:handle_missing_values:39 | Handling missing values with strategy: auto
+2025-06-19 10:43:28 | INFO | data_processing.data_cleaner:handle_missing_values:43 | Missing value percentages:
+Series([], dtype: float64)
+2025-06-19 10:43:28 | INFO | data_processing.data_cleaner:handle_missing_values:80 | Missing values handled. Remaining missing values: 0
+2025-06-19 10:43:28 | INFO | data_processing.data_cleaner:clean_and_prepare_data:368 | Handling outliers in dataset: financial
+2025-06-19 10:43:28 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:97 | Detecting outliers in columns: ['close_price', 'volume', 'high', 'low', 'open_price', 'revenue', 'net_income', 'operating_income', 'total_assets', 'operating_cash_flow', 'free_cash_flow', 'profit_margin', 'headcount', 'market_cap', 'pe_ratio', 'pb_ratio']
+2025-06-19 10:43:28 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:111 | Found 85 outliers in close_price
+2025-06-19 10:43:29 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:111 | Found 389 outliers in volume
+2025-06-19 10:43:29 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:111 | Found 78 outliers in high
+2025-06-19 10:43:29 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:111 | Found 81 outliers in low
+2025-06-19 10:43:29 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:111 | Found 85 outliers in open_price
+2025-06-19 10:43:29 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:111 | Found 621 outliers in total_assets
+2025-06-19 10:43:29 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:111 | Found 617 outliers in headcount
+2025-06-19 10:43:29 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:111 | Found 621 outliers in pb_ratio
+2025-06-19 10:43:29 | INFO | data_processing.data_cleaner:clean_and_prepare_data:368 | Handling outliers in dataset: eia
+2025-06-19 10:43:29 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:97 | Detecting outliers in columns: ['value']
+2025-06-19 10:43:29 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:111 | Found 26 outliers in value
+2025-06-19 10:43:29 | INFO | data_processing.data_cleaner:clean_and_prepare_data:368 | Handling outliers in dataset: twitter
+2025-06-19 10:43:29 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:97 | Detecting outliers in columns: ['user_followers', 'retweet_count', 'favorite_count', 'sentiment_score']
+2025-06-19 10:43:29 | INFO | data_processing.data_cleaner:clean_and_prepare_data:368 | Handling outliers in dataset: reddit
+2025-06-19 10:43:29 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:97 | Detecting outliers in columns: ['score', 'upvote_ratio', 'num_comments', 'sentiment_score']
+2025-06-19 10:43:29 | INFO | data_processing.data_cleaner:clean_and_prepare_data:373 | Standardizing time series for dataset: financial
+2025-06-19 10:43:29 | INFO | data_processing.data_cleaner:standardize_time_series:137 | Standardizing time series to frequency: D
+2025-06-19 10:43:29 | ERROR | main_pipeline:run_data_cleaning:125 | Error in data cleaning phase: Tz-aware datetime.datetime cannot be converted to datetime64 unless utc=True, at position 5589
+2025-06-19 10:43:29 | ERROR | main_pipeline:run_data_cleaning:126 | Traceback (most recent call last):
+  File "/Users/amberwitheridge/Documents/internship/asset forcast/fste_and_sandp_forcaster/main_pipeline.py", line 110, in run_data_cleaning
+    self.cleaned_dataset = self.data_cleaner.clean_and_prepare_data(self.raw_datasets)
+  File "/Users/amberwitheridge/Documents/internship/asset forcast/fste_and_sandp_forcaster/data_processing/data_cleaner.py", line 374, in clean_and_prepare_data
+    cleaned_datasets[name] = self.standardize_time_series(dataset)
+  File "/Users/amberwitheridge/Documents/internship/asset forcast/fste_and_sandp_forcaster/data_processing/data_cleaner.py", line 140, in standardize_time_series
+    df[date_column] = pd.to_datetime(df[date_column])
+  File "/Users/amberwitheridge/Library/Python/3.9/lib/python/site-packages/pandas/core/tools/datetimes.py", line 1067, in to_datetime
+    values = convert_listlike(arg._values, format)
+  File "/Users/amberwitheridge/Library/Python/3.9/lib/python/site-packages/pandas/core/tools/datetimes.py", line 435, in _convert_listlike_datetimes
+    result, tz_parsed = objects_to_datetime64(
+  File "/Users/amberwitheridge/Library/Python/3.9/lib/python/site-packages/pandas/core/arrays/datetimes.py", line 2398, in objects_to_datetime64
+    result, tz_parsed = tslib.array_to_datetime(
+  File "tslib.pyx", line 414, in pandas._libs.tslib.array_to_datetime
+  File "tslib.pyx", line 596, in pandas._libs.tslib.array_to_datetime
+  File "tslib.pyx", line 504, in pandas._libs.tslib.array_to_datetime
+  File "strptime.pyx", line 285, in pandas._libs.tslibs.strptime.DatetimeParseState.process_datetime
+ValueError: Tz-aware datetime.datetime cannot be converted to datetime64 unless utc=True, at position 5589
+
+2025-06-19 10:43:29 | ERROR | main_pipeline:run_complete_pipeline:305 | Data cleaning phase failed
+2025-06-19 10:45:39 | INFO | __main__:main:81 | Running data acquisition phase only
+2025-06-19 10:45:39 | INFO | main_pipeline:run_data_acquisition:49 | Starting data acquisition phase
+2025-06-19 10:45:39 | INFO | main_pipeline:run_data_acquisition:53 | Collecting financial data...
+2025-06-19 10:45:39 | INFO | data_acquisition.financial_data:collect_all_companies_data:154 | Collecting data for ftse100 top_performers: ['AAL.L', 'ABF.L', 'ADM.L', 'AHT.L', 'ANTO.L']
+2025-06-19 10:45:46 | INFO | data_acquisition.financial_data:collect_all_companies_data:154 | Collecting data for ftse100 bottom_performers: ['BARC.L', 'BDEV.L', 'BKG.L', 'BLND.L', 'BT-A.L']
+2025-06-19 10:45:52 | INFO | data_acquisition.financial_data:collect_all_companies_data:154 | Collecting data for sp500 top_performers: ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA']
+2025-06-19 10:45:58 | INFO | data_acquisition.financial_data:collect_all_companies_data:154 | Collecting data for sp500 bottom_performers: ['XOM', 'CVX', 'KO', 'PEP', 'WMT']
+2025-06-19 10:46:04 | INFO | data_acquisition.financial_data:collect_all_companies_data:183 | Successfully collected data for 19 companies
+2025-06-19 10:46:04 | INFO | main_pipeline:run_data_acquisition:58 | Financial data collected: 11759 records
+2025-06-19 10:46:04 | INFO | main_pipeline:run_data_acquisition:63 | Collecting economic data...
+2025-06-19 10:46:04 | INFO | data_acquisition.economic_data:collect_all_economic_data:285 | Collecting FRED economic data...
+2025-06-19 10:46:04 | ERROR | data_acquisition.economic_data:get_fred_data:65 | fredapi not installed. Please install with: pip install fredapi
+2025-06-19 10:46:04 | ERROR | data_acquisition.economic_data:get_fred_data:65 | fredapi not installed. Please install with: pip install fredapi
+2025-06-19 10:46:04 | ERROR | data_acquisition.economic_data:get_fred_data:65 | fredapi not installed. Please install with: pip install fredapi
+2025-06-19 10:46:04 | INFO | data_acquisition.economic_data:collect_all_economic_data:302 | Collecting EIA energy data...
+2025-06-19 10:46:05 | WARNING | data_acquisition.economic_data:get_eia_data:163 | EIA API failed for RBRTE. Using sample data.
+2025-06-19 10:46:05 | INFO | data_acquisition.economic_data:_generate_sample_eia_data:210 | Generated sample EIA data for RBRTE
+2025-06-19 10:46:05 | INFO | data_acquisition.economic_data:collect_all_economic_data:319 | Collecting Google Trends data...
+2025-06-19 10:46:05 | ERROR | data_acquisition.economic_data:get_google_trends_data:269 | pytrends not installed. Please install with: pip install pytrends
+2025-06-19 10:46:05 | INFO | data_acquisition.economic_data:collect_all_economic_data:326 | Economic data collection completed. Sources: ['eia']
+2025-06-19 10:46:05 | INFO | main_pipeline:run_data_acquisition:69 | Economic data collected: 901 records across 1 sources
+2025-06-19 10:46:05 | INFO | main_pipeline:run_data_acquisition:74 | Collecting sentiment data...
+2025-06-19 10:46:05 | INFO | data_acquisition.sentiment_data:collect_all_sentiment_data:338 | Collecting Twitter sentiment data...
+2025-06-19 10:46:05 | ERROR | data_acquisition.sentiment_data:get_twitter_sentiment:94 | tweepy not installed. Please install with: pip install tweepy
+2025-06-19 10:46:05 | INFO | data_acquisition.sentiment_data:_generate_sample_twitter_data:145 | Generated sample Twitter data for 9 keywords
+2025-06-19 10:46:05 | WARNING | data_acquisition.sentiment_data:calculate_sentiment_scores:314 | TextBlob not installed. Skipping sentiment analysis.
+2025-06-19 10:46:05 | INFO | data_acquisition.sentiment_data:collect_all_sentiment_data:346 | Collecting Reddit sentiment data...
+2025-06-19 10:46:05 | ERROR | data_acquisition.sentiment_data:get_reddit_sentiment:214 | praw not installed. Please install with: pip install praw
+2025-06-19 10:46:05 | INFO | data_acquisition.sentiment_data:_generate_sample_reddit_data:278 | Generated sample Reddit data for 5 subreddits and 9 keywords
+2025-06-19 10:46:05 | WARNING | data_acquisition.sentiment_data:calculate_sentiment_scores:314 | TextBlob not installed. Skipping sentiment analysis.
+2025-06-19 10:46:05 | INFO | data_acquisition.sentiment_data:collect_all_sentiment_data:354 | Sentiment data collection completed. Sources: ['twitter', 'reddit']
+2025-06-19 10:46:05 | INFO | main_pipeline:run_data_acquisition:80 | Sentiment data collected: 758 records across 2 sources
+2025-06-19 10:46:06 | INFO | main_pipeline:_save_raw_data:198 | Raw financial data saved to /Users/amberwitheridge/Documents/internship/asset forcast/fste_and_sandp_forcaster/data/raw/financial_data.csv
+2025-06-19 10:46:06 | INFO | main_pipeline:_save_raw_data:198 | Raw eia data saved to /Users/amberwitheridge/Documents/internship/asset forcast/fste_and_sandp_forcaster/data/raw/eia_data.csv
+2025-06-19 10:46:06 | INFO | main_pipeline:_save_raw_data:198 | Raw twitter data saved to /Users/amberwitheridge/Documents/internship/asset forcast/fste_and_sandp_forcaster/data/raw/twitter_data.csv
+2025-06-19 10:46:06 | INFO | main_pipeline:_save_raw_data:198 | Raw reddit data saved to /Users/amberwitheridge/Documents/internship/asset forcast/fste_and_sandp_forcaster/data/raw/reddit_data.csv
+2025-06-19 10:46:06 | INFO | main_pipeline:run_data_acquisition:87 | Data acquisition phase completed successfully
+2025-06-19 10:46:50 | INFO | data_processing.data_cleaner:standardize_time_series:137 | Standardizing time series to frequency: D
+2025-06-19 10:46:50 | INFO | data_processing.data_cleaner:standardize_time_series:203 | Time series standardized. Shape: (10, 2)
+2025-06-19 10:47:26 | INFO | data_processing.data_cleaner:standardize_time_series:137 | Standardizing time series to frequency: D
+2025-06-19 10:47:26 | INFO | data_processing.data_cleaner:standardize_time_series:203 | Time series standardized. Shape: (10, 2)
+2025-06-19 10:47:26 | INFO | data_processing.data_cleaner:handle_missing_values:39 | Handling missing values with strategy: auto
+2025-06-19 10:47:26 | INFO | data_processing.data_cleaner:handle_missing_values:43 | Missing value percentages:
+Series([], dtype: float64)
+2025-06-19 10:47:26 | INFO | data_processing.data_cleaner:handle_missing_values:80 | Missing values handled. Remaining missing values: 0
+2025-06-19 10:47:26 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:97 | Detecting outliers in columns: ['value']
+2025-06-19 10:47:30 | INFO | data_processing.data_cleaner:handle_missing_values:39 | Handling missing values with strategy: auto
+2025-06-19 10:47:30 | INFO | data_processing.data_cleaner:handle_missing_values:43 | Missing value percentages:
+total_liabilities    1.0
+total_equity         1.0
+dtype: float64
+2025-06-19 10:47:30 | INFO | data_processing.data_cleaner:handle_missing_values:50 | Dropping columns with >30.0% missing values: ['total_liabilities', 'total_equity']
+2025-06-19 10:47:30 | INFO | data_processing.data_cleaner:handle_missing_values:80 | Missing values handled. Remaining missing values: 0
+2025-06-19 10:47:30 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:97 | Detecting outliers in columns: ['close_price', 'volume', 'high', 'low', 'open_price', 'revenue', 'net_income', 'operating_income', 'total_assets', 'operating_cash_flow', 'free_cash_flow', 'profit_margin', 'headcount', 'market_cap', 'pe_ratio', 'pb_ratio']
+2025-06-19 10:47:30 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:111 | Found 10 outliers in volume
+2025-06-19 10:47:30 | INFO | data_processing.data_cleaner:standardize_time_series:137 | Standardizing time series to frequency: D
+2025-06-19 10:47:30 | INFO | data_processing.data_cleaner:standardize_time_series:203 | Time series standardized. Shape: (898, 18)
+2025-06-19 10:47:42 | INFO | __main__:main:93 | Running complete pipeline
+2025-06-19 10:47:42 | INFO | main_pipeline:run_complete_pipeline:293 | Starting complete forecast model pipeline
+2025-06-19 10:47:42 | INFO | main_pipeline:run_data_acquisition:49 | Starting data acquisition phase
+2025-06-19 10:47:42 | INFO | main_pipeline:run_data_acquisition:53 | Collecting financial data...
+2025-06-19 10:47:42 | INFO | data_acquisition.financial_data:collect_all_companies_data:154 | Collecting data for ftse100 top_performers: ['AAL.L', 'ABF.L', 'ADM.L', 'AHT.L', 'ANTO.L']
+2025-06-19 10:47:48 | INFO | data_acquisition.financial_data:collect_all_companies_data:154 | Collecting data for ftse100 bottom_performers: ['BARC.L', 'BDEV.L', 'BKG.L', 'BLND.L', 'BT-A.L']
+2025-06-19 10:47:53 | INFO | data_acquisition.financial_data:collect_all_companies_data:154 | Collecting data for sp500 top_performers: ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA']
+2025-06-19 10:48:00 | INFO | data_acquisition.financial_data:collect_all_companies_data:154 | Collecting data for sp500 bottom_performers: ['XOM', 'CVX', 'KO', 'PEP', 'WMT']
+2025-06-19 10:48:07 | INFO | data_acquisition.financial_data:collect_all_companies_data:183 | Successfully collected data for 19 companies
+2025-06-19 10:48:07 | INFO | main_pipeline:run_data_acquisition:58 | Financial data collected: 11759 records
+2025-06-19 10:48:07 | INFO | main_pipeline:run_data_acquisition:63 | Collecting economic data...
+2025-06-19 10:48:07 | INFO | data_acquisition.economic_data:collect_all_economic_data:285 | Collecting FRED economic data...
+2025-06-19 10:48:07 | ERROR | data_acquisition.economic_data:get_fred_data:65 | fredapi not installed. Please install with: pip install fredapi
+2025-06-19 10:48:07 | ERROR | data_acquisition.economic_data:get_fred_data:65 | fredapi not installed. Please install with: pip install fredapi
+2025-06-19 10:48:07 | ERROR | data_acquisition.economic_data:get_fred_data:65 | fredapi not installed. Please install with: pip install fredapi
+2025-06-19 10:48:07 | INFO | data_acquisition.economic_data:collect_all_economic_data:302 | Collecting EIA energy data...
+2025-06-19 10:48:08 | WARNING | data_acquisition.economic_data:get_eia_data:163 | EIA API failed for RBRTE. Using sample data.
+2025-06-19 10:48:08 | INFO | data_acquisition.economic_data:_generate_sample_eia_data:210 | Generated sample EIA data for RBRTE
+2025-06-19 10:48:08 | INFO | data_acquisition.economic_data:collect_all_economic_data:319 | Collecting Google Trends data...
+2025-06-19 10:48:08 | ERROR | data_acquisition.economic_data:get_google_trends_data:269 | pytrends not installed. Please install with: pip install pytrends
+2025-06-19 10:48:08 | INFO | data_acquisition.economic_data:collect_all_economic_data:326 | Economic data collection completed. Sources: ['eia']
+2025-06-19 10:48:08 | INFO | main_pipeline:run_data_acquisition:69 | Economic data collected: 901 records across 1 sources
+2025-06-19 10:48:08 | INFO | main_pipeline:run_data_acquisition:74 | Collecting sentiment data...
+2025-06-19 10:48:08 | INFO | data_acquisition.sentiment_data:collect_all_sentiment_data:338 | Collecting Twitter sentiment data...
+2025-06-19 10:48:08 | ERROR | data_acquisition.sentiment_data:get_twitter_sentiment:94 | tweepy not installed. Please install with: pip install tweepy
+2025-06-19 10:48:08 | INFO | data_acquisition.sentiment_data:_generate_sample_twitter_data:145 | Generated sample Twitter data for 9 keywords
+2025-06-19 10:48:08 | WARNING | data_acquisition.sentiment_data:calculate_sentiment_scores:314 | TextBlob not installed. Skipping sentiment analysis.
+2025-06-19 10:48:08 | INFO | data_acquisition.sentiment_data:collect_all_sentiment_data:346 | Collecting Reddit sentiment data...
+2025-06-19 10:48:08 | ERROR | data_acquisition.sentiment_data:get_reddit_sentiment:214 | praw not installed. Please install with: pip install praw
+2025-06-19 10:48:09 | INFO | data_acquisition.sentiment_data:_generate_sample_reddit_data:278 | Generated sample Reddit data for 5 subreddits and 9 keywords
+2025-06-19 10:48:09 | WARNING | data_acquisition.sentiment_data:calculate_sentiment_scores:314 | TextBlob not installed. Skipping sentiment analysis.
+2025-06-19 10:48:09 | INFO | data_acquisition.sentiment_data:collect_all_sentiment_data:354 | Sentiment data collection completed. Sources: ['twitter', 'reddit']
+2025-06-19 10:48:09 | INFO | main_pipeline:run_data_acquisition:80 | Sentiment data collected: 758 records across 2 sources
+2025-06-19 10:48:10 | INFO | main_pipeline:_save_raw_data:198 | Raw financial data saved to /Users/amberwitheridge/Documents/internship/asset forcast/fste_and_sandp_forcaster/data/raw/financial_data.csv
+2025-06-19 10:48:10 | INFO | main_pipeline:_save_raw_data:198 | Raw eia data saved to /Users/amberwitheridge/Documents/internship/asset forcast/fste_and_sandp_forcaster/data/raw/eia_data.csv
+2025-06-19 10:48:10 | INFO | main_pipeline:_save_raw_data:198 | Raw twitter data saved to /Users/amberwitheridge/Documents/internship/asset forcast/fste_and_sandp_forcaster/data/raw/twitter_data.csv
+2025-06-19 10:48:10 | INFO | main_pipeline:_save_raw_data:198 | Raw reddit data saved to /Users/amberwitheridge/Documents/internship/asset forcast/fste_and_sandp_forcaster/data/raw/reddit_data.csv
+2025-06-19 10:48:10 | INFO | main_pipeline:run_data_acquisition:87 | Data acquisition phase completed successfully
+2025-06-19 10:48:10 | INFO | main_pipeline:run_data_cleaning:102 | Starting data cleaning phase
+2025-06-19 10:48:10 | INFO | data_processing.data_cleaner:clean_and_prepare_data:382 | Starting complete data cleaning and preparation pipeline
+2025-06-19 10:48:10 | INFO | data_processing.data_cleaner:clean_and_prepare_data:387 | Cleaning dataset: financial
+2025-06-19 10:48:10 | INFO | data_processing.data_cleaner:handle_missing_values:39 | Handling missing values with strategy: auto
+2025-06-19 10:48:10 | INFO | data_processing.data_cleaner:handle_missing_values:43 | Missing value percentages:
+operating_income       0.105621
+total_liabilities      1.000000
+total_equity           1.000000
+operating_cash_flow    0.052811
+pe_ratio               0.052811
+dtype: float64
+2025-06-19 10:48:10 | INFO | data_processing.data_cleaner:handle_missing_values:50 | Dropping columns with >30.0% missing values: ['total_liabilities', 'total_equity']
+2025-06-19 10:48:10 | INFO | data_processing.data_cleaner:handle_missing_values:80 | Missing values handled. Remaining missing values: 0
+2025-06-19 10:48:10 | INFO | data_processing.data_cleaner:clean_and_prepare_data:387 | Cleaning dataset: eia
+2025-06-19 10:48:10 | INFO | data_processing.data_cleaner:handle_missing_values:39 | Handling missing values with strategy: auto
+2025-06-19 10:48:10 | INFO | data_processing.data_cleaner:handle_missing_values:43 | Missing value percentages:
+Series([], dtype: float64)
+2025-06-19 10:48:10 | INFO | data_processing.data_cleaner:handle_missing_values:80 | Missing values handled. Remaining missing values: 0
+2025-06-19 10:48:10 | INFO | data_processing.data_cleaner:clean_and_prepare_data:387 | Cleaning dataset: twitter
+2025-06-19 10:48:10 | INFO | data_processing.data_cleaner:handle_missing_values:39 | Handling missing values with strategy: auto
+2025-06-19 10:48:10 | INFO | data_processing.data_cleaner:handle_missing_values:43 | Missing value percentages:
+Series([], dtype: float64)
+2025-06-19 10:48:10 | INFO | data_processing.data_cleaner:handle_missing_values:80 | Missing values handled. Remaining missing values: 0
+2025-06-19 10:48:10 | INFO | data_processing.data_cleaner:clean_and_prepare_data:387 | Cleaning dataset: reddit
+2025-06-19 10:48:10 | INFO | data_processing.data_cleaner:handle_missing_values:39 | Handling missing values with strategy: auto
+2025-06-19 10:48:10 | INFO | data_processing.data_cleaner:handle_missing_values:43 | Missing value percentages:
+Series([], dtype: float64)
+2025-06-19 10:48:10 | INFO | data_processing.data_cleaner:handle_missing_values:80 | Missing values handled. Remaining missing values: 0
+2025-06-19 10:48:10 | INFO | data_processing.data_cleaner:clean_and_prepare_data:393 | Handling outliers in dataset: financial
+2025-06-19 10:48:10 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:97 | Detecting outliers in columns: ['close_price', 'volume', 'high', 'low', 'open_price', 'revenue', 'net_income', 'operating_income', 'total_assets', 'operating_cash_flow', 'free_cash_flow', 'profit_margin', 'headcount', 'market_cap', 'pe_ratio', 'pb_ratio']
+2025-06-19 10:48:10 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:111 | Found 85 outliers in close_price
+2025-06-19 10:48:10 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:111 | Found 389 outliers in volume
+2025-06-19 10:48:10 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:111 | Found 78 outliers in high
+2025-06-19 10:48:10 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:111 | Found 81 outliers in low
+2025-06-19 10:48:10 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:111 | Found 85 outliers in open_price
+2025-06-19 10:48:10 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:111 | Found 621 outliers in total_assets
+2025-06-19 10:48:10 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:111 | Found 617 outliers in headcount
+2025-06-19 10:48:10 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:111 | Found 621 outliers in pb_ratio
+2025-06-19 10:48:10 | INFO | data_processing.data_cleaner:clean_and_prepare_data:393 | Handling outliers in dataset: eia
+2025-06-19 10:48:10 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:97 | Detecting outliers in columns: ['value']
+2025-06-19 10:48:10 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:111 | Found 26 outliers in value
+2025-06-19 10:48:10 | INFO | data_processing.data_cleaner:clean_and_prepare_data:393 | Handling outliers in dataset: twitter
+2025-06-19 10:48:10 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:97 | Detecting outliers in columns: ['user_followers', 'retweet_count', 'favorite_count', 'sentiment_score']
+2025-06-19 10:48:10 | INFO | data_processing.data_cleaner:clean_and_prepare_data:393 | Handling outliers in dataset: reddit
+2025-06-19 10:48:10 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:97 | Detecting outliers in columns: ['score', 'upvote_ratio', 'num_comments', 'sentiment_score']
+2025-06-19 10:48:10 | INFO | data_processing.data_cleaner:clean_and_prepare_data:398 | Standardizing time series for dataset: financial
+2025-06-19 10:48:10 | INFO | data_processing.data_cleaner:standardize_time_series:137 | Standardizing time series to frequency: D
+2025-06-19 10:48:10 | INFO | data_processing.data_cleaner:standardize_time_series:145 | Converting timezone-aware datetime objects to UTC
+2025-06-19 10:48:11 | INFO | data_processing.data_cleaner:standardize_time_series:203 | Time series standardized. Shape: (17053, 23)
+2025-06-19 10:48:11 | INFO | data_processing.data_cleaner:clean_and_prepare_data:398 | Standardizing time series for dataset: eia
+2025-06-19 10:48:11 | INFO | data_processing.data_cleaner:standardize_time_series:137 | Standardizing time series to frequency: D
+2025-06-19 10:48:11 | INFO | data_processing.data_cleaner:standardize_time_series:203 | Time series standardized. Shape: (901, 6)
+2025-06-19 10:48:11 | INFO | data_processing.data_cleaner:clean_and_prepare_data:398 | Standardizing time series for dataset: twitter
+2025-06-19 10:48:11 | INFO | data_processing.data_cleaner:standardize_time_series:137 | Standardizing time series to frequency: D
+2025-06-19 10:48:11 | INFO | data_processing.data_cleaner:standardize_time_series:203 | Time series standardized. Shape: (24201, 9)
+2025-06-19 10:48:11 | INFO | data_processing.data_cleaner:clean_and_prepare_data:398 | Standardizing time series for dataset: reddit
+2025-06-19 10:48:11 | INFO | data_processing.data_cleaner:standardize_time_series:137 | Standardizing time series to frequency: D
+2025-06-19 10:48:18 | INFO | data_processing.data_cleaner:standardize_time_series:203 | Time series standardized. Shape: (33807, 11)
+2025-06-19 10:48:18 | INFO | data_processing.data_cleaner:clean_and_prepare_data:403 | Standardizing currency for dataset: financial
+2025-06-19 10:48:18 | INFO | data_processing.data_cleaner:standardize_currency:222 | Standardizing currency to USD
+2025-06-19 10:48:18 | WARNING | data_processing.data_cleaner:standardize_currency:225 | Currency column 'currency' not found. Skipping currency standardization.
+2025-06-19 10:48:18 | INFO | data_processing.data_cleaner:clean_and_prepare_data:403 | Standardizing currency for dataset: eia
+2025-06-19 10:48:18 | INFO | data_processing.data_cleaner:standardize_currency:222 | Standardizing currency to USD
+2025-06-19 10:48:18 | WARNING | data_processing.data_cleaner:standardize_currency:225 | Currency column 'currency' not found. Skipping currency standardization.
+2025-06-19 10:48:18 | INFO | data_processing.data_cleaner:clean_and_prepare_data:403 | Standardizing currency for dataset: twitter
+2025-06-19 10:48:18 | INFO | data_processing.data_cleaner:standardize_currency:222 | Standardizing currency to USD
+2025-06-19 10:48:18 | WARNING | data_processing.data_cleaner:standardize_currency:225 | Currency column 'currency' not found. Skipping currency standardization.
+2025-06-19 10:48:18 | INFO | data_processing.data_cleaner:clean_and_prepare_data:403 | Standardizing currency for dataset: reddit
+2025-06-19 10:48:18 | INFO | data_processing.data_cleaner:standardize_currency:222 | Standardizing currency to USD
+2025-06-19 10:48:18 | WARNING | data_processing.data_cleaner:standardize_currency:225 | Currency column 'currency' not found. Skipping currency standardization.
+2025-06-19 10:48:18 | INFO | data_processing.data_cleaner:clean_and_prepare_data:407 | Merging all datasets
+2025-06-19 10:48:18 | INFO | data_processing.data_cleaner:merge_datasets:274 | Merging 4 datasets with strategy: outer
+2025-06-19 10:48:18 | INFO | data_processing.data_cleaner:merge_datasets:285 | Merging dataset: eia
+2025-06-19 10:48:18 | ERROR | main_pipeline:run_data_cleaning:125 | Error in data cleaning phase: You are trying to merge on datetime64[ns, UTC] and datetime64[ns] columns for key 'date'. If you wish to proceed you should use pd.concat
+2025-06-19 10:48:18 | ERROR | main_pipeline:run_data_cleaning:126 | Traceback (most recent call last):
+  File "/Users/amberwitheridge/Documents/internship/asset forcast/fste_and_sandp_forcaster/main_pipeline.py", line 110, in run_data_cleaning
+    self.cleaned_dataset = self.data_cleaner.clean_and_prepare_data(self.raw_datasets)
+  File "/Users/amberwitheridge/Documents/internship/asset forcast/fste_and_sandp_forcaster/data_processing/data_cleaner.py", line 408, in clean_and_prepare_data
+    merged_df = self.merge_datasets(cleaned_datasets)
+  File "/Users/amberwitheridge/Documents/internship/asset forcast/fste_and_sandp_forcaster/data_processing/data_cleaner.py", line 306, in merge_datasets
+    merged_df = pd.merge(merged_df, dataset, on='date', how=merge_strategy, suffixes=('', f'_{name}'))
+  File "/Users/amberwitheridge/Library/Python/3.9/lib/python/site-packages/pandas/core/reshape/merge.py", line 170, in merge
+    op = _MergeOperation(
+  File "/Users/amberwitheridge/Library/Python/3.9/lib/python/site-packages/pandas/core/reshape/merge.py", line 807, in __init__
+    self._maybe_coerce_merge_keys()
+  File "/Users/amberwitheridge/Library/Python/3.9/lib/python/site-packages/pandas/core/reshape/merge.py", line 1518, in _maybe_coerce_merge_keys
+    raise ValueError(msg)
+ValueError: You are trying to merge on datetime64[ns, UTC] and datetime64[ns] columns for key 'date'. If you wish to proceed you should use pd.concat
+
+2025-06-19 10:48:18 | ERROR | main_pipeline:run_complete_pipeline:305 | Data cleaning phase failed
+2025-06-19 10:50:58 | INFO | __main__:main:93 | Running complete pipeline
+2025-06-19 10:50:58 | INFO | main_pipeline:run_complete_pipeline:293 | Starting complete forecast model pipeline
+2025-06-19 10:50:58 | INFO | main_pipeline:run_data_acquisition:49 | Starting data acquisition phase
+2025-06-19 10:50:58 | INFO | main_pipeline:run_data_acquisition:53 | Collecting financial data...
+2025-06-19 10:50:58 | INFO | data_acquisition.financial_data:collect_all_companies_data:154 | Collecting data for ftse100 top_performers: ['AAL.L', 'ABF.L', 'ADM.L', 'AHT.L', 'ANTO.L']
+2025-06-19 10:51:06 | INFO | data_acquisition.financial_data:collect_all_companies_data:154 | Collecting data for ftse100 bottom_performers: ['BARC.L', 'BDEV.L', 'BKG.L', 'BLND.L', 'BT-A.L']
+2025-06-19 10:51:12 | INFO | data_acquisition.financial_data:collect_all_companies_data:154 | Collecting data for sp500 top_performers: ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA']
+2025-06-19 10:51:18 | INFO | data_acquisition.financial_data:collect_all_companies_data:154 | Collecting data for sp500 bottom_performers: ['XOM', 'CVX', 'KO', 'PEP', 'WMT']
+2025-06-19 10:51:24 | INFO | data_acquisition.financial_data:collect_all_companies_data:183 | Successfully collected data for 19 companies
+2025-06-19 10:51:24 | INFO | main_pipeline:run_data_acquisition:58 | Financial data collected: 11759 records
+2025-06-19 10:51:24 | INFO | main_pipeline:run_data_acquisition:63 | Collecting economic data...
+2025-06-19 10:51:24 | INFO | data_acquisition.economic_data:collect_all_economic_data:285 | Collecting FRED economic data...
+2025-06-19 10:51:24 | ERROR | data_acquisition.economic_data:get_fred_data:65 | fredapi not installed. Please install with: pip install fredapi
+2025-06-19 10:51:24 | ERROR | data_acquisition.economic_data:get_fred_data:65 | fredapi not installed. Please install with: pip install fredapi
+2025-06-19 10:51:24 | ERROR | data_acquisition.economic_data:get_fred_data:65 | fredapi not installed. Please install with: pip install fredapi
+2025-06-19 10:51:24 | INFO | data_acquisition.economic_data:collect_all_economic_data:302 | Collecting EIA energy data...
+2025-06-19 10:51:26 | WARNING | data_acquisition.economic_data:get_eia_data:163 | EIA API failed for RBRTE. Using sample data.
+2025-06-19 10:51:26 | INFO | data_acquisition.economic_data:_generate_sample_eia_data:210 | Generated sample EIA data for RBRTE
+2025-06-19 10:51:26 | INFO | data_acquisition.economic_data:collect_all_economic_data:319 | Collecting Google Trends data...
+2025-06-19 10:51:26 | ERROR | data_acquisition.economic_data:get_google_trends_data:269 | pytrends not installed. Please install with: pip install pytrends
+2025-06-19 10:51:26 | INFO | data_acquisition.economic_data:collect_all_economic_data:326 | Economic data collection completed. Sources: ['eia']
+2025-06-19 10:51:26 | INFO | main_pipeline:run_data_acquisition:69 | Economic data collected: 901 records across 1 sources
+2025-06-19 10:51:26 | INFO | main_pipeline:run_data_acquisition:74 | Collecting sentiment data...
+2025-06-19 10:51:26 | INFO | data_acquisition.sentiment_data:collect_all_sentiment_data:338 | Collecting Twitter sentiment data...
+2025-06-19 10:51:26 | ERROR | data_acquisition.sentiment_data:get_twitter_sentiment:94 | tweepy not installed. Please install with: pip install tweepy
+2025-06-19 10:51:26 | INFO | data_acquisition.sentiment_data:_generate_sample_twitter_data:145 | Generated sample Twitter data for 9 keywords
+2025-06-19 10:51:26 | WARNING | data_acquisition.sentiment_data:calculate_sentiment_scores:314 | TextBlob not installed. Skipping sentiment analysis.
+2025-06-19 10:51:26 | INFO | data_acquisition.sentiment_data:collect_all_sentiment_data:346 | Collecting Reddit sentiment data...
+2025-06-19 10:51:26 | ERROR | data_acquisition.sentiment_data:get_reddit_sentiment:214 | praw not installed. Please install with: pip install praw
+2025-06-19 10:51:26 | INFO | data_acquisition.sentiment_data:_generate_sample_reddit_data:278 | Generated sample Reddit data for 5 subreddits and 9 keywords
+2025-06-19 10:51:26 | WARNING | data_acquisition.sentiment_data:calculate_sentiment_scores:314 | TextBlob not installed. Skipping sentiment analysis.
+2025-06-19 10:51:26 | INFO | data_acquisition.sentiment_data:collect_all_sentiment_data:354 | Sentiment data collection completed. Sources: ['twitter', 'reddit']
+2025-06-19 10:51:26 | INFO | main_pipeline:run_data_acquisition:80 | Sentiment data collected: 758 records across 2 sources
+2025-06-19 10:51:26 | INFO | main_pipeline:_save_raw_data:198 | Raw financial data saved to /Users/amberwitheridge/Documents/internship/asset forcast/fste_and_sandp_forcaster/data/raw/financial_data.csv
+2025-06-19 10:51:26 | INFO | main_pipeline:_save_raw_data:198 | Raw eia data saved to /Users/amberwitheridge/Documents/internship/asset forcast/fste_and_sandp_forcaster/data/raw/eia_data.csv
+2025-06-19 10:51:26 | INFO | main_pipeline:_save_raw_data:198 | Raw twitter data saved to /Users/amberwitheridge/Documents/internship/asset forcast/fste_and_sandp_forcaster/data/raw/twitter_data.csv
+2025-06-19 10:51:27 | INFO | main_pipeline:_save_raw_data:198 | Raw reddit data saved to /Users/amberwitheridge/Documents/internship/asset forcast/fste_and_sandp_forcaster/data/raw/reddit_data.csv
+2025-06-19 10:51:27 | INFO | main_pipeline:run_data_acquisition:87 | Data acquisition phase completed successfully
+2025-06-19 10:51:27 | INFO | main_pipeline:run_data_cleaning:102 | Starting data cleaning phase
+2025-06-19 10:51:27 | INFO | data_processing.data_cleaner:clean_and_prepare_data:392 | Starting complete data cleaning and preparation pipeline
+2025-06-19 10:51:27 | INFO | data_processing.data_cleaner:clean_and_prepare_data:397 | Cleaning dataset: financial
+2025-06-19 10:51:27 | INFO | data_processing.data_cleaner:handle_missing_values:39 | Handling missing values with strategy: auto
+2025-06-19 10:51:27 | INFO | data_processing.data_cleaner:handle_missing_values:43 | Missing value percentages:
+operating_income       0.105621
+total_liabilities      1.000000
+total_equity           1.000000
+operating_cash_flow    0.052811
+pe_ratio               0.052811
+dtype: float64
+2025-06-19 10:51:27 | INFO | data_processing.data_cleaner:handle_missing_values:50 | Dropping columns with >30.0% missing values: ['total_liabilities', 'total_equity']
+2025-06-19 10:51:27 | INFO | data_processing.data_cleaner:handle_missing_values:80 | Missing values handled. Remaining missing values: 0
+2025-06-19 10:51:27 | INFO | data_processing.data_cleaner:clean_and_prepare_data:397 | Cleaning dataset: eia
+2025-06-19 10:51:27 | INFO | data_processing.data_cleaner:handle_missing_values:39 | Handling missing values with strategy: auto
+2025-06-19 10:51:27 | INFO | data_processing.data_cleaner:handle_missing_values:43 | Missing value percentages:
+Series([], dtype: float64)
+2025-06-19 10:51:27 | INFO | data_processing.data_cleaner:handle_missing_values:80 | Missing values handled. Remaining missing values: 0
+2025-06-19 10:51:27 | INFO | data_processing.data_cleaner:clean_and_prepare_data:397 | Cleaning dataset: twitter
+2025-06-19 10:51:27 | INFO | data_processing.data_cleaner:handle_missing_values:39 | Handling missing values with strategy: auto
+2025-06-19 10:51:27 | INFO | data_processing.data_cleaner:handle_missing_values:43 | Missing value percentages:
+Series([], dtype: float64)
+2025-06-19 10:51:27 | INFO | data_processing.data_cleaner:handle_missing_values:80 | Missing values handled. Remaining missing values: 0
+2025-06-19 10:51:27 | INFO | data_processing.data_cleaner:clean_and_prepare_data:397 | Cleaning dataset: reddit
+2025-06-19 10:51:27 | INFO | data_processing.data_cleaner:handle_missing_values:39 | Handling missing values with strategy: auto
+2025-06-19 10:51:27 | INFO | data_processing.data_cleaner:handle_missing_values:43 | Missing value percentages:
+Series([], dtype: float64)
+2025-06-19 10:51:27 | INFO | data_processing.data_cleaner:handle_missing_values:80 | Missing values handled. Remaining missing values: 0
+2025-06-19 10:51:27 | INFO | data_processing.data_cleaner:clean_and_prepare_data:403 | Handling outliers in dataset: financial
+2025-06-19 10:51:27 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:97 | Detecting outliers in columns: ['close_price', 'volume', 'high', 'low', 'open_price', 'revenue', 'net_income', 'operating_income', 'total_assets', 'operating_cash_flow', 'free_cash_flow', 'profit_margin', 'headcount', 'market_cap', 'pe_ratio', 'pb_ratio']
+2025-06-19 10:51:27 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:111 | Found 85 outliers in close_price
+2025-06-19 10:51:27 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:111 | Found 389 outliers in volume
+2025-06-19 10:51:27 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:111 | Found 78 outliers in high
+2025-06-19 10:51:27 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:111 | Found 81 outliers in low
+2025-06-19 10:51:27 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:111 | Found 85 outliers in open_price
+2025-06-19 10:51:27 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:111 | Found 621 outliers in total_assets
+2025-06-19 10:51:27 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:111 | Found 617 outliers in headcount
+2025-06-19 10:51:27 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:111 | Found 621 outliers in pb_ratio
+2025-06-19 10:51:27 | INFO | data_processing.data_cleaner:clean_and_prepare_data:403 | Handling outliers in dataset: eia
+2025-06-19 10:51:27 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:97 | Detecting outliers in columns: ['value']
+2025-06-19 10:51:27 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:111 | Found 26 outliers in value
+2025-06-19 10:51:27 | INFO | data_processing.data_cleaner:clean_and_prepare_data:403 | Handling outliers in dataset: twitter
+2025-06-19 10:51:27 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:97 | Detecting outliers in columns: ['user_followers', 'retweet_count', 'favorite_count', 'sentiment_score']
+2025-06-19 10:51:27 | INFO | data_processing.data_cleaner:clean_and_prepare_data:403 | Handling outliers in dataset: reddit
+2025-06-19 10:51:27 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:97 | Detecting outliers in columns: ['score', 'upvote_ratio', 'num_comments', 'sentiment_score']
+2025-06-19 10:51:27 | INFO | data_processing.data_cleaner:clean_and_prepare_data:408 | Standardizing time series for dataset: financial
+2025-06-19 10:51:27 | INFO | data_processing.data_cleaner:standardize_time_series:137 | Standardizing time series to frequency: D
+2025-06-19 10:51:27 | INFO | data_processing.data_cleaner:standardize_time_series:145 | Converting timezone-aware datetime objects to UTC
+2025-06-19 10:51:27 | INFO | data_processing.data_cleaner:standardize_time_series:203 | Time series standardized. Shape: (17053, 23)
+2025-06-19 10:51:27 | INFO | data_processing.data_cleaner:clean_and_prepare_data:408 | Standardizing time series for dataset: eia
+2025-06-19 10:51:27 | INFO | data_processing.data_cleaner:standardize_time_series:137 | Standardizing time series to frequency: D
+2025-06-19 10:51:27 | INFO | data_processing.data_cleaner:standardize_time_series:203 | Time series standardized. Shape: (901, 6)
+2025-06-19 10:51:27 | INFO | data_processing.data_cleaner:clean_and_prepare_data:408 | Standardizing time series for dataset: twitter
+2025-06-19 10:51:27 | INFO | data_processing.data_cleaner:standardize_time_series:137 | Standardizing time series to frequency: D
+2025-06-19 10:51:28 | INFO | data_processing.data_cleaner:standardize_time_series:203 | Time series standardized. Shape: (24201, 9)
+2025-06-19 10:51:28 | INFO | data_processing.data_cleaner:clean_and_prepare_data:408 | Standardizing time series for dataset: reddit
+2025-06-19 10:51:28 | INFO | data_processing.data_cleaner:standardize_time_series:137 | Standardizing time series to frequency: D
+2025-06-19 10:51:36 | INFO | data_processing.data_cleaner:standardize_time_series:203 | Time series standardized. Shape: (33807, 11)
+2025-06-19 10:51:36 | INFO | data_processing.data_cleaner:clean_and_prepare_data:413 | Standardizing currency for dataset: financial
+2025-06-19 10:51:36 | INFO | data_processing.data_cleaner:standardize_currency:222 | Standardizing currency to USD
+2025-06-19 10:51:36 | WARNING | data_processing.data_cleaner:standardize_currency:225 | Currency column 'currency' not found. Skipping currency standardization.
+2025-06-19 10:51:36 | INFO | data_processing.data_cleaner:clean_and_prepare_data:413 | Standardizing currency for dataset: eia
+2025-06-19 10:51:36 | INFO | data_processing.data_cleaner:standardize_currency:222 | Standardizing currency to USD
+2025-06-19 10:51:36 | WARNING | data_processing.data_cleaner:standardize_currency:225 | Currency column 'currency' not found. Skipping currency standardization.
+2025-06-19 10:51:36 | INFO | data_processing.data_cleaner:clean_and_prepare_data:413 | Standardizing currency for dataset: twitter
+2025-06-19 10:51:36 | INFO | data_processing.data_cleaner:standardize_currency:222 | Standardizing currency to USD
+2025-06-19 10:51:36 | WARNING | data_processing.data_cleaner:standardize_currency:225 | Currency column 'currency' not found. Skipping currency standardization.
+2025-06-19 10:51:36 | INFO | data_processing.data_cleaner:clean_and_prepare_data:413 | Standardizing currency for dataset: reddit
+2025-06-19 10:51:36 | INFO | data_processing.data_cleaner:standardize_currency:222 | Standardizing currency to USD
+2025-06-19 10:51:36 | WARNING | data_processing.data_cleaner:standardize_currency:225 | Currency column 'currency' not found. Skipping currency standardization.
+2025-06-19 10:51:36 | INFO | data_processing.data_cleaner:clean_and_prepare_data:417 | Merging all datasets
+2025-06-19 10:51:36 | INFO | data_processing.data_cleaner:merge_datasets:274 | Merging 4 datasets with strategy: outer
+2025-06-19 10:51:36 | INFO | data_processing.data_cleaner:merge_datasets:285 | Merging dataset: eia
+2025-06-19 10:51:36 | INFO | data_processing.data_cleaner:merge_datasets:318 | After merging eia: shape = (17056, 28)
+2025-06-19 10:51:36 | INFO | data_processing.data_cleaner:merge_datasets:285 | Merging dataset: twitter
+2025-06-19 10:51:38 | INFO | data_processing.data_cleaner:merge_datasets:318 | After merging twitter: shape = (459852, 36)
+2025-06-19 10:51:38 | INFO | data_processing.data_cleaner:merge_datasets:285 | Merging dataset: reddit
+2025-06-19 10:55:45 | INFO | data_processing.data_cleaner:merge_datasets:318 | After merging reddit: shape = (20012744, 46)
+2025-06-19 10:57:03 | INFO | data_processing.data_cleaner:merge_datasets:323 | Final merged dataset shape: (20012744, 46)
+2025-06-19 10:57:03 | INFO | data_processing.data_cleaner:clean_and_prepare_data:421 | Creating additional features
+2025-06-19 10:57:03 | INFO | data_processing.data_cleaner:create_features:336 | Creating additional features
+2025-06-19 11:01:32 | INFO | data_processing.data_cleaner:create_features:379 | Feature creation completed. Final shape: (1384, 121)
+2025-06-19 11:01:32 | INFO | data_processing.data_cleaner:clean_and_prepare_data:424 | Data cleaning and preparation completed. Final shape: (1384, 121)
+2025-06-19 11:01:44 | INFO | main_pipeline:run_data_cleaning:113 | Data cleaning completed. Final dataset shape: (1384, 121)
+2025-06-19 11:01:44 | INFO | data_processing.data_cleaner:save_cleaned_data:439 | Cleaned data saved to /Users/amberwitheridge/Documents/internship/asset forcast/fste_and_sandp_forcaster/data/processed/cleaned_dataset.csv
+2025-06-19 11:01:44 | INFO | main_pipeline:_save_cleaned_data:206 | Cleaned data saved to /Users/amberwitheridge/Documents/internship/asset forcast/fste_and_sandp_forcaster/data/processed/cleaned_dataset.csv
+2025-06-19 11:01:44 | INFO | main_pipeline:run_data_cleaning:118 | Data cleaning phase completed successfully
+2025-06-19 11:01:44 | INFO | main_pipeline:run_exploratory_analysis:136 | Starting exploratory data analysis phase
+2025-06-19 11:01:45 | INFO | utils.visualization:save_plot:418 | Plot saved to /Users/amberwitheridge/Documents/internship/asset forcast/fste_and_sandp_forcaster/data/processed/time_series_analysis.html
+2025-06-19 11:01:45 | INFO | utils.visualization:save_plot:418 | Plot saved to /Users/amberwitheridge/Documents/internship/asset forcast/fste_and_sandp_forcaster/data/processed/correlation_matrix.html
+2025-06-19 11:01:45 | INFO | utils.visualization:save_plot:418 | Plot saved to /Users/amberwitheridge/Documents/internship/asset forcast/fste_and_sandp_forcaster/data/processed/missing_values_analysis.html
+2025-06-19 11:01:45 | INFO | utils.visualization:save_plot:418 | Plot saved to /Users/amberwitheridge/Documents/internship/asset forcast/fste_and_sandp_forcaster/data/processed/feature_distributions.html
+2025-06-19 11:01:45 | INFO | main_pipeline:_create_analysis_plots:248 | Analysis plots created and saved
+2025-06-19 11:01:46 | INFO | main_pipeline:_generate_summary_statistics:281 | Summary statistics generated and saved
+2025-06-19 11:01:46 | INFO | main_pipeline:run_exploratory_analysis:149 | Exploratory data analysis phase completed successfully
+2025-06-19 11:01:46 | INFO | main_pipeline:setup_dvc_tracking:164 | Setting up DVC tracking
+2025-06-19 11:01:46 | ERROR | dvc_integration:initialize_dvc:55 | DVC is not installed. Please install with: pip install dvc
+2025-06-19 11:01:46 | WARNING | main_pipeline:setup_dvc_tracking:169 | DVC initialization failed. Continuing without DVC tracking.
+2025-06-19 11:01:46 | INFO | main_pipeline:run_complete_pipeline:319 | Complete pipeline executed successfully in 0:10:47.608641
+2025-06-19 11:01:46 | INFO | __main__:main:98 | Setting up DVC tracking
+2025-06-19 11:01:46 | INFO | main_pipeline:setup_dvc_tracking:164 | Setting up DVC tracking
+2025-06-19 11:01:46 | ERROR | dvc_integration:initialize_dvc:55 | DVC is not installed. Please install with: pip install dvc
+2025-06-19 11:01:46 | WARNING | main_pipeline:setup_dvc_tracking:169 | DVC initialization failed. Continuing without DVC tracking.
+2025-06-19 11:19:34 | INFO | __main__:main:93 | Running complete pipeline
+2025-06-19 11:19:34 | INFO | main_pipeline:run_complete_pipeline:293 | Starting complete forecast model pipeline
+2025-06-19 11:19:34 | INFO | main_pipeline:run_data_acquisition:49 | Starting data acquisition phase
+2025-06-19 11:19:34 | INFO | main_pipeline:run_data_acquisition:53 | Collecting financial data...
+2025-06-19 11:19:34 | INFO | data_acquisition.financial_data:collect_all_companies_data:154 | Collecting data for ftse100 top_performers: ['AAL.L', 'ABF.L', 'ADM.L', 'AHT.L', 'ANTO.L']
+2025-06-19 11:19:41 | INFO | data_acquisition.financial_data:collect_all_companies_data:154 | Collecting data for ftse100 bottom_performers: ['BARC.L', 'BDEV.L', 'BKG.L', 'BLND.L', 'BT-A.L']
+2025-06-19 11:19:46 | INFO | data_acquisition.financial_data:collect_all_companies_data:154 | Collecting data for sp500 top_performers: ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA']
+2025-06-19 11:19:51 | INFO | data_acquisition.financial_data:collect_all_companies_data:154 | Collecting data for sp500 bottom_performers: ['XOM', 'CVX', 'KO', 'PEP', 'WMT']
+2025-06-19 11:19:57 | INFO | data_acquisition.financial_data:collect_all_companies_data:183 | Successfully collected data for 19 companies
+2025-06-19 11:19:57 | INFO | main_pipeline:run_data_acquisition:58 | Financial data collected: 11759 records
+2025-06-19 11:19:57 | INFO | main_pipeline:run_data_acquisition:63 | Collecting economic data...
+2025-06-19 11:19:57 | INFO | data_acquisition.economic_data:collect_all_economic_data:285 | Collecting FRED economic data...
+2025-06-19 11:19:57 | ERROR | data_acquisition.economic_data:get_fred_data:69 | Error fetching FRED data for FEDFUNDS: Bad Request.  The value for variable api_key is not a 32 character alpha-numeric lower-case string.  Read https://fred.stlouisfed.org/docs/api/api_key.html for more information.
+2025-06-19 11:19:57 | ERROR | data_acquisition.economic_data:get_fred_data:69 | Error fetching FRED data for IR3TIB01GBM156N: Bad Request.  The value for variable api_key is not a 32 character alpha-numeric lower-case string.  Read https://fred.stlouisfed.org/docs/api/api_key.html for more information.
+2025-06-19 11:19:57 | ERROR | data_acquisition.economic_data:get_fred_data:69 | Error fetching FRED data for UNRATE: Bad Request.  The value for variable api_key is not a 32 character alpha-numeric lower-case string.  Read https://fred.stlouisfed.org/docs/api/api_key.html for more information.
+2025-06-19 11:19:57 | INFO | data_acquisition.economic_data:collect_all_economic_data:302 | Collecting EIA energy data...
+2025-06-19 11:19:58 | WARNING | data_acquisition.economic_data:get_eia_data:163 | EIA API failed for RBRTE. Using sample data.
+2025-06-19 11:19:58 | INFO | data_acquisition.economic_data:_generate_sample_eia_data:210 | Generated sample EIA data for RBRTE
+2025-06-19 11:19:58 | INFO | data_acquisition.economic_data:collect_all_economic_data:319 | Collecting Google Trends data...
+2025-06-19 11:20:07 | INFO | data_acquisition.economic_data:get_google_trends_data:263 | Successfully fetched Google Trends data for 5 keywords
+2025-06-19 11:20:07 | INFO | data_acquisition.economic_data:collect_all_economic_data:326 | Economic data collection completed. Sources: ['eia', 'google_trends']
+2025-06-19 11:20:07 | INFO | main_pipeline:run_data_acquisition:69 | Economic data collected: 1546 records across 2 sources
+2025-06-19 11:20:07 | INFO | main_pipeline:run_data_acquisition:74 | Collecting sentiment data...
+2025-06-19 11:20:07 | INFO | data_acquisition.sentiment_data:collect_all_sentiment_data:338 | Collecting Twitter sentiment data...
+2025-06-19 11:20:08 | ERROR | data_acquisition.sentiment_data:get_twitter_sentiment:83 | Error fetching Twitter data for inflation: 401 Unauthorized
+89 - Invalid or expired token.
+2025-06-19 11:20:08 | ERROR | data_acquisition.sentiment_data:get_twitter_sentiment:83 | Error fetching Twitter data for recession: 401 Unauthorized
+89 - Invalid or expired token.
+2025-06-19 11:20:08 | ERROR | data_acquisition.sentiment_data:get_twitter_sentiment:83 | Error fetching Twitter data for interest rates: 401 Unauthorized
+89 - Invalid or expired token.
+2025-06-19 11:20:08 | ERROR | data_acquisition.sentiment_data:get_twitter_sentiment:83 | Error fetching Twitter data for oil prices: 401 Unauthorized
+89 - Invalid or expired token.
+2025-06-19 11:20:08 | ERROR | data_acquisition.sentiment_data:get_twitter_sentiment:83 | Error fetching Twitter data for unemployment: 401 Unauthorized
+89 - Invalid or expired token.
+2025-06-19 11:20:08 | ERROR | data_acquisition.sentiment_data:get_twitter_sentiment:83 | Error fetching Twitter data for stock market: 401 Unauthorized
+89 - Invalid or expired token.
+2025-06-19 11:20:09 | ERROR | data_acquisition.sentiment_data:get_twitter_sentiment:83 | Error fetching Twitter data for economy: 401 Unauthorized
+89 - Invalid or expired token.
+2025-06-19 11:20:09 | ERROR | data_acquisition.sentiment_data:get_twitter_sentiment:83 | Error fetching Twitter data for GDP: 401 Unauthorized
+89 - Invalid or expired token.
+2025-06-19 11:20:09 | ERROR | data_acquisition.sentiment_data:get_twitter_sentiment:83 | Error fetching Twitter data for employment: 401 Unauthorized
+89 - Invalid or expired token.
+2025-06-19 11:20:09 | INFO | data_acquisition.sentiment_data:collect_all_sentiment_data:346 | Collecting Reddit sentiment data...
+2025-06-19 11:20:10 | ERROR | data_acquisition.sentiment_data:get_reddit_sentiment:203 | Error fetching Reddit data for r/investing: received 401 HTTP response
+2025-06-19 11:20:10 | ERROR | data_acquisition.sentiment_data:get_reddit_sentiment:203 | Error fetching Reddit data for r/stocks: received 401 HTTP response
+2025-06-19 11:20:10 | ERROR | data_acquisition.sentiment_data:get_reddit_sentiment:203 | Error fetching Reddit data for r/economics: received 401 HTTP response
+2025-06-19 11:20:10 | ERROR | data_acquisition.sentiment_data:get_reddit_sentiment:203 | Error fetching Reddit data for r/finance: received 401 HTTP response
+2025-06-19 11:20:10 | ERROR | data_acquisition.sentiment_data:get_reddit_sentiment:203 | Error fetching Reddit data for r/wallstreetbets: received 401 HTTP response
+2025-06-19 11:20:10 | INFO | data_acquisition.sentiment_data:collect_all_sentiment_data:354 | Sentiment data collection completed. Sources: []
+2025-06-19 11:20:10 | WARNING | main_pipeline:run_data_acquisition:82 | No sentiment data collected
+2025-06-19 11:20:11 | INFO | main_pipeline:_save_raw_data:198 | Raw financial data saved to /Users/amberwitheridge/Documents/internship/asset forcast/fste_and_sandp_forcaster/data/raw/financial_data.csv
+2025-06-19 11:20:11 | INFO | main_pipeline:_save_raw_data:198 | Raw eia data saved to /Users/amberwitheridge/Documents/internship/asset forcast/fste_and_sandp_forcaster/data/raw/eia_data.csv
+2025-06-19 11:20:11 | INFO | main_pipeline:_save_raw_data:198 | Raw google_trends data saved to /Users/amberwitheridge/Documents/internship/asset forcast/fste_and_sandp_forcaster/data/raw/google_trends_data.csv
+2025-06-19 11:20:11 | INFO | main_pipeline:run_data_acquisition:87 | Data acquisition phase completed successfully
+2025-06-19 11:20:11 | INFO | main_pipeline:run_data_cleaning:102 | Starting data cleaning phase
+2025-06-19 11:20:11 | INFO | data_processing.data_cleaner:clean_and_prepare_data:392 | Starting complete data cleaning and preparation pipeline
+2025-06-19 11:20:11 | INFO | data_processing.data_cleaner:clean_and_prepare_data:397 | Cleaning dataset: financial
+2025-06-19 11:20:11 | INFO | data_processing.data_cleaner:handle_missing_values:39 | Handling missing values with strategy: auto
+2025-06-19 11:20:11 | INFO | data_processing.data_cleaner:handle_missing_values:43 | Missing value percentages:
+operating_income       0.105621
+total_liabilities      1.000000
+total_equity           1.000000
+operating_cash_flow    0.052811
+pe_ratio               0.052811
+dtype: float64
+2025-06-19 11:20:11 | INFO | data_processing.data_cleaner:handle_missing_values:50 | Dropping columns with >30.0% missing values: ['total_liabilities', 'total_equity']
+2025-06-19 11:20:11 | INFO | data_processing.data_cleaner:handle_missing_values:80 | Missing values handled. Remaining missing values: 0
+2025-06-19 11:20:11 | INFO | data_processing.data_cleaner:clean_and_prepare_data:397 | Cleaning dataset: eia
+2025-06-19 11:20:11 | INFO | data_processing.data_cleaner:handle_missing_values:39 | Handling missing values with strategy: auto
+2025-06-19 11:20:11 | INFO | data_processing.data_cleaner:handle_missing_values:43 | Missing value percentages:
+Series([], dtype: float64)
+2025-06-19 11:20:11 | INFO | data_processing.data_cleaner:handle_missing_values:80 | Missing values handled. Remaining missing values: 0
+2025-06-19 11:20:11 | INFO | data_processing.data_cleaner:clean_and_prepare_data:397 | Cleaning dataset: google_trends
+2025-06-19 11:20:11 | INFO | data_processing.data_cleaner:handle_missing_values:39 | Handling missing values with strategy: auto
+2025-06-19 11:20:11 | INFO | data_processing.data_cleaner:handle_missing_values:43 | Missing value percentages:
+Series([], dtype: float64)
+2025-06-19 11:20:11 | INFO | data_processing.data_cleaner:handle_missing_values:80 | Missing values handled. Remaining missing values: 0
+2025-06-19 11:20:11 | INFO | data_processing.data_cleaner:clean_and_prepare_data:403 | Handling outliers in dataset: financial
+2025-06-19 11:20:11 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:97 | Detecting outliers in columns: ['close_price', 'volume', 'high', 'low', 'open_price', 'revenue', 'net_income', 'operating_income', 'total_assets', 'operating_cash_flow', 'free_cash_flow', 'profit_margin', 'headcount', 'market_cap', 'pe_ratio', 'pb_ratio']
+2025-06-19 11:20:11 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:111 | Found 85 outliers in close_price
+2025-06-19 11:20:11 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:111 | Found 389 outliers in volume
+2025-06-19 11:20:11 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:111 | Found 78 outliers in high
+2025-06-19 11:20:11 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:111 | Found 81 outliers in low
+2025-06-19 11:20:11 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:111 | Found 85 outliers in open_price
+2025-06-19 11:20:11 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:111 | Found 621 outliers in total_assets
+2025-06-19 11:20:11 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:111 | Found 617 outliers in headcount
+2025-06-19 11:20:11 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:111 | Found 621 outliers in pb_ratio
+2025-06-19 11:20:11 | INFO | data_processing.data_cleaner:clean_and_prepare_data:403 | Handling outliers in dataset: eia
+2025-06-19 11:20:11 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:97 | Detecting outliers in columns: ['value']
+2025-06-19 11:20:11 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:111 | Found 26 outliers in value
+2025-06-19 11:20:11 | INFO | data_processing.data_cleaner:clean_and_prepare_data:403 | Handling outliers in dataset: google_trends
+2025-06-19 11:20:11 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:97 | Detecting outliers in columns: ['value']
+2025-06-19 11:20:11 | INFO | data_processing.data_cleaner:clean_and_prepare_data:408 | Standardizing time series for dataset: financial
+2025-06-19 11:20:11 | INFO | data_processing.data_cleaner:standardize_time_series:137 | Standardizing time series to frequency: D
+2025-06-19 11:20:11 | INFO | data_processing.data_cleaner:standardize_time_series:145 | Converting timezone-aware datetime objects to UTC
+2025-06-19 11:20:11 | INFO | data_processing.data_cleaner:standardize_time_series:203 | Time series standardized. Shape: (17053, 23)
+2025-06-19 11:20:11 | INFO | data_processing.data_cleaner:clean_and_prepare_data:408 | Standardizing time series for dataset: eia
+2025-06-19 11:20:11 | INFO | data_processing.data_cleaner:standardize_time_series:137 | Standardizing time series to frequency: D
+2025-06-19 11:20:11 | INFO | data_processing.data_cleaner:standardize_time_series:203 | Time series standardized. Shape: (901, 6)
+2025-06-19 11:20:11 | INFO | data_processing.data_cleaner:clean_and_prepare_data:408 | Standardizing time series for dataset: google_trends
+2025-06-19 11:20:11 | INFO | data_processing.data_cleaner:standardize_time_series:137 | Standardizing time series to frequency: D
+2025-06-19 11:20:12 | INFO | data_processing.data_cleaner:standardize_time_series:203 | Time series standardized. Shape: (4485, 5)
+2025-06-19 11:20:12 | INFO | data_processing.data_cleaner:clean_and_prepare_data:413 | Standardizing currency for dataset: financial
+2025-06-19 11:20:12 | INFO | data_processing.data_cleaner:standardize_currency:222 | Standardizing currency to USD
+2025-06-19 11:20:12 | WARNING | data_processing.data_cleaner:standardize_currency:225 | Currency column 'currency' not found. Skipping currency standardization.
+2025-06-19 11:20:12 | INFO | data_processing.data_cleaner:clean_and_prepare_data:413 | Standardizing currency for dataset: eia
+2025-06-19 11:20:12 | INFO | data_processing.data_cleaner:standardize_currency:222 | Standardizing currency to USD
+2025-06-19 11:20:12 | WARNING | data_processing.data_cleaner:standardize_currency:225 | Currency column 'currency' not found. Skipping currency standardization.
+2025-06-19 11:20:12 | INFO | data_processing.data_cleaner:clean_and_prepare_data:413 | Standardizing currency for dataset: google_trends
+2025-06-19 11:20:12 | INFO | data_processing.data_cleaner:standardize_currency:222 | Standardizing currency to USD
+2025-06-19 11:20:12 | WARNING | data_processing.data_cleaner:standardize_currency:225 | Currency column 'currency' not found. Skipping currency standardization.
+2025-06-19 11:20:12 | INFO | data_processing.data_cleaner:clean_and_prepare_data:417 | Merging all datasets
+2025-06-19 11:20:12 | INFO | data_processing.data_cleaner:merge_datasets:274 | Merging 3 datasets with strategy: outer
+2025-06-19 11:20:12 | INFO | data_processing.data_cleaner:merge_datasets:285 | Merging dataset: eia
+2025-06-19 11:20:12 | INFO | data_processing.data_cleaner:merge_datasets:318 | After merging eia: shape = (17056, 28)
+2025-06-19 11:20:12 | INFO | data_processing.data_cleaner:merge_datasets:285 | Merging dataset: google_trends
+2025-06-19 11:20:13 | INFO | data_processing.data_cleaner:merge_datasets:318 | After merging google_trends: shape = (85084, 32)
+2025-06-19 11:20:13 | INFO | data_processing.data_cleaner:merge_datasets:323 | Final merged dataset shape: (85084, 32)
+2025-06-19 11:20:13 | INFO | data_processing.data_cleaner:clean_and_prepare_data:421 | Creating additional features
+2025-06-19 11:20:13 | INFO | data_processing.data_cleaner:create_features:336 | Creating additional features
+2025-06-19 11:20:14 | INFO | data_processing.data_cleaner:create_features:379 | Feature creation completed. Final shape: (0, 107)
+2025-06-19 11:20:14 | INFO | data_processing.data_cleaner:clean_and_prepare_data:424 | Data cleaning and preparation completed. Final shape: (0, 107)
+2025-06-19 11:20:14 | ERROR | main_pipeline:run_data_cleaning:121 | Data cleaning failed - no valid dataset produced
+2025-06-19 11:20:14 | ERROR | main_pipeline:run_complete_pipeline:305 | Data cleaning phase failed
+2025-06-19 11:21:11 | INFO | __main__:main:93 | Running complete pipeline
+2025-06-19 11:21:11 | INFO | main_pipeline:run_complete_pipeline:293 | Starting complete forecast model pipeline
+2025-06-19 11:21:11 | INFO | main_pipeline:run_data_acquisition:49 | Starting data acquisition phase
+2025-06-19 11:21:11 | INFO | main_pipeline:run_data_acquisition:53 | Collecting financial data...
+2025-06-19 11:21:11 | INFO | data_acquisition.financial_data:collect_all_companies_data:154 | Collecting data for ftse100 top_performers: ['AAL.L', 'ABF.L', 'ADM.L', 'AHT.L', 'ANTO.L']
+2025-06-19 11:21:17 | INFO | data_acquisition.financial_data:collect_all_companies_data:154 | Collecting data for ftse100 bottom_performers: ['BARC.L', 'BDEV.L', 'BKG.L', 'BLND.L', 'BT-A.L']
+2025-06-19 11:21:23 | INFO | data_acquisition.financial_data:collect_all_companies_data:154 | Collecting data for sp500 top_performers: ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA']
+2025-06-19 11:21:30 | INFO | data_acquisition.financial_data:collect_all_companies_data:154 | Collecting data for sp500 bottom_performers: ['XOM', 'CVX', 'KO', 'PEP', 'WMT']
+2025-06-19 11:21:42 | INFO | data_acquisition.financial_data:collect_all_companies_data:183 | Successfully collected data for 19 companies
+2025-06-19 11:21:42 | INFO | main_pipeline:run_data_acquisition:58 | Financial data collected: 11759 records
+2025-06-19 11:21:42 | INFO | main_pipeline:run_data_acquisition:63 | Collecting economic data...
+2025-06-19 11:21:42 | INFO | data_acquisition.economic_data:collect_all_economic_data:285 | Collecting FRED economic data...
+2025-06-19 11:21:42 | ERROR | data_acquisition.economic_data:get_fred_data:69 | Error fetching FRED data for FEDFUNDS: Bad Request.  The value for variable api_key is not a 32 character alpha-numeric lower-case string.  Read https://fred.stlouisfed.org/docs/api/api_key.html for more information.
+2025-06-19 11:21:42 | ERROR | data_acquisition.economic_data:get_fred_data:69 | Error fetching FRED data for IR3TIB01GBM156N: Bad Request.  The value for variable api_key is not a 32 character alpha-numeric lower-case string.  Read https://fred.stlouisfed.org/docs/api/api_key.html for more information.
+2025-06-19 11:21:42 | ERROR | data_acquisition.economic_data:get_fred_data:69 | Error fetching FRED data for UNRATE: Bad Request.  The value for variable api_key is not a 32 character alpha-numeric lower-case string.  Read https://fred.stlouisfed.org/docs/api/api_key.html for more information.
+2025-06-19 11:21:42 | INFO | data_acquisition.economic_data:collect_all_economic_data:302 | Collecting EIA energy data...
+2025-06-19 11:21:43 | WARNING | data_acquisition.economic_data:get_eia_data:163 | EIA API failed for RBRTE. Using sample data.
+2025-06-19 11:21:43 | INFO | data_acquisition.economic_data:_generate_sample_eia_data:210 | Generated sample EIA data for RBRTE
+2025-06-19 11:21:43 | INFO | data_acquisition.economic_data:collect_all_economic_data:319 | Collecting Google Trends data...
+2025-06-19 11:21:50 | INFO | data_acquisition.economic_data:get_google_trends_data:263 | Successfully fetched Google Trends data for 5 keywords
+2025-06-19 11:21:50 | INFO | data_acquisition.economic_data:collect_all_economic_data:326 | Economic data collection completed. Sources: ['eia', 'google_trends']
+2025-06-19 11:21:50 | INFO | main_pipeline:run_data_acquisition:69 | Economic data collected: 1546 records across 2 sources
+2025-06-19 11:21:50 | INFO | main_pipeline:run_data_acquisition:74 | Collecting sentiment data...
+2025-06-19 11:21:50 | INFO | data_acquisition.sentiment_data:collect_all_sentiment_data:338 | Collecting Twitter sentiment data...
+2025-06-19 11:21:51 | ERROR | data_acquisition.sentiment_data:get_twitter_sentiment:83 | Error fetching Twitter data for inflation: 401 Unauthorized
+89 - Invalid or expired token.
+2025-06-19 11:21:51 | ERROR | data_acquisition.sentiment_data:get_twitter_sentiment:83 | Error fetching Twitter data for recession: 401 Unauthorized
+89 - Invalid or expired token.
+2025-06-19 11:21:51 | ERROR | data_acquisition.sentiment_data:get_twitter_sentiment:83 | Error fetching Twitter data for interest rates: 401 Unauthorized
+89 - Invalid or expired token.
+2025-06-19 11:21:51 | ERROR | data_acquisition.sentiment_data:get_twitter_sentiment:83 | Error fetching Twitter data for oil prices: 401 Unauthorized
+89 - Invalid or expired token.
+2025-06-19 11:21:52 | ERROR | data_acquisition.sentiment_data:get_twitter_sentiment:83 | Error fetching Twitter data for unemployment: 401 Unauthorized
+89 - Invalid or expired token.
+2025-06-19 11:21:52 | ERROR | data_acquisition.sentiment_data:get_twitter_sentiment:83 | Error fetching Twitter data for stock market: 401 Unauthorized
+89 - Invalid or expired token.
+2025-06-19 11:21:52 | ERROR | data_acquisition.sentiment_data:get_twitter_sentiment:83 | Error fetching Twitter data for economy: 401 Unauthorized
+89 - Invalid or expired token.
+2025-06-19 11:21:52 | ERROR | data_acquisition.sentiment_data:get_twitter_sentiment:83 | Error fetching Twitter data for GDP: 401 Unauthorized
+89 - Invalid or expired token.
+2025-06-19 11:21:52 | ERROR | data_acquisition.sentiment_data:get_twitter_sentiment:83 | Error fetching Twitter data for employment: 401 Unauthorized
+89 - Invalid or expired token.
+2025-06-19 11:21:52 | INFO | data_acquisition.sentiment_data:collect_all_sentiment_data:346 | Collecting Reddit sentiment data...
+2025-06-19 11:21:53 | ERROR | data_acquisition.sentiment_data:get_reddit_sentiment:203 | Error fetching Reddit data for r/investing: received 401 HTTP response
+2025-06-19 11:21:53 | ERROR | data_acquisition.sentiment_data:get_reddit_sentiment:203 | Error fetching Reddit data for r/stocks: received 401 HTTP response
+2025-06-19 11:21:53 | ERROR | data_acquisition.sentiment_data:get_reddit_sentiment:203 | Error fetching Reddit data for r/economics: received 401 HTTP response
+2025-06-19 11:21:54 | ERROR | data_acquisition.sentiment_data:get_reddit_sentiment:203 | Error fetching Reddit data for r/finance: received 401 HTTP response
+2025-06-19 11:21:54 | ERROR | data_acquisition.sentiment_data:get_reddit_sentiment:203 | Error fetching Reddit data for r/wallstreetbets: received 401 HTTP response
+2025-06-19 11:21:54 | INFO | data_acquisition.sentiment_data:collect_all_sentiment_data:354 | Sentiment data collection completed. Sources: []
+2025-06-19 11:21:54 | WARNING | main_pipeline:run_data_acquisition:82 | No sentiment data collected
+2025-06-19 11:21:54 | INFO | main_pipeline:_save_raw_data:198 | Raw financial data saved to /Users/amberwitheridge/Documents/internship/asset forcast/fste_and_sandp_forcaster/data/raw/financial_data.csv
+2025-06-19 11:21:54 | INFO | main_pipeline:_save_raw_data:198 | Raw eia data saved to /Users/amberwitheridge/Documents/internship/asset forcast/fste_and_sandp_forcaster/data/raw/eia_data.csv
+2025-06-19 11:21:54 | INFO | main_pipeline:_save_raw_data:198 | Raw google_trends data saved to /Users/amberwitheridge/Documents/internship/asset forcast/fste_and_sandp_forcaster/data/raw/google_trends_data.csv
+2025-06-19 11:21:54 | INFO | main_pipeline:run_data_acquisition:87 | Data acquisition phase completed successfully
+2025-06-19 11:21:54 | INFO | main_pipeline:run_data_cleaning:102 | Starting data cleaning phase
+2025-06-19 11:21:54 | INFO | data_processing.data_cleaner:clean_and_prepare_data:395 | Starting complete data cleaning and preparation pipeline
+2025-06-19 11:21:54 | INFO | data_processing.data_cleaner:clean_and_prepare_data:400 | Cleaning dataset: financial
+2025-06-19 11:21:54 | INFO | data_processing.data_cleaner:handle_missing_values:39 | Handling missing values with strategy: auto
+2025-06-19 11:21:54 | INFO | data_processing.data_cleaner:handle_missing_values:43 | Missing value percentages:
+operating_income       0.105621
+total_liabilities      1.000000
+total_equity           1.000000
+operating_cash_flow    0.052811
+pe_ratio               0.052811
+dtype: float64
+2025-06-19 11:21:54 | INFO | data_processing.data_cleaner:handle_missing_values:50 | Dropping columns with >30.0% missing values: ['total_liabilities', 'total_equity']
+2025-06-19 11:21:55 | INFO | data_processing.data_cleaner:handle_missing_values:80 | Missing values handled. Remaining missing values: 0
+2025-06-19 11:21:55 | INFO | data_processing.data_cleaner:clean_and_prepare_data:400 | Cleaning dataset: eia
+2025-06-19 11:21:55 | INFO | data_processing.data_cleaner:handle_missing_values:39 | Handling missing values with strategy: auto
+2025-06-19 11:21:55 | INFO | data_processing.data_cleaner:handle_missing_values:43 | Missing value percentages:
+Series([], dtype: float64)
+2025-06-19 11:21:55 | INFO | data_processing.data_cleaner:handle_missing_values:80 | Missing values handled. Remaining missing values: 0
+2025-06-19 11:21:55 | INFO | data_processing.data_cleaner:clean_and_prepare_data:400 | Cleaning dataset: google_trends
+2025-06-19 11:21:55 | INFO | data_processing.data_cleaner:handle_missing_values:39 | Handling missing values with strategy: auto
+2025-06-19 11:21:55 | INFO | data_processing.data_cleaner:handle_missing_values:43 | Missing value percentages:
+Series([], dtype: float64)
+2025-06-19 11:21:55 | INFO | data_processing.data_cleaner:handle_missing_values:80 | Missing values handled. Remaining missing values: 0
+2025-06-19 11:21:55 | INFO | data_processing.data_cleaner:clean_and_prepare_data:406 | Handling outliers in dataset: financial
+2025-06-19 11:21:55 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:97 | Detecting outliers in columns: ['close_price', 'volume', 'high', 'low', 'open_price', 'revenue', 'net_income', 'operating_income', 'total_assets', 'operating_cash_flow', 'free_cash_flow', 'profit_margin', 'headcount', 'market_cap', 'pe_ratio', 'pb_ratio']
+2025-06-19 11:21:55 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:111 | Found 85 outliers in close_price
+2025-06-19 11:21:55 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:111 | Found 389 outliers in volume
+2025-06-19 11:21:55 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:111 | Found 78 outliers in high
+2025-06-19 11:21:55 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:111 | Found 81 outliers in low
+2025-06-19 11:21:55 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:111 | Found 85 outliers in open_price
+2025-06-19 11:21:55 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:111 | Found 621 outliers in total_assets
+2025-06-19 11:21:55 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:111 | Found 617 outliers in headcount
+2025-06-19 11:21:55 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:111 | Found 621 outliers in pb_ratio
+2025-06-19 11:21:55 | INFO | data_processing.data_cleaner:clean_and_prepare_data:406 | Handling outliers in dataset: eia
+2025-06-19 11:21:55 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:97 | Detecting outliers in columns: ['value']
+2025-06-19 11:21:55 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:111 | Found 26 outliers in value
+2025-06-19 11:21:55 | INFO | data_processing.data_cleaner:clean_and_prepare_data:406 | Handling outliers in dataset: google_trends
+2025-06-19 11:21:55 | INFO | data_processing.data_cleaner:detect_and_handle_outliers:97 | Detecting outliers in columns: ['value']
+2025-06-19 11:21:55 | INFO | data_processing.data_cleaner:clean_and_prepare_data:411 | Standardizing time series for dataset: financial
+2025-06-19 11:21:55 | INFO | data_processing.data_cleaner:standardize_time_series:137 | Standardizing time series to frequency: D
+2025-06-19 11:21:55 | INFO | data_processing.data_cleaner:standardize_time_series:145 | Converting timezone-aware datetime objects to UTC
+2025-06-19 11:21:56 | INFO | data_processing.data_cleaner:standardize_time_series:203 | Time series standardized. Shape: (17053, 23)
+2025-06-19 11:21:56 | INFO | data_processing.data_cleaner:clean_and_prepare_data:411 | Standardizing time series for dataset: eia
+2025-06-19 11:21:56 | INFO | data_processing.data_cleaner:standardize_time_series:137 | Standardizing time series to frequency: D
+2025-06-19 11:21:56 | INFO | data_processing.data_cleaner:standardize_time_series:203 | Time series standardized. Shape: (901, 6)
+2025-06-19 11:21:56 | INFO | data_processing.data_cleaner:clean_and_prepare_data:411 | Standardizing time series for dataset: google_trends
+2025-06-19 11:21:56 | INFO | data_processing.data_cleaner:standardize_time_series:137 | Standardizing time series to frequency: D
+2025-06-19 11:21:56 | INFO | data_processing.data_cleaner:standardize_time_series:203 | Time series standardized. Shape: (4485, 5)
+2025-06-19 11:21:56 | INFO | data_processing.data_cleaner:clean_and_prepare_data:416 | Standardizing currency for dataset: financial
+2025-06-19 11:21:56 | INFO | data_processing.data_cleaner:standardize_currency:222 | Standardizing currency to USD
+2025-06-19 11:21:56 | WARNING | data_processing.data_cleaner:standardize_currency:225 | Currency column 'currency' not found. Skipping currency standardization.
+2025-06-19 11:21:56 | INFO | data_processing.data_cleaner:clean_and_prepare_data:416 | Standardizing currency for dataset: eia
+2025-06-19 11:21:56 | INFO | data_processing.data_cleaner:standardize_currency:222 | Standardizing currency to USD
+2025-06-19 11:21:56 | WARNING | data_processing.data_cleaner:standardize_currency:225 | Currency column 'currency' not found. Skipping currency standardization.
+2025-06-19 11:21:56 | INFO | data_processing.data_cleaner:clean_and_prepare_data:416 | Standardizing currency for dataset: google_trends
+2025-06-19 11:21:56 | INFO | data_processing.data_cleaner:standardize_currency:222 | Standardizing currency to USD
+2025-06-19 11:21:56 | WARNING | data_processing.data_cleaner:standardize_currency:225 | Currency column 'currency' not found. Skipping currency standardization.
+2025-06-19 11:21:56 | INFO | data_processing.data_cleaner:clean_and_prepare_data:420 | Merging all datasets
+2025-06-19 11:21:56 | INFO | data_processing.data_cleaner:merge_datasets:274 | Merging 3 datasets with strategy: outer
+2025-06-19 11:21:56 | INFO | data_processing.data_cleaner:merge_datasets:285 | Merging dataset: eia
+2025-06-19 11:21:56 | INFO | data_processing.data_cleaner:merge_datasets:318 | After merging eia: shape = (17056, 28)
+2025-06-19 11:21:56 | INFO | data_processing.data_cleaner:merge_datasets:285 | Merging dataset: google_trends
+2025-06-19 11:21:57 | INFO | data_processing.data_cleaner:merge_datasets:318 | After merging google_trends: shape = (85084, 32)
+2025-06-19 11:21:57 | INFO | data_processing.data_cleaner:merge_datasets:323 | Final merged dataset shape: (85084, 32)
+2025-06-19 11:21:57 | INFO | data_processing.data_cleaner:clean_and_prepare_data:424 | Creating additional features
+2025-06-19 11:21:57 | INFO | data_processing.data_cleaner:create_features:336 | Creating additional features
+2025-06-19 11:21:57 | INFO | data_processing.data_cleaner:create_features:372 | Creating features for columns: ['close_price', 'volume', 'value']
+2025-06-19 11:21:57 | INFO | data_processing.data_cleaner:create_features:382 | Feature creation completed. Final shape: (85084, 43)
+2025-06-19 11:21:57 | INFO | data_processing.data_cleaner:clean_and_prepare_data:427 | Data cleaning and preparation completed. Final shape: (85084, 43)
+2025-06-19 11:21:57 | INFO | main_pipeline:run_data_cleaning:113 | Data cleaning completed. Final dataset shape: (85084, 43)
+2025-06-19 11:22:03 | INFO | data_processing.data_cleaner:save_cleaned_data:442 | Cleaned data saved to /Users/amberwitheridge/Documents/internship/asset forcast/fste_and_sandp_forcaster/data/processed/cleaned_dataset.csv
+2025-06-19 11:22:03 | INFO | main_pipeline:_save_cleaned_data:206 | Cleaned data saved to /Users/amberwitheridge/Documents/internship/asset forcast/fste_and_sandp_forcaster/data/processed/cleaned_dataset.csv
+2025-06-19 11:22:03 | INFO | main_pipeline:run_data_cleaning:118 | Data cleaning phase completed successfully
+2025-06-19 11:22:03 | INFO | main_pipeline:run_exploratory_analysis:136 | Starting exploratory data analysis phase
+2025-06-19 11:22:17 | INFO | utils.visualization:save_plot:418 | Plot saved to /Users/amberwitheridge/Documents/internship/asset forcast/fste_and_sandp_forcaster/data/processed/time_series_analysis.html
+2025-06-19 11:22:17 | INFO | utils.visualization:save_plot:418 | Plot saved to /Users/amberwitheridge/Documents/internship/asset forcast/fste_and_sandp_forcaster/data/processed/correlation_matrix.html
+2025-06-19 11:22:17 | INFO | utils.visualization:save_plot:418 | Plot saved to /Users/amberwitheridge/Documents/internship/asset forcast/fste_and_sandp_forcaster/data/processed/missing_values_analysis.html
+2025-06-19 11:22:20 | INFO | utils.visualization:save_plot:418 | Plot saved to /Users/amberwitheridge/Documents/internship/asset forcast/fste_and_sandp_forcaster/data/processed/feature_distributions.html
+2025-06-19 11:22:20 | INFO | main_pipeline:_create_analysis_plots:248 | Analysis plots created and saved
+2025-06-19 11:22:23 | INFO | main_pipeline:_generate_summary_statistics:281 | Summary statistics generated and saved
+2025-06-19 11:22:23 | INFO | main_pipeline:run_exploratory_analysis:149 | Exploratory data analysis phase completed successfully
+2025-06-19 11:22:23 | INFO | main_pipeline:setup_dvc_tracking:164 | Setting up DVC tracking
+2025-06-19 11:22:23 | ERROR | dvc_integration:initialize_dvc:55 | DVC is not installed. Please install with: pip install dvc
+2025-06-19 11:22:23 | WARNING | main_pipeline:setup_dvc_tracking:169 | DVC initialization failed. Continuing without DVC tracking.
+2025-06-19 11:22:23 | INFO | main_pipeline:run_complete_pipeline:319 | Complete pipeline executed successfully in 0:01:12.143919
+2025-06-19 11:22:23 | INFO | __main__:main:98 | Setting up DVC tracking
+2025-06-19 11:22:23 | INFO | main_pipeline:setup_dvc_tracking:164 | Setting up DVC tracking
+2025-06-19 11:22:23 | ERROR | dvc_integration:initialize_dvc:55 | DVC is not installed. Please install with: pip install dvc
+2025-06-19 11:22:23 | WARNING | main_pipeline:setup_dvc_tracking:169 | DVC initialization failed. Continuing without DVC tracking.

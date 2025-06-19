@@ -1,0 +1,35 @@
+# Web Application Requirements for Forecast Assessment Model
+# These packages are required to run the Flask web application
+
+# Web framework
+Flask>=2.3.0
+Werkzeug>=2.3.0
+
+# Data manipulation and analysis
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Data visualization
+plotly>=5.15.0
+
+# Machine learning and model serialization
+joblib>=1.3.0
+scikit-learn>=1.3.0
+
+# Time series forecasting
+prophet>=1.1.4
+statsmodels>=0.14.0
+
+# Deep learning (for LSTM model)
+tensorflow>=2.13.0
+
+# File handling
+openpyxl>=3.1.0
+xlrd>=2.0.0
+
+# Configuration and logging
+python-dotenv>=1.0.0
+loguru>=0.7.0
+
+# Additional utilities
+tqdm>=4.65.0 

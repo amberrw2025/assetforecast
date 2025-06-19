@@ -1,0 +1,423 @@
+{% extends "base.html" %}
+
+{% block title %}Forecast Assessment - Dashboard{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Welcome Section -->
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-chart-line me-2"></i>
+                    Welcome to Forecast Accuracy Assessment
+                </h4>
+            </div>
+            <div class="card-body">
+                <p class="lead">
+                    Upload your financial data and generate accurate forecasts using our advanced machine learning models.
+                </p>
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="stats-card text-center">
+                            <div class="stats-number" id="totalRecords">-</div>
+                            <div class="stats-label">Total Records</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stats-card text-center">
+                            <div class="stats-number" id="dateRange">-</div>
+                            <div class="stats-label">Date Range</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stats-card text-center">
+                            <div class="stats-number" id="avgPrice">-</div>
+                            <div class="stats-label">Avg Price</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stats-card text-center">
+                            <div class="stats-number">3</div>
+                            <div class="stats-label">Models Ready</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Quick Actions -->
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-bolt me-2"></i>
+                    Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-3">
+                    <button class="btn btn-primary" onclick="showUploadModal()">
+                        <i class="fas fa-upload me-2"></i>
+                        Upload Data
+                    </button>
+                    <button class="btn btn-success" onclick="generateForecast()" id="forecastBtn" disabled>
+                        <i class="fas fa-magic me-2"></i>
+                        Generate Forecast
+                    </button>
+                    <button class="btn btn-warning" onclick="evaluateModels()" id="evaluateBtn" disabled>
+                        <i class="fas fa-chart-bar me-2"></i>
+                        Evaluate Models
+                    </button>
+                    <a href="/dashboard" class="btn btn-info">
+                        <i class="fas fa-tachometer-alt me-2"></i>
+                        View Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Model Information -->
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-robot me-2"></i>
+                    Available Models
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-12 mb-3">
+                        <div class="card model-card arima">
+                            <div class="card-body">
+                                <h6 class="card-title">
+                                    <i class="fas fa-chart-area me-2"></i>
+                                    ARIMA Model
+                                </h6>
+                                <p class="card-text small">
+                                    Statistical model for trend and seasonality analysis. Best for short-term forecasts.
+                                </p>
+                                <span class="badge bg-success">Ready</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 mb-3">
+                        <div class="card model-card prophet">
+                            <div class="card-body">
+                                <h6 class="card-title">
+                                    <i class="fab fa-facebook me-2"></i>
+                                    Prophet Model
+                                </h6>
+                                <p class="card-text small">
+                                    Facebook's forecasting tool. Robust to missing data and outliers.
+                                </p>
+                                <span class="badge bg-success">Ready</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="card model-card lstm">
+                            <div class="card-body">
+                                <h6 class="card-title">
+                                    <i class="fas fa-brain me-2"></i>
+                                    LSTM Model
+                                </h6>
+                                <p class="card-text small">
+                                    Deep learning model for complex non-linear patterns.
+                                </p>
+                                <span class="badge bg-success">Ready</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-history me-2"></i>
+                    Recent Activity
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="activityLog">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Upload your data to get started with forecasting!
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Forecast Results Modal -->
+<div class="modal fade" id="forecastModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-chart-line me-2"></i>
+                    Forecast Results
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="forecastChart" class="chart-container"></div>
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <h6>Forecast Summary</h6>
+                        <div id="forecastSummary"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Model Performance</h6>
+                        <div id="modelPerformance"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="downloadForecast()">
+                    <i class="fas fa-download me-2"></i>
+                    Download Results
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Check if data is available on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        checkDataAvailability();
+    });
+
+    function checkDataAvailability() {
+        fetch('/api/data-summary')
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    console.log('No data available');
+                    return;
+                }
+                
+                currentData = data;
+                updateDashboard();
+                enableButtons();
+                addActivityLog('Data loaded successfully', 'success');
+            })
+            .catch(error => {
+                console.log('Error checking data:', error);
+            });
+    }
+
+    function enableButtons() {
+        document.getElementById('forecastBtn').disabled = false;
+        document.getElementById('evaluateBtn').disabled = false;
+    }
+
+    function generateForecast() {
+        showLoading('forecastBtn');
+        
+        const forecastData = {
+            steps: 30,
+            models: ['ARIMA', 'Prophet', 'LSTM']
+        };
+        
+        fetch('/forecast', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(forecastData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            hideLoading('forecastBtn');
+            
+            if (data.success) {
+                currentForecasts = data;
+                showForecastResults(data);
+                addActivityLog('Forecast generated successfully', 'success');
+            } else {
+                showAlert('danger', data.error || 'Failed to generate forecast');
+                addActivityLog('Forecast generation failed', 'danger');
+            }
+        })
+        .catch(error => {
+            hideLoading('forecastBtn');
+            showAlert('danger', 'Error generating forecast: ' + error.message);
+            addActivityLog('Forecast generation error', 'danger');
+        });
+    }
+
+    function showForecastResults(data) {
+        // Create chart
+        const traces = [];
+        
+        // Add actual data
+        traces.push({
+            x: data.actual_data.dates,
+            y: data.actual_data.values,
+            type: 'scatter',
+            mode: 'lines',
+            name: 'Actual',
+            line: { color: '#2c3e50', width: 2 }
+        });
+        
+        // Add forecast data
+        const colors = ['#e74c3c', '#f39c12', '#27ae60'];
+        const modelNames = ['ARIMA', 'Prophet', 'LSTM'];
+        
+        modelNames.forEach((model, index) => {
+            if (data.forecasts[model] && !data.forecasts[model].error) {
+                traces.push({
+                    x: data.dates,
+                    y: data.forecasts[model],
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: `${model} Forecast`,
+                    line: { color: colors[index], width: 2, dash: 'dash' }
+                });
+            }
+        });
+        
+        const layout = {
+            title: 'Forecast Results',
+            xaxis: { title: 'Date' },
+            yaxis: { title: 'Price' },
+            hovermode: 'x unified',
+            showlegend: true
+        };
+        
+        Plotly.newPlot('forecastChart', traces, layout);
+        
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('forecastModal'));
+        modal.show();
+    }
+
+    function evaluateModels() {
+        showLoading('evaluateBtn');
+        
+        fetch('/evaluate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            hideLoading('evaluateBtn');
+            
+            if (data.success) {
+                showEvaluationResults(data.results);
+                addActivityLog('Model evaluation completed', 'success');
+            } else {
+                showAlert('danger', data.error || 'Failed to evaluate models');
+                addActivityLog('Model evaluation failed', 'danger');
+            }
+        })
+        .catch(error => {
+            hideLoading('evaluateBtn');
+            showAlert('danger', 'Error evaluating models: ' + error.message);
+            addActivityLog('Model evaluation error', 'danger');
+        });
+    }
+
+    function showEvaluationResults(results) {
+        let summaryHtml = '<div class="table-responsive"><table class="table table-sm">';
+        summaryHtml += '<thead><tr><th>Model</th><th>RMSE</th><th>MAE</th><th>R²</th><th>MAPE</th></tr></thead><tbody>';
+        
+        Object.entries(results).forEach(([model, metrics]) => {
+            summaryHtml += `<tr>
+                <td><strong>${model}</strong></td>
+                <td>${metrics.rmse ? metrics.rmse.toFixed(4) : 'N/A'}</td>
+                <td>${metrics.mae ? metrics.mae.toFixed(4) : 'N/A'}</td>
+                <td>${metrics.r2 ? metrics.r2.toFixed(4) : 'N/A'}</td>
+                <td>${metrics.mape ? metrics.mape.toFixed(2) + '%' : 'N/A'}</td>
+            </tr>`;
+        });
+        
+        summaryHtml += '</tbody></table></div>';
+        
+        // Find best model
+        let bestModel = null;
+        let bestRmse = Infinity;
+        
+        Object.entries(results).forEach(([model, metrics]) => {
+            if (metrics.rmse && metrics.rmse < bestRmse) {
+                bestRmse = metrics.rmse;
+                bestModel = model;
+            }
+        });
+        
+        if (bestModel) {
+            summaryHtml += `<div class="alert alert-success mt-3">
+                <i class="fas fa-trophy me-2"></i>
+                <strong>Best Model:</strong> ${bestModel} (RMSE: ${bestRmse.toFixed(4)})
+            </div>`;
+        }
+        
+        document.getElementById('modelPerformance').innerHTML = summaryHtml;
+        
+        // Show in modal
+        const modal = new bootstrap.Modal(document.getElementById('forecastModal'));
+        modal.show();
+    }
+
+    function downloadForecast() {
+        window.open('/download-forecast', '_blank');
+    }
+
+    function addActivityLog(message, type) {
+        const activityLog = document.getElementById('activityLog');
+        const timestamp = new Date().toLocaleTimeString();
+        
+        const alertClass = type === 'success' ? 'alert-success' : 
+                          type === 'danger' ? 'alert-danger' : 'alert-info';
+        
+        const logEntry = document.createElement('div');
+        logEntry.className = `alert ${alertClass} alert-sm`;
+        logEntry.innerHTML = `
+            <small>
+                <i class="fas fa-clock me-1"></i>
+                ${timestamp}: ${message}
+            </small>
+        `;
+        
+        activityLog.appendChild(logEntry);
+        
+        // Keep only last 5 entries
+        const entries = activityLog.querySelectorAll('.alert');
+        if (entries.length > 5) {
+            entries[0].remove();
+        }
+    }
+
+    function updateDashboard() {
+        if (currentData) {
+            document.getElementById('totalRecords').textContent = currentData.total_records || '-';
+            document.getElementById('dateRange').textContent = 
+                currentData.date_range ? 
+                `${currentData.date_range.start} to ${currentData.date_range.end}` : '-';
+            document.getElementById('avgPrice').textContent = 
+                currentData.price_stats ? 
+                `$${currentData.price_stats.mean.toFixed(2)}` : '-';
+        }
+    }
+</script>
+{% endblock %} 

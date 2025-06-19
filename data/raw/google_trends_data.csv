@@ -1,0 +1,646 @@
+date,value,is_partial,keyword,geo,source
+2023-01-01,60,False,inflation,US,Google Trends
+2023-01-08,83,False,inflation,US,Google Trends
+2023-01-15,67,False,inflation,US,Google Trends
+2023-01-22,66,False,inflation,US,Google Trends
+2023-01-29,73,False,inflation,US,Google Trends
+2023-02-05,76,False,inflation,US,Google Trends
+2023-02-12,79,False,inflation,US,Google Trends
+2023-02-19,71,False,inflation,US,Google Trends
+2023-02-26,69,False,inflation,US,Google Trends
+2023-03-05,70,False,inflation,US,Google Trends
+2023-03-12,71,False,inflation,US,Google Trends
+2023-03-19,73,False,inflation,US,Google Trends
+2023-03-26,69,False,inflation,US,Google Trends
+2023-04-02,60,False,inflation,US,Google Trends
+2023-04-09,81,False,inflation,US,Google Trends
+2023-04-16,66,False,inflation,US,Google Trends
+2023-04-23,67,False,inflation,US,Google Trends
+2023-04-30,70,False,inflation,US,Google Trends
+2023-05-07,70,False,inflation,US,Google Trends
+2023-05-14,57,False,inflation,US,Google Trends
+2023-05-21,53,False,inflation,US,Google Trends
+2023-05-28,50,False,inflation,US,Google Trends
+2023-06-04,48,False,inflation,US,Google Trends
+2023-06-11,66,False,inflation,US,Google Trends
+2023-06-18,48,False,inflation,US,Google Trends
+2023-06-25,55,False,inflation,US,Google Trends
+2023-07-02,50,False,inflation,US,Google Trends
+2023-07-09,72,False,inflation,US,Google Trends
+2023-07-16,52,False,inflation,US,Google Trends
+2023-07-23,56,False,inflation,US,Google Trends
+2023-07-30,50,False,inflation,US,Google Trends
+2023-08-06,61,False,inflation,US,Google Trends
+2023-08-13,58,False,inflation,US,Google Trends
+2023-08-20,54,False,inflation,US,Google Trends
+2023-08-27,60,False,inflation,US,Google Trends
+2023-09-03,54,False,inflation,US,Google Trends
+2023-09-10,68,False,inflation,US,Google Trends
+2023-09-17,78,False,inflation,US,Google Trends
+2023-09-24,63,False,inflation,US,Google Trends
+2023-10-01,62,False,inflation,US,Google Trends
+2023-10-08,66,False,inflation,US,Google Trends
+2023-10-15,65,False,inflation,US,Google Trends
+2023-10-22,65,False,inflation,US,Google Trends
+2023-10-29,67,False,inflation,US,Google Trends
+2023-11-05,64,False,inflation,US,Google Trends
+2023-11-12,73,False,inflation,US,Google Trends
+2023-11-19,52,False,inflation,US,Google Trends
+2023-11-26,73,False,inflation,US,Google Trends
+2023-12-03,72,False,inflation,US,Google Trends
+2023-12-10,77,False,inflation,US,Google Trends
+2023-12-17,57,False,inflation,US,Google Trends
+2023-12-24,46,False,inflation,US,Google Trends
+2023-12-31,49,False,inflation,US,Google Trends
+2024-01-07,62,False,inflation,US,Google Trends
+2024-01-14,54,False,inflation,US,Google Trends
+2024-01-21,64,False,inflation,US,Google Trends
+2024-01-28,63,False,inflation,US,Google Trends
+2024-02-04,64,False,inflation,US,Google Trends
+2024-02-11,77,False,inflation,US,Google Trends
+2024-02-18,72,False,inflation,US,Google Trends
+2024-02-25,74,False,inflation,US,Google Trends
+2024-03-03,74,False,inflation,US,Google Trends
+2024-03-10,74,False,inflation,US,Google Trends
+2024-03-17,64,False,inflation,US,Google Trends
+2024-03-24,64,False,inflation,US,Google Trends
+2024-03-31,62,False,inflation,US,Google Trends
+2024-04-07,92,False,inflation,US,Google Trends
+2024-04-14,71,False,inflation,US,Google Trends
+2024-04-21,74,False,inflation,US,Google Trends
+2024-04-28,70,False,inflation,US,Google Trends
+2024-05-05,68,False,inflation,US,Google Trends
+2024-05-12,78,False,inflation,US,Google Trends
+2024-05-19,62,False,inflation,US,Google Trends
+2024-05-26,64,False,inflation,US,Google Trends
+2024-06-02,58,False,inflation,US,Google Trends
+2024-06-09,62,False,inflation,US,Google Trends
+2024-06-16,51,False,inflation,US,Google Trends
+2024-06-23,64,False,inflation,US,Google Trends
+2024-06-30,52,False,inflation,US,Google Trends
+2024-07-07,67,False,inflation,US,Google Trends
+2024-07-14,54,False,inflation,US,Google Trends
+2024-07-21,60,False,inflation,US,Google Trends
+2024-07-28,55,False,inflation,US,Google Trends
+2024-08-04,53,False,inflation,US,Google Trends
+2024-08-11,85,False,inflation,US,Google Trends
+2024-08-18,66,False,inflation,US,Google Trends
+2024-08-25,63,False,inflation,US,Google Trends
+2024-09-01,57,False,inflation,US,Google Trends
+2024-09-08,88,False,inflation,US,Google Trends
+2024-09-15,72,False,inflation,US,Google Trends
+2024-09-22,64,False,inflation,US,Google Trends
+2024-09-29,62,False,inflation,US,Google Trends
+2024-10-06,63,False,inflation,US,Google Trends
+2024-10-13,61,False,inflation,US,Google Trends
+2024-10-20,68,False,inflation,US,Google Trends
+2024-10-27,71,False,inflation,US,Google Trends
+2024-11-03,100,False,inflation,US,Google Trends
+2024-11-10,76,False,inflation,US,Google Trends
+2024-11-17,65,False,inflation,US,Google Trends
+2024-11-24,50,False,inflation,US,Google Trends
+2024-12-01,59,False,inflation,US,Google Trends
+2024-12-08,68,False,inflation,US,Google Trends
+2024-12-15,56,False,inflation,US,Google Trends
+2024-12-22,48,False,inflation,US,Google Trends
+2024-12-29,45,False,inflation,US,Google Trends
+2025-01-05,52,False,inflation,US,Google Trends
+2025-01-12,60,False,inflation,US,Google Trends
+2025-01-19,67,False,inflation,US,Google Trends
+2025-01-26,61,False,inflation,US,Google Trends
+2025-02-02,63,False,inflation,US,Google Trends
+2025-02-09,77,False,inflation,US,Google Trends
+2025-02-16,69,False,inflation,US,Google Trends
+2025-02-23,66,False,inflation,US,Google Trends
+2025-03-02,65,False,inflation,US,Google Trends
+2025-03-09,82,False,inflation,US,Google Trends
+2025-03-16,56,False,inflation,US,Google Trends
+2025-03-23,60,False,inflation,US,Google Trends
+2025-03-30,72,False,inflation,US,Google Trends
+2025-04-06,72,False,inflation,US,Google Trends
+2025-04-13,53,False,inflation,US,Google Trends
+2025-04-20,53,False,inflation,US,Google Trends
+2025-04-27,64,False,inflation,US,Google Trends
+2025-05-04,56,False,inflation,US,Google Trends
+2025-05-11,66,False,inflation,US,Google Trends
+2025-05-18,54,False,inflation,US,Google Trends
+2025-05-25,50,False,inflation,US,Google Trends
+2025-06-01,42,False,inflation,US,Google Trends
+2025-06-08,50,False,inflation,US,Google Trends
+2025-06-15,41,True,inflation,US,Google Trends
+2023-01-01,23,False,recession,US,Google Trends
+2023-01-08,23,False,recession,US,Google Trends
+2023-01-15,26,False,recession,US,Google Trends
+2023-01-22,29,False,recession,US,Google Trends
+2023-01-29,23,False,recession,US,Google Trends
+2023-02-05,20,False,recession,US,Google Trends
+2023-02-12,17,False,recession,US,Google Trends
+2023-02-19,17,False,recession,US,Google Trends
+2023-02-26,18,False,recession,US,Google Trends
+2023-03-05,23,False,recession,US,Google Trends
+2023-03-12,27,False,recession,US,Google Trends
+2023-03-19,27,False,recession,US,Google Trends
+2023-03-26,22,False,recession,US,Google Trends
+2023-04-02,20,False,recession,US,Google Trends
+2023-04-09,25,False,recession,US,Google Trends
+2023-04-16,23,False,recession,US,Google Trends
+2023-04-23,25,False,recession,US,Google Trends
+2023-04-30,25,False,recession,US,Google Trends
+2023-05-07,22,False,recession,US,Google Trends
+2023-05-14,21,False,recession,US,Google Trends
+2023-05-21,24,False,recession,US,Google Trends
+2023-05-28,15,False,recession,US,Google Trends
+2023-06-04,17,False,recession,US,Google Trends
+2023-06-11,13,False,recession,US,Google Trends
+2023-06-18,11,False,recession,US,Google Trends
+2023-06-25,12,False,recession,US,Google Trends
+2023-07-02,11,False,recession,US,Google Trends
+2023-07-09,12,False,recession,US,Google Trends
+2023-07-16,13,False,recession,US,Google Trends
+2023-07-23,13,False,recession,US,Google Trends
+2023-07-30,12,False,recession,US,Google Trends
+2023-08-06,12,False,recession,US,Google Trends
+2023-08-13,16,False,recession,US,Google Trends
+2023-08-20,18,False,recession,US,Google Trends
+2023-08-27,12,False,recession,US,Google Trends
+2023-09-03,12,False,recession,US,Google Trends
+2023-09-10,12,False,recession,US,Google Trends
+2023-09-17,13,False,recession,US,Google Trends
+2023-09-24,15,False,recession,US,Google Trends
+2023-10-01,16,False,recession,US,Google Trends
+2023-10-08,13,False,recession,US,Google Trends
+2023-10-15,14,False,recession,US,Google Trends
+2023-10-22,15,False,recession,US,Google Trends
+2023-10-29,14,False,recession,US,Google Trends
+2023-11-05,13,False,recession,US,Google Trends
+2023-11-12,13,False,recession,US,Google Trends
+2023-11-19,9,False,recession,US,Google Trends
+2023-11-26,14,False,recession,US,Google Trends
+2023-12-03,14,False,recession,US,Google Trends
+2023-12-10,14,False,recession,US,Google Trends
+2023-12-17,10,False,recession,US,Google Trends
+2023-12-24,8,False,recession,US,Google Trends
+2023-12-31,9,False,recession,US,Google Trends
+2024-01-07,10,False,recession,US,Google Trends
+2024-01-14,9,False,recession,US,Google Trends
+2024-01-21,12,False,recession,US,Google Trends
+2024-01-28,13,False,recession,US,Google Trends
+2024-02-04,12,False,recession,US,Google Trends
+2024-02-11,17,False,recession,US,Google Trends
+2024-02-18,14,False,recession,US,Google Trends
+2024-02-25,13,False,recession,US,Google Trends
+2024-03-03,13,False,recession,US,Google Trends
+2024-03-10,12,False,recession,US,Google Trends
+2024-03-17,12,False,recession,US,Google Trends
+2024-03-24,11,False,recession,US,Google Trends
+2024-03-31,11,False,recession,US,Google Trends
+2024-04-07,12,False,recession,US,Google Trends
+2024-04-14,13,False,recession,US,Google Trends
+2024-04-21,13,False,recession,US,Google Trends
+2024-04-28,14,False,recession,US,Google Trends
+2024-05-05,15,False,recession,US,Google Trends
+2024-05-12,12,False,recession,US,Google Trends
+2024-05-19,12,False,recession,US,Google Trends
+2024-05-26,10,False,recession,US,Google Trends
+2024-06-02,10,False,recession,US,Google Trends
+2024-06-09,9,False,recession,US,Google Trends
+2024-06-16,8,False,recession,US,Google Trends
+2024-06-23,8,False,recession,US,Google Trends
+2024-06-30,9,False,recession,US,Google Trends
+2024-07-07,10,False,recession,US,Google Trends
+2024-07-14,9,False,recession,US,Google Trends
+2024-07-21,9,False,recession,US,Google Trends
+2024-07-28,19,False,recession,US,Google Trends
+2024-08-04,53,False,recession,US,Google Trends
+2024-08-11,14,False,recession,US,Google Trends
+2024-08-18,12,False,recession,US,Google Trends
+2024-08-25,11,False,recession,US,Google Trends
+2024-09-01,14,False,recession,US,Google Trends
+2024-09-08,14,False,recession,US,Google Trends
+2024-09-15,14,False,recession,US,Google Trends
+2024-09-22,13,False,recession,US,Google Trends
+2024-09-29,12,False,recession,US,Google Trends
+2024-10-06,10,False,recession,US,Google Trends
+2024-10-13,10,False,recession,US,Google Trends
+2024-10-20,11,False,recession,US,Google Trends
+2024-10-27,11,False,recession,US,Google Trends
+2024-11-03,14,False,recession,US,Google Trends
+2024-11-10,14,False,recession,US,Google Trends
+2024-11-17,13,False,recession,US,Google Trends
+2024-11-24,9,False,recession,US,Google Trends
+2024-12-01,11,False,recession,US,Google Trends
+2024-12-08,11,False,recession,US,Google Trends
+2024-12-15,10,False,recession,US,Google Trends
+2024-12-22,7,False,recession,US,Google Trends
+2024-12-29,7,False,recession,US,Google Trends
+2025-01-05,9,False,recession,US,Google Trends
+2025-01-12,9,False,recession,US,Google Trends
+2025-01-19,9,False,recession,US,Google Trends
+2025-01-26,11,False,recession,US,Google Trends
+2025-02-02,14,False,recession,US,Google Trends
+2025-02-09,12,False,recession,US,Google Trends
+2025-02-16,14,False,recession,US,Google Trends
+2025-02-23,18,False,recession,US,Google Trends
+2025-03-02,31,False,recession,US,Google Trends
+2025-03-09,100,False,recession,US,Google Trends
+2025-03-16,31,False,recession,US,Google Trends
+2025-03-23,24,False,recession,US,Google Trends
+2025-03-30,71,False,recession,US,Google Trends
+2025-04-06,86,False,recession,US,Google Trends
+2025-04-13,30,False,recession,US,Google Trends
+2025-04-20,26,False,recession,US,Google Trends
+2025-04-27,35,False,recession,US,Google Trends
+2025-05-04,23,False,recession,US,Google Trends
+2025-05-11,15,False,recession,US,Google Trends
+2025-05-18,14,False,recession,US,Google Trends
+2025-05-25,15,False,recession,US,Google Trends
+2025-06-01,16,False,recession,US,Google Trends
+2025-06-08,11,False,recession,US,Google Trends
+2025-06-15,10,True,recession,US,Google Trends
+2023-01-01,35,False,interest rates,US,Google Trends
+2023-01-08,35,False,interest rates,US,Google Trends
+2023-01-15,35,False,interest rates,US,Google Trends
+2023-01-22,36,False,interest rates,US,Google Trends
+2023-01-29,46,False,interest rates,US,Google Trends
+2023-02-05,36,False,interest rates,US,Google Trends
+2023-02-12,35,False,interest rates,US,Google Trends
+2023-02-19,42,False,interest rates,US,Google Trends
+2023-02-26,46,False,interest rates,US,Google Trends
+2023-03-05,49,False,interest rates,US,Google Trends
+2023-03-12,52,False,interest rates,US,Google Trends
+2023-03-19,60,False,interest rates,US,Google Trends
+2023-03-26,41,False,interest rates,US,Google Trends
+2023-04-02,39,False,interest rates,US,Google Trends
+2023-04-09,37,False,interest rates,US,Google Trends
+2023-04-16,44,False,interest rates,US,Google Trends
+2023-04-23,44,False,interest rates,US,Google Trends
+2023-04-30,56,False,interest rates,US,Google Trends
+2023-05-07,37,False,interest rates,US,Google Trends
+2023-05-14,35,False,interest rates,US,Google Trends
+2023-05-21,33,False,interest rates,US,Google Trends
+2023-05-28,36,False,interest rates,US,Google Trends
+2023-06-04,33,False,interest rates,US,Google Trends
+2023-06-11,40,False,interest rates,US,Google Trends
+2023-06-18,33,False,interest rates,US,Google Trends
+2023-06-25,34,False,interest rates,US,Google Trends
+2023-07-02,36,False,interest rates,US,Google Trends
+2023-07-09,39,False,interest rates,US,Google Trends
+2023-07-16,35,False,interest rates,US,Google Trends
+2023-07-23,52,False,interest rates,US,Google Trends
+2023-07-30,35,False,interest rates,US,Google Trends
+2023-08-06,34,False,interest rates,US,Google Trends
+2023-08-13,39,False,interest rates,US,Google Trends
+2023-08-20,38,False,interest rates,US,Google Trends
+2023-08-27,40,False,interest rates,US,Google Trends
+2023-09-03,37,False,interest rates,US,Google Trends
+2023-09-10,36,False,interest rates,US,Google Trends
+2023-09-17,41,False,interest rates,US,Google Trends
+2023-09-24,37,False,interest rates,US,Google Trends
+2023-10-01,39,False,interest rates,US,Google Trends
+2023-10-08,38,False,interest rates,US,Google Trends
+2023-10-15,41,False,interest rates,US,Google Trends
+2023-10-22,44,False,interest rates,US,Google Trends
+2023-10-29,46,False,interest rates,US,Google Trends
+2023-11-05,43,False,interest rates,US,Google Trends
+2023-11-12,39,False,interest rates,US,Google Trends
+2023-11-19,33,False,interest rates,US,Google Trends
+2023-11-26,40,False,interest rates,US,Google Trends
+2023-12-03,42,False,interest rates,US,Google Trends
+2023-12-10,50,False,interest rates,US,Google Trends
+2023-12-17,40,False,interest rates,US,Google Trends
+2023-12-24,35,False,interest rates,US,Google Trends
+2023-12-31,43,False,interest rates,US,Google Trends
+2024-01-07,37,False,interest rates,US,Google Trends
+2024-01-14,35,False,interest rates,US,Google Trends
+2024-01-21,38,False,interest rates,US,Google Trends
+2024-01-28,42,False,interest rates,US,Google Trends
+2024-02-04,37,False,interest rates,US,Google Trends
+2024-02-11,37,False,interest rates,US,Google Trends
+2024-02-18,38,False,interest rates,US,Google Trends
+2024-02-25,39,False,interest rates,US,Google Trends
+2024-03-03,42,False,interest rates,US,Google Trends
+2024-03-10,34,False,interest rates,US,Google Trends
+2024-03-17,42,False,interest rates,US,Google Trends
+2024-03-24,35,False,interest rates,US,Google Trends
+2024-03-31,38,False,interest rates,US,Google Trends
+2024-04-07,41,False,interest rates,US,Google Trends
+2024-04-14,40,False,interest rates,US,Google Trends
+2024-04-21,40,False,interest rates,US,Google Trends
+2024-04-28,44,False,interest rates,US,Google Trends
+2024-05-05,35,False,interest rates,US,Google Trends
+2024-05-12,35,False,interest rates,US,Google Trends
+2024-05-19,33,False,interest rates,US,Google Trends
+2024-05-26,31,False,interest rates,US,Google Trends
+2024-06-02,35,False,interest rates,US,Google Trends
+2024-06-09,37,False,interest rates,US,Google Trends
+2024-06-16,30,False,interest rates,US,Google Trends
+2024-06-23,30,False,interest rates,US,Google Trends
+2024-06-30,30,False,interest rates,US,Google Trends
+2024-07-07,34,False,interest rates,US,Google Trends
+2024-07-14,34,False,interest rates,US,Google Trends
+2024-07-21,35,False,interest rates,US,Google Trends
+2024-07-28,41,False,interest rates,US,Google Trends
+2024-08-04,48,False,interest rates,US,Google Trends
+2024-08-11,39,False,interest rates,US,Google Trends
+2024-08-18,41,False,interest rates,US,Google Trends
+2024-08-25,37,False,interest rates,US,Google Trends
+2024-09-01,40,False,interest rates,US,Google Trends
+2024-09-08,44,False,interest rates,US,Google Trends
+2024-09-15,100,False,interest rates,US,Google Trends
+2024-09-22,41,False,interest rates,US,Google Trends
+2024-09-29,35,False,interest rates,US,Google Trends
+2024-10-06,32,False,interest rates,US,Google Trends
+2024-10-13,32,False,interest rates,US,Google Trends
+2024-10-20,33,False,interest rates,US,Google Trends
+2024-10-27,32,False,interest rates,US,Google Trends
+2024-11-03,57,False,interest rates,US,Google Trends
+2024-11-10,43,False,interest rates,US,Google Trends
+2024-11-17,35,False,interest rates,US,Google Trends
+2024-11-24,28,False,interest rates,US,Google Trends
+2024-12-01,35,False,interest rates,US,Google Trends
+2024-12-08,32,False,interest rates,US,Google Trends
+2024-12-15,44,False,interest rates,US,Google Trends
+2024-12-22,26,False,interest rates,US,Google Trends
+2024-12-29,30,False,interest rates,US,Google Trends
+2025-01-05,31,False,interest rates,US,Google Trends
+2025-01-12,36,False,interest rates,US,Google Trends
+2025-01-19,38,False,interest rates,US,Google Trends
+2025-01-26,42,False,interest rates,US,Google Trends
+2025-02-02,39,False,interest rates,US,Google Trends
+2025-02-09,34,False,interest rates,US,Google Trends
+2025-02-16,36,False,interest rates,US,Google Trends
+2025-02-23,36,False,interest rates,US,Google Trends
+2025-03-02,54,False,interest rates,US,Google Trends
+2025-03-09,43,False,interest rates,US,Google Trends
+2025-03-16,42,False,interest rates,US,Google Trends
+2025-03-23,33,False,interest rates,US,Google Trends
+2025-03-30,45,False,interest rates,US,Google Trends
+2025-04-06,50,False,interest rates,US,Google Trends
+2025-04-13,38,False,interest rates,US,Google Trends
+2025-04-20,36,False,interest rates,US,Google Trends
+2025-04-27,36,False,interest rates,US,Google Trends
+2025-05-04,37,False,interest rates,US,Google Trends
+2025-05-11,31,False,interest rates,US,Google Trends
+2025-05-18,30,False,interest rates,US,Google Trends
+2025-05-25,28,False,interest rates,US,Google Trends
+2025-06-01,31,False,interest rates,US,Google Trends
+2025-06-08,28,False,interest rates,US,Google Trends
+2025-06-15,33,True,interest rates,US,Google Trends
+2023-01-01,50,False,oil prices,US,Google Trends
+2023-01-08,47,False,oil prices,US,Google Trends
+2023-01-15,40,False,oil prices,US,Google Trends
+2023-01-22,47,False,oil prices,US,Google Trends
+2023-01-29,49,False,oil prices,US,Google Trends
+2023-02-05,45,False,oil prices,US,Google Trends
+2023-02-12,42,False,oil prices,US,Google Trends
+2023-02-19,44,False,oil prices,US,Google Trends
+2023-02-26,43,False,oil prices,US,Google Trends
+2023-03-05,41,False,oil prices,US,Google Trends
+2023-03-12,49,False,oil prices,US,Google Trends
+2023-03-19,48,False,oil prices,US,Google Trends
+2023-03-26,42,False,oil prices,US,Google Trends
+2023-04-02,77,False,oil prices,US,Google Trends
+2023-04-09,40,False,oil prices,US,Google Trends
+2023-04-16,37,False,oil prices,US,Google Trends
+2023-04-23,37,False,oil prices,US,Google Trends
+2023-04-30,41,False,oil prices,US,Google Trends
+2023-05-07,37,False,oil prices,US,Google Trends
+2023-05-14,37,False,oil prices,US,Google Trends
+2023-05-21,35,False,oil prices,US,Google Trends
+2023-05-28,35,False,oil prices,US,Google Trends
+2023-06-04,40,False,oil prices,US,Google Trends
+2023-06-11,40,False,oil prices,US,Google Trends
+2023-06-18,38,False,oil prices,US,Google Trends
+2023-06-25,37,False,oil prices,US,Google Trends
+2023-07-02,37,False,oil prices,US,Google Trends
+2023-07-09,37,False,oil prices,US,Google Trends
+2023-07-16,37,False,oil prices,US,Google Trends
+2023-07-23,40,False,oil prices,US,Google Trends
+2023-07-30,45,False,oil prices,US,Google Trends
+2023-08-06,42,False,oil prices,US,Google Trends
+2023-08-13,42,False,oil prices,US,Google Trends
+2023-08-20,40,False,oil prices,US,Google Trends
+2023-08-27,41,False,oil prices,US,Google Trends
+2023-09-03,47,False,oil prices,US,Google Trends
+2023-09-10,47,False,oil prices,US,Google Trends
+2023-09-17,54,False,oil prices,US,Google Trends
+2023-09-24,52,False,oil prices,US,Google Trends
+2023-10-01,55,False,oil prices,US,Google Trends
+2023-10-08,74,False,oil prices,US,Google Trends
+2023-10-15,56,False,oil prices,US,Google Trends
+2023-10-22,47,False,oil prices,US,Google Trends
+2023-10-29,48,False,oil prices,US,Google Trends
+2023-11-05,47,False,oil prices,US,Google Trends
+2023-11-12,42,False,oil prices,US,Google Trends
+2023-11-19,43,False,oil prices,US,Google Trends
+2023-11-26,48,False,oil prices,US,Google Trends
+2023-12-03,43,False,oil prices,US,Google Trends
+2023-12-10,48,False,oil prices,US,Google Trends
+2023-12-17,45,False,oil prices,US,Google Trends
+2023-12-24,37,False,oil prices,US,Google Trends
+2023-12-31,41,False,oil prices,US,Google Trends
+2024-01-07,43,False,oil prices,US,Google Trends
+2024-01-14,42,False,oil prices,US,Google Trends
+2024-01-21,40,False,oil prices,US,Google Trends
+2024-01-28,36,False,oil prices,US,Google Trends
+2024-02-04,34,False,oil prices,US,Google Trends
+2024-02-11,34,False,oil prices,US,Google Trends
+2024-02-18,33,False,oil prices,US,Google Trends
+2024-02-25,32,False,oil prices,US,Google Trends
+2024-03-03,31,False,oil prices,US,Google Trends
+2024-03-10,30,False,oil prices,US,Google Trends
+2024-03-17,33,False,oil prices,US,Google Trends
+2024-03-24,32,False,oil prices,US,Google Trends
+2024-03-31,37,False,oil prices,US,Google Trends
+2024-04-07,35,False,oil prices,US,Google Trends
+2024-04-14,48,False,oil prices,US,Google Trends
+2024-04-21,34,False,oil prices,US,Google Trends
+2024-04-28,33,False,oil prices,US,Google Trends
+2024-05-05,31,False,oil prices,US,Google Trends
+2024-05-12,29,False,oil prices,US,Google Trends
+2024-05-19,30,False,oil prices,US,Google Trends
+2024-05-26,25,False,oil prices,US,Google Trends
+2024-06-02,33,False,oil prices,US,Google Trends
+2024-06-09,28,False,oil prices,US,Google Trends
+2024-06-16,26,False,oil prices,US,Google Trends
+2024-06-23,26,False,oil prices,US,Google Trends
+2024-06-30,25,False,oil prices,US,Google Trends
+2024-07-07,25,False,oil prices,US,Google Trends
+2024-07-14,25,False,oil prices,US,Google Trends
+2024-07-21,28,False,oil prices,US,Google Trends
+2024-07-28,30,False,oil prices,US,Google Trends
+2024-08-04,34,False,oil prices,US,Google Trends
+2024-08-11,31,False,oil prices,US,Google Trends
+2024-08-18,31,False,oil prices,US,Google Trends
+2024-08-25,29,False,oil prices,US,Google Trends
+2024-09-01,34,False,oil prices,US,Google Trends
+2024-09-08,37,False,oil prices,US,Google Trends
+2024-09-15,35,False,oil prices,US,Google Trends
+2024-09-22,34,False,oil prices,US,Google Trends
+2024-09-29,51,False,oil prices,US,Google Trends
+2024-10-06,40,False,oil prices,US,Google Trends
+2024-10-13,38,False,oil prices,US,Google Trends
+2024-10-20,34,False,oil prices,US,Google Trends
+2024-10-27,37,False,oil prices,US,Google Trends
+2024-11-03,35,False,oil prices,US,Google Trends
+2024-11-10,36,False,oil prices,US,Google Trends
+2024-11-17,34,False,oil prices,US,Google Trends
+2024-11-24,29,False,oil prices,US,Google Trends
+2024-12-01,36,False,oil prices,US,Google Trends
+2024-12-08,33,False,oil prices,US,Google Trends
+2024-12-15,32,False,oil prices,US,Google Trends
+2024-12-22,28,False,oil prices,US,Google Trends
+2024-12-29,29,False,oil prices,US,Google Trends
+2025-01-05,35,False,oil prices,US,Google Trends
+2025-01-12,41,False,oil prices,US,Google Trends
+2025-01-19,43,False,oil prices,US,Google Trends
+2025-01-26,40,False,oil prices,US,Google Trends
+2025-02-02,43,False,oil prices,US,Google Trends
+2025-02-09,35,False,oil prices,US,Google Trends
+2025-02-16,37,False,oil prices,US,Google Trends
+2025-02-23,35,False,oil prices,US,Google Trends
+2025-03-02,41,False,oil prices,US,Google Trends
+2025-03-09,37,False,oil prices,US,Google Trends
+2025-03-16,33,False,oil prices,US,Google Trends
+2025-03-23,31,False,oil prices,US,Google Trends
+2025-03-30,49,False,oil prices,US,Google Trends
+2025-04-06,100,False,oil prices,US,Google Trends
+2025-04-13,44,False,oil prices,US,Google Trends
+2025-04-20,41,False,oil prices,US,Google Trends
+2025-04-27,43,False,oil prices,US,Google Trends
+2025-05-04,49,False,oil prices,US,Google Trends
+2025-05-11,41,False,oil prices,US,Google Trends
+2025-05-18,36,False,oil prices,US,Google Trends
+2025-05-25,29,False,oil prices,US,Google Trends
+2025-06-01,30,False,oil prices,US,Google Trends
+2025-06-08,60,False,oil prices,US,Google Trends
+2025-06-15,92,True,oil prices,US,Google Trends
+2023-01-01,89,False,unemployment,US,Google Trends
+2023-01-08,97,False,unemployment,US,Google Trends
+2023-01-15,91,False,unemployment,US,Google Trends
+2023-01-22,93,False,unemployment,US,Google Trends
+2023-01-29,92,False,unemployment,US,Google Trends
+2023-02-05,93,False,unemployment,US,Google Trends
+2023-02-12,87,False,unemployment,US,Google Trends
+2023-02-19,81,False,unemployment,US,Google Trends
+2023-02-26,84,False,unemployment,US,Google Trends
+2023-03-05,81,False,unemployment,US,Google Trends
+2023-03-12,76,False,unemployment,US,Google Trends
+2023-03-19,80,False,unemployment,US,Google Trends
+2023-03-26,78,False,unemployment,US,Google Trends
+2023-04-02,78,False,unemployment,US,Google Trends
+2023-04-09,84,False,unemployment,US,Google Trends
+2023-04-16,79,False,unemployment,US,Google Trends
+2023-04-23,77,False,unemployment,US,Google Trends
+2023-04-30,77,False,unemployment,US,Google Trends
+2023-05-07,74,False,unemployment,US,Google Trends
+2023-05-14,72,False,unemployment,US,Google Trends
+2023-05-21,74,False,unemployment,US,Google Trends
+2023-05-28,75,False,unemployment,US,Google Trends
+2023-06-04,75,False,unemployment,US,Google Trends
+2023-06-11,78,False,unemployment,US,Google Trends
+2023-06-18,76,False,unemployment,US,Google Trends
+2023-06-25,81,False,unemployment,US,Google Trends
+2023-07-02,81,False,unemployment,US,Google Trends
+2023-07-09,82,False,unemployment,US,Google Trends
+2023-07-16,79,False,unemployment,US,Google Trends
+2023-07-23,82,False,unemployment,US,Google Trends
+2023-07-30,79,False,unemployment,US,Google Trends
+2023-08-06,73,False,unemployment,US,Google Trends
+2023-08-13,78,False,unemployment,US,Google Trends
+2023-08-20,75,False,unemployment,US,Google Trends
+2023-08-27,77,False,unemployment,US,Google Trends
+2023-09-03,73,False,unemployment,US,Google Trends
+2023-09-10,69,False,unemployment,US,Google Trends
+2023-09-17,73,False,unemployment,US,Google Trends
+2023-09-24,71,False,unemployment,US,Google Trends
+2023-10-01,79,False,unemployment,US,Google Trends
+2023-10-08,74,False,unemployment,US,Google Trends
+2023-10-15,74,False,unemployment,US,Google Trends
+2023-10-22,75,False,unemployment,US,Google Trends
+2023-10-29,75,False,unemployment,US,Google Trends
+2023-11-05,75,False,unemployment,US,Google Trends
+2023-11-12,81,False,unemployment,US,Google Trends
+2023-11-19,63,False,unemployment,US,Google Trends
+2023-11-26,85,False,unemployment,US,Google Trends
+2023-12-03,82,False,unemployment,US,Google Trends
+2023-12-10,85,False,unemployment,US,Google Trends
+2023-12-17,78,False,unemployment,US,Google Trends
+2023-12-24,76,False,unemployment,US,Google Trends
+2023-12-31,90,False,unemployment,US,Google Trends
+2024-01-07,96,False,unemployment,US,Google Trends
+2024-01-14,97,False,unemployment,US,Google Trends
+2024-01-21,100,False,unemployment,US,Google Trends
+2024-01-28,89,False,unemployment,US,Google Trends
+2024-02-04,86,False,unemployment,US,Google Trends
+2024-02-11,76,False,unemployment,US,Google Trends
+2024-02-18,78,False,unemployment,US,Google Trends
+2024-02-25,79,False,unemployment,US,Google Trends
+2024-03-03,80,False,unemployment,US,Google Trends
+2024-03-10,76,False,unemployment,US,Google Trends
+2024-03-17,76,False,unemployment,US,Google Trends
+2024-03-24,72,False,unemployment,US,Google Trends
+2024-03-31,73,False,unemployment,US,Google Trends
+2024-04-07,73,False,unemployment,US,Google Trends
+2024-04-14,75,False,unemployment,US,Google Trends
+2024-04-21,73,False,unemployment,US,Google Trends
+2024-04-28,74,False,unemployment,US,Google Trends
+2024-05-05,67,False,unemployment,US,Google Trends
+2024-05-12,65,False,unemployment,US,Google Trends
+2024-05-19,68,False,unemployment,US,Google Trends
+2024-05-26,65,False,unemployment,US,Google Trends
+2024-06-02,73,False,unemployment,US,Google Trends
+2024-06-09,70,False,unemployment,US,Google Trends
+2024-06-16,76,False,unemployment,US,Google Trends
+2024-06-23,76,False,unemployment,US,Google Trends
+2024-06-30,74,False,unemployment,US,Google Trends
+2024-07-07,81,False,unemployment,US,Google Trends
+2024-07-14,76,False,unemployment,US,Google Trends
+2024-07-21,74,False,unemployment,US,Google Trends
+2024-07-28,76,False,unemployment,US,Google Trends
+2024-08-04,70,False,unemployment,US,Google Trends
+2024-08-11,72,False,unemployment,US,Google Trends
+2024-08-18,71,False,unemployment,US,Google Trends
+2024-08-25,68,False,unemployment,US,Google Trends
+2024-09-01,69,False,unemployment,US,Google Trends
+2024-09-08,70,False,unemployment,US,Google Trends
+2024-09-15,69,False,unemployment,US,Google Trends
+2024-09-22,67,False,unemployment,US,Google Trends
+2024-09-29,73,False,unemployment,US,Google Trends
+2024-10-06,70,False,unemployment,US,Google Trends
+2024-10-13,68,False,unemployment,US,Google Trends
+2024-10-20,72,False,unemployment,US,Google Trends
+2024-10-27,72,False,unemployment,US,Google Trends
+2024-11-03,71,False,unemployment,US,Google Trends
+2024-11-10,72,False,unemployment,US,Google Trends
+2024-11-17,73,False,unemployment,US,Google Trends
+2024-11-24,58,False,unemployment,US,Google Trends
+2024-12-01,80,False,unemployment,US,Google Trends
+2024-12-08,68,False,unemployment,US,Google Trends
+2024-12-15,74,False,unemployment,US,Google Trends
+2024-12-22,66,False,unemployment,US,Google Trends
+2024-12-29,78,False,unemployment,US,Google Trends
+2025-01-05,89,False,unemployment,US,Google Trends
+2025-01-12,90,False,unemployment,US,Google Trends
+2025-01-19,85,False,unemployment,US,Google Trends
+2025-01-26,85,False,unemployment,US,Google Trends
+2025-02-02,81,False,unemployment,US,Google Trends
+2025-02-09,75,False,unemployment,US,Google Trends
+2025-02-16,90,False,unemployment,US,Google Trends
+2025-02-23,81,False,unemployment,US,Google Trends
+2025-03-02,77,False,unemployment,US,Google Trends
+2025-03-09,78,False,unemployment,US,Google Trends
+2025-03-16,73,False,unemployment,US,Google Trends
+2025-03-23,69,False,unemployment,US,Google Trends
+2025-03-30,76,False,unemployment,US,Google Trends
+2025-04-06,75,False,unemployment,US,Google Trends
+2025-04-13,75,False,unemployment,US,Google Trends
+2025-04-20,71,False,unemployment,US,Google Trends
+2025-04-27,73,False,unemployment,US,Google Trends
+2025-05-04,68,False,unemployment,US,Google Trends
+2025-05-11,68,False,unemployment,US,Google Trends
+2025-05-18,66,False,unemployment,US,Google Trends
+2025-05-25,68,False,unemployment,US,Google Trends
+2025-06-01,74,False,unemployment,US,Google Trends
+2025-06-08,70,False,unemployment,US,Google Trends
+2025-06-15,74,True,unemployment,US,Google Trends

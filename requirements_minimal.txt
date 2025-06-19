@@ -1,0 +1,35 @@
+# Minimal requirements for the Forecast Accuracy Assessment Model Pipeline
+# These are the essential packages needed for basic functionality
+
+# Core data manipulation (essential)
+pandas>=1.5.0
+numpy>=1.21.0
+
+# Financial data (essential)
+yfinance>=0.2.0
+
+# HTTP requests (essential)
+requests>=2.25.0
+
+# Data visualization (essential)
+plotly>=5.0.0
+
+# Configuration (essential)
+python-dotenv>=0.19.0
+
+# Progress bars (essential)
+tqdm>=4.60.0
+
+# Logging (essential)
+loguru>=0.7.0
+
+# Note: The following packages are optional and will use sample data if not available:
+# - fredapi (for economic data)
+# - pytrends (for Google Trends)
+# - tweepy (for Twitter sentiment)
+# - praw (for Reddit sentiment)
+# - scikit-learn (for machine learning)
+# - xgboost (for gradient boosting)
+# - prophet (for time series forecasting)
+# - statsmodels (for statistical models)
+# - streamlit (for web app) 

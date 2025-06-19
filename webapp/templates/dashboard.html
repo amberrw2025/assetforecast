@@ -1,0 +1,377 @@
+{% extends "base.html" %}
+
+{% block title %}Forecast Assessment - Analytics Dashboard{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Page Header -->
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>
+                <i class="fas fa-tachometer-alt me-2"></i>
+                Analytics Dashboard
+            </h2>
+            <div>
+                <button class="btn btn-primary" onclick="refreshData()">
+                    <i class="fas fa-sync-alt me-2"></i>
+                    Refresh
+                </button>
+                <button class="btn btn-success" onclick="exportDashboard()">
+                    <i class="fas fa-download me-2"></i>
+                    Export
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Data Overview -->
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-line me-2"></i>
+                    Price Time Series
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="priceChart" class="chart-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key Metrics -->
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>
+                    Key Metrics
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="metricsContainer">
+                    <div class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading metrics...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Model Performance -->
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    Model Performance Comparison
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="performanceChart" class="chart-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Forecast Accuracy -->
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-bullseye me-2"></i>
+                    Forecast Accuracy
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="accuracyChart" class="chart-container"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Recent Forecasts -->
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-clock me-2"></i>
+                    Recent Forecasts
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="recentForecasts">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Generate forecasts to see recent predictions here.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Status -->
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-server me-2"></i>
+                    System Status
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="systemStatus">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>ARIMA Model</span>
+                        <span class="badge bg-success">Ready</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>Prophet Model</span>
+                        <span class="badge bg-success">Ready</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>LSTM Model</span>
+                        <span class="badge bg-success">Ready</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>Data Pipeline</span>
+                        <span class="badge bg-success">Active</span>
+                    </div>
+                    <hr>
+                    <small class="text-muted">
+                        Last updated: <span id="lastUpdated">-</span>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Dashboard data
+    let dashboardData = null;
+    let performanceData = null;
+
+    // Initialize dashboard
+    document.addEventListener('DOMContentLoaded', function() {
+        loadDashboardData();
+        updateLastUpdated();
+    });
+
+    function loadDashboardData() {
+        // Load data summary
+        fetch('/api/data-summary')
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    showNoDataMessage();
+                    return;
+                }
+                
+                dashboardData = data;
+                updateMetrics(data);
+                loadChartData();
+            })
+            .catch(error => {
+                console.error('Error loading dashboard data:', error);
+                showNoDataMessage();
+            });
+    }
+
+    function loadChartData() {
+        // Load chart data
+        fetch('/api/chart-data')
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    return;
+                }
+                
+                createPriceChart(data);
+                createPerformanceChart();
+                createAccuracyChart();
+            })
+            .catch(error => {
+                console.error('Error loading chart data:', error);
+            });
+    }
+
+    function updateMetrics(data) {
+        const container = document.getElementById('metricsContainer');
+        
+        container.innerHTML = `
+            <div class="row text-center">
+                <div class="col-6 mb-3">
+                    <div class="border rounded p-3">
+                        <h4 class="text-primary mb-1">${data.total_records?.toLocaleString() || '-'}</h4>
+                        <small class="text-muted">Total Records</small>
+                    </div>
+                </div>
+                <div class="col-6 mb-3">
+                    <div class="border rounded p-3">
+                        <h4 class="text-success mb-1">$${data.price_stats?.mean?.toFixed(2) || '-'}</h4>
+                        <small class="text-muted">Average Price</small>
+                    </div>
+                </div>
+                <div class="col-6 mb-3">
+                    <div class="border rounded p-3">
+                        <h4 class="text-warning mb-1">$${data.price_stats?.std?.toFixed(2) || '-'}</h4>
+                        <small class="text-muted">Price Volatility</small>
+                    </div>
+                </div>
+                <div class="col-6 mb-3">
+                    <div class="border rounded p-3">
+                        <h4 class="text-info mb-1">${data.models_loaded || 0}</h4>
+                        <small class="text-muted">Models Loaded</small>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-3">
+                <small class="text-muted">
+                    <strong>Date Range:</strong><br>
+                    ${data.date_range?.start || '-'} to ${data.date_range?.end || '-'}
+                </small>
+            </div>
+        `;
+    }
+
+    function createPriceChart(data) {
+        const traces = [
+            {
+                x: data.dates,
+                y: data.prices,
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Price',
+                line: { color: '#2c3e50', width: 2 }
+            },
+            {
+                x: data.dates,
+                y: data.rolling_mean,
+                type: 'scatter',
+                mode: 'lines',
+                name: '30-day Moving Average',
+                line: { color: '#3498db', width: 2, dash: 'dash' }
+            }
+        ];
+
+        const layout = {
+            title: 'Price Time Series with Moving Average',
+            xaxis: { title: 'Date' },
+            yaxis: { title: 'Price ($)' },
+            hovermode: 'x unified',
+            showlegend: true,
+            height: 400
+        };
+
+        Plotly.newPlot('priceChart', traces, layout);
+    }
+
+    function createPerformanceChart() {
+        // Sample performance data - in real app, this would come from model evaluation
+        const data = [
+            {
+                x: ['ARIMA', 'Prophet', 'LSTM'],
+                y: [0.045, 0.052, 0.038],
+                type: 'bar',
+                name: 'RMSE',
+                marker: { color: ['#e74c3c', '#f39c12', '#27ae60'] }
+            }
+        ];
+
+        const layout = {
+            title: 'Model Performance (RMSE)',
+            yaxis: { title: 'RMSE' },
+            height: 400
+        };
+
+        Plotly.newPlot('performanceChart', data, layout);
+    }
+
+    function createAccuracyChart() {
+        // Sample accuracy data
+        const data = [
+            {
+                values: [85, 78, 92],
+                labels: ['ARIMA', 'Prophet', 'LSTM'],
+                type: 'pie',
+                marker: { colors: ['#e74c3c', '#f39c12', '#27ae60'] }
+            }
+        ];
+
+        const layout = {
+            title: 'Forecast Accuracy (%)',
+            height: 400
+        };
+
+        Plotly.newPlot('accuracyChart', data, layout);
+    }
+
+    function showNoDataMessage() {
+        const container = document.getElementById('metricsContainer');
+        container.innerHTML = `
+            <div class="text-center">
+                <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                <h5>No Data Available</h5>
+                <p class="text-muted">Upload data to see dashboard metrics.</p>
+                <button class="btn btn-primary" onclick="showUploadModal()">
+                    <i class="fas fa-upload me-2"></i>
+                    Upload Data
+                </button>
+            </div>
+        `;
+    }
+
+    function refreshData() {
+        const btn = event.target;
+        const originalText = btn.innerHTML;
+        
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Refreshing...';
+        btn.disabled = true;
+        
+        loadDashboardData();
+        
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            updateLastUpdated();
+        }, 2000);
+    }
+
+    function exportDashboard() {
+        // Create a simple export of dashboard data
+        const exportData = {
+            timestamp: new Date().toISOString(),
+            dashboard_data: dashboardData,
+            performance_data: performanceData
+        };
+        
+        const dataStr = JSON.stringify(exportData, null, 2);
+        const dataBlob = new Blob([dataStr], {type: 'application/json'});
+        
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(dataBlob);
+        link.download = `dashboard_export_${new Date().toISOString().split('T')[0]}.json`;
+        link.click();
+    }
+
+    function updateLastUpdated() {
+        document.getElementById('lastUpdated').textContent = new Date().toLocaleString();
+    }
+
+    // Auto-refresh every 5 minutes
+    setInterval(() => {
+        loadDashboardData();
+        updateLastUpdated();
+    }, 5 * 60 * 1000);
+</script>
+{% endblock %} 
