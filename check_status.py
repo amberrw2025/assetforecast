@@ -15,7 +15,7 @@ def check_python_packages():
     
     required_packages = [
         'flask', 'plotly', 'pandas', 'numpy', 'joblib',
-        'scikit-learn', 'prophet', 'statsmodels', 'tensorflow'
+        'sklearn', 'prophet', 'statsmodels', 'tensorflow'
     ]
     
     missing_packages = []
