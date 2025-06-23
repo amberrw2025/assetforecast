@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Stock Data - Forecast Assessment{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>
+                <i class="fas fa-upload me-2"></i>
+                Upload Stock Data
+            </h2>
+            <div>
+                <a href="/stocks" class="btn btn-outline-primary">
+                    <i class="fas fa-chart-line me-2"></i>
+                    Back to Stocks
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-primary">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    How to Upload Your Stock Data
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h6><i class="fas fa-file-csv me-2 text-primary"></i>Required CSV Format</h6>
+                        <p class="mb-3">
+                            Upload a CSV file with at least <strong>100 data points</strong> for reliable forecasting. 
+                            Your 5-year dataset will provide the best results for our 6-model ensemble forecasting system.
+                        </p>
+                        
+                        <h6><i class="fas fa-columns me-2 text-success"></i>Required Columns</h6>
+                        <ul class="mb-3">
+                            <li><strong>Date</strong> - Trading date (YYYY-MM-DD format)</li>
+                            <li><strong>Close</strong> - Closing price (required for forecasting)</li>
+                            <li><strong>Open</strong> - Opening price (optional, improves accuracy)</li>
+                            <li><strong>High</strong> - Daily high price (optional)</li>
+                            <li><strong>Low</strong> - Daily low price (optional)</li>
+                            <li><strong>Volume</strong> - Trading volume (optional)</li>
+                        </ul>
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-lightbulb me-2"></i>
+                            <strong>Pro Tip:</strong> More data = better forecasts! Our models perform best with 2-5 years of historical data.
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="bg-light p-3 rounded">
+                            <h6><i class="fas fa-download me-2 text-info"></i>Example CSV Format</h6>
+                            <pre class="small mb-0">Date,Open,High,Low,Close,Volume
+2019-01-01,100.50,102.30,99.80,101.20,1000000
+2019-01-02,101.20,103.50,100.90,102.80,1200000</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-cloud-upload-alt me-2"></i>
+                    Upload Stock Data File
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="uploadForm" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="ticker" class="form-label">
+                            <i class="fas fa-tag me-2"></i>Stock Ticker Symbol
+                        </label>
+                        <input type="text" class="form-control" id="ticker" name="ticker" 
+                               placeholder="e.g., AAPL, TSLA, GOOGL" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="file" class="form-label">
+                            <i class="fas fa-file-csv me-2"></i>CSV Data File
+                        </label>
+                        <input type="file" class="form-control" id="file" name="file" accept=".csv" required>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-upload me-2"></i>
+                            Upload Stock Data
+                        </button>
+                    </div>
+                </form>
+                
+                <div id="uploadProgress" class="mt-3" style="display: none;">
+                    <div class="progress">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                             role="progressbar" style="width: 100%">
+                            Uploading...
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="uploadResult" class="mt-3"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('uploadForm');
+    const progressDiv = document.getElementById('uploadProgress');
+    const resultDiv = document.getElementById('uploadResult');
+    
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(form);
+        progressDiv.style.display = 'block';
+        resultDiv.innerHTML = '';
+        
+        fetch('/api/upload-stock', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            progressDiv.style.display = 'none';
+            
+            if (data.success) {
+                resultDiv.innerHTML = '<div class="alert alert-success"><i class="fas fa-check-circle me-2"></i>' + data.message + '</div>';
+                form.reset();
+            } else {
+                resultDiv.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-triangle me-2"></i>' + data.error + '</div>';
+            }
+        })
+        .catch(error => {
+            progressDiv.style.display = 'none';
+            resultDiv.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-triangle me-2"></i>Upload failed</div>';
+        });
+    });
+});
+</script>
+{% endblock %}
