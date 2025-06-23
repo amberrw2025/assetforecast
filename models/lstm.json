@@ -217,5 +217,8 @@
     ],
     "n_observations": 46890,
     "sequence_length": 30
-  }
+  },
+  "status": "fixed_compatible",
+  "fix_date": "2025-06-20",
+  "tensorflow_version": "2.15.0"
 }
