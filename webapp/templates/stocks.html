@@ -102,12 +102,12 @@
                     <div class="card mb-4">
                         <div class="card-header">
                             <h6 class="mb-0">
-                                <i class="fas fa-dollar-sign me-2"></i>
-                                Revenue Trend
+                                <i class="fas fa-chart-bar me-2"></i>
+                                Volume Trend
                             </h6>
                         </div>
                         <div class="card-body">
-                            <div id="revenueChart" class="chart-container" style="height: 300px;"></div>
+                            <div id="volumeChart" class="chart-container" style="height: 300px;"></div>
                         </div>
                     </div>
                 </div>
@@ -115,12 +115,12 @@
                     <div class="card mb-4">
                         <div class="card-header">
                             <h6 class="mb-0">
-                                <i class="fas fa-coins me-2"></i>
-                                Net Income
+                                <i class="fas fa-chart-area me-2"></i>
+                                Price Range
                             </h6>
                         </div>
                         <div class="card-body">
-                            <div id="incomeChart" class="chart-container" style="height: 300px;"></div>
+                            <div id="rangeChart" class="chart-container" style="height: 300px;"></div>
                         </div>
                     </div>
                 </div>
@@ -179,6 +179,16 @@ document.addEventListener('DOMContentLoaded', function() {
     loadStocks();
 });
 
+function showError(message) {
+    document.getElementById('noStockSelected').innerHTML = `
+        <div class="card-body text-center py-5">
+            <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+            <h4 class="text-muted">Error</h4>
+            <p class="text-muted">${message}</p>
+        </div>
+    `;
+}
+
 function loadStocks() {
     fetch('/api/stocks')
         .then(response => response.json())
@@ -203,9 +213,9 @@ function displayStocks(stocks) {
     if (ftseStocks.length > 0) {
         html += '<h6 class="text-muted mb-2">FTSE 100</h6>';
         ftseStocks.forEach(stock => {
-            html += `<a href="#" class="list-group-item list-group-item-action" onclick="selectStock('${stock.symbol}')">
+            html += `<a href="#" class="list-group-item list-group-item-action" onclick="selectStock('${stock.ticker}')">
                 <div class="d-flex justify-content-between">
-                    <h6 class="mb-1">${stock.symbol}</h6>
+                    <h6 class="mb-1">${stock.ticker}</h6>
                     <small>${stock.market}</small>
                 </div>
                 <p class="mb-1">${stock.name}</p>
@@ -216,9 +226,9 @@ function displayStocks(stocks) {
     if (sp500Stocks.length > 0) {
         html += '<h6 class="text-muted mb-2 mt-3">S&P 500</h6>';
         sp500Stocks.forEach(stock => {
-            html += `<a href="#" class="list-group-item list-group-item-action" onclick="selectStock('${stock.symbol}')">
+            html += `<a href="#" class="list-group-item list-group-item-action" onclick="selectStock('${stock.ticker}')">
                 <div class="d-flex justify-content-between">
-                    <h6 class="mb-1">${stock.symbol}</h6>
+                    <h6 class="mb-1">${stock.ticker}</h6>
                     <small>${stock.market}</small>
                 </div>
                 <p class="mb-1">${stock.name}</p>
@@ -235,7 +245,7 @@ function filterStocks() {
     
     let filteredStocks = allStocks.filter(stock => {
         const matchesSearch = stock.name.toLowerCase().includes(searchTerm) || 
-                            stock.symbol.toLowerCase().includes(searchTerm);
+                            stock.ticker.toLowerCase().includes(searchTerm);
         const matchesMarket = !marketFilter || stock.market === marketFilter;
         return matchesSearch && matchesMarket;
     });
@@ -243,32 +253,35 @@ function filterStocks() {
     displayStocks(filteredStocks);
 }
 
-function selectStock(symbol) {
+function selectStock(ticker) {
     document.querySelectorAll('.list-group-item').forEach(item => {
         item.classList.remove('active');
     });
     event.target.closest('.list-group-item').classList.add('active');
     
-    loadStockData(symbol);
+    loadStockData(ticker);
 }
 
-function loadStockData(symbol) {
+function loadStockData(ticker) {
     document.getElementById('stockAnalysis').style.display = 'none';
     document.getElementById('noStockSelected').innerHTML = `
         <div class="card-body text-center py-5">
             <div class="spinner-border text-primary"></div>
-            <p class="mt-2">Loading ${symbol} data...</p>
+            <p class="mt-2">Loading ${ticker} data...</p>
         </div>
     `;
     
-    fetch(`/api/stock/${symbol}`)
+    fetch(`/api/stock/${ticker}`)
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                displayStockAnalysis(data.data);
+                displayStockAnalysis(data);
             } else {
                 showError('Error: ' + data.error);
             }
+        })
+        .catch(error => {
+            showError('Error loading data: ' + error.message);
         });
 }
 
@@ -278,171 +291,294 @@ function displayStockAnalysis(stock) {
     
     document.getElementById('stockTitle').innerHTML = `
         <i class="fas fa-chart-line me-2"></i>
-        ${stock.name} (${stock.symbol})
+        ${stock.name} (${stock.ticker})
     `;
     
-    const metrics = stock.latest_metrics;
+    // Update basic stats
+    document.getElementById('currentPrice').textContent = `$${stock.current_price.toFixed(2)}`;
     
-    document.getElementById('currentPrice').textContent = 
-        metrics.close_price ? `$${metrics.close_price.toFixed(2)}` : 'N/A';
+    const returnClass = stock.total_return >= 0 ? 'text-success' : 'text-danger';
+    const returnSign = stock.total_return >= 0 ? '+' : '';
+    document.getElementById('totalReturn').innerHTML = 
+        `<span class="${returnClass}">${returnSign}${stock.total_return.toFixed(1)}%</span>`;
     
-    document.getElementById('totalReturn').textContent = 
-        stock.performance.total_return_pct ? 
-        `${stock.performance.total_return_pct > 0 ? '+' : ''}${stock.performance.total_return_pct.toFixed(1)}%` : 'N/A';
+    document.getElementById('marketCap').textContent = 'N/A';  // Not available in our dataset
+    document.getElementById('peRatio').textContent = 'N/A';   // Not available in our dataset
     
-    document.getElementById('marketCap').textContent = 
-        metrics.market_cap ? `$${(metrics.market_cap / 1e9).toFixed(1)}B` : 'N/A';
+    // Store stock data globally for forecast
+    window.currentStock = stock;
     
-    document.getElementById('peRatio').textContent = 
-        metrics.pe_ratio ? metrics.pe_ratio.toFixed(1) : 'N/A';
-    
+    // Create charts
     createPriceChart(stock);
-    createRevenueChart(stock);
-    createIncomeChart(stock);
+    createVolumeChart(stock);
+    createRangeChart(stock);
     
-    if (stock.forecast && Object.keys(stock.forecast).length > 0) {
-        document.getElementById('forecastCurrent').textContent = `$${stock.forecast.current_price.toFixed(2)}`;
-        document.getElementById('forecastPrice').textContent = `$${stock.forecast.forecast_price.toFixed(2)}`;
-        
-        const change = stock.forecast.expected_change;
-        const changePct = stock.forecast.expected_change_pct;
-        const changeClass = change >= 0 ? 'text-success' : 'text-danger';
-        const changeSign = change >= 0 ? '+' : '';
-        
-        document.getElementById('forecastChange').innerHTML = 
-            `<span class="${changeClass}">${changeSign}$${change.toFixed(2)} (${changeSign}${changePct.toFixed(1)}%)</span>`;
-    }
+    // Generate a simple forecast for display
+    generateForecast(stock);
 }
 
-function createPriceChart(stock) {
-    if (!stock.chart_data.prices) return;
+function generateForecast(stock) {
+    // Simple 30-day forecast using trend
+    const prices = stock.historical_data.prices;
+    const recent30 = prices.slice(-30);
+    
+    if (recent30.length < 10) {
+        document.getElementById('forecastCurrent').textContent = `$${stock.current_price.toFixed(2)}`;
+        document.getElementById('forecastPrice').textContent = 'Insufficient data';
+        document.getElementById('forecastChange').textContent = 'N/A';
+        return;
+    }
+    
+    // Calculate simple trend
+    const firstPrice = recent30[0];
+    const lastPrice = recent30[recent30.length - 1];
+    const dailyChange = (lastPrice - firstPrice) / recent30.length;
+    
+    // Project 30 days forward
+    const forecastPrice = lastPrice + (dailyChange * 30);
+    const change = forecastPrice - lastPrice;
+    const changePct = (change / lastPrice) * 100;
+    
+    document.getElementById('forecastCurrent').textContent = `$${lastPrice.toFixed(2)}`;
+    document.getElementById('forecastPrice').textContent = `$${forecastPrice.toFixed(2)}`;
+    
+    const changeClass = change >= 0 ? 'text-success' : 'text-danger';
+    const changeSign = change >= 0 ? '+' : '';
+    
+    document.getElementById('forecastChange').innerHTML = 
+        `<span class="${changeClass}">${changeSign}$${change.toFixed(2)} (${changeSign}${changePct.toFixed(1)}%)</span>`;
+}
+
+function createPriceChart(stock, forecastData = null) {
+    if (!stock.historical_data || !stock.historical_data.prices) return;
     
     const traces = [];
     
-    traces.push({
-        x: stock.chart_data.prices.dates,
-        y: stock.chart_data.prices.values,
-        type: 'scatter',
-        mode: 'lines',
-        name: 'Historical Price',
-        line: { color: '#3498db', width: 2 }
-    });
-    
-    if (stock.forecast && stock.forecast.dates) {
+    // If we have forecast data, create a truly seamless connection
+    if (forecastData && forecastData.forecast_dates && forecastData.forecast_prices) {
+        // Historical portion (solid blue line) - only historical data
         traces.push({
-            x: stock.forecast.dates,
-            y: stock.forecast.values,
+            x: stock.historical_data.dates,
+            y: stock.historical_data.prices,
             type: 'scatter',
             mode: 'lines',
-            name: '30-Day Forecast',
-            line: { color: '#e74c3c', width: 2, dash: 'dash' }
+            name: 'Historical Price',
+            line: { color: '#3498db', width: 2 },
+            hovertemplate: 'Historical: $%{y:.2f}<br>%{x}<extra></extra>'
+        });
+        
+        // Forecast portion (dashed red line) - starts from last historical point
+        // forecastData.forecast_dates and forecast_prices already include the connection point
+        traces.push({
+            x: forecastData.forecast_dates,
+            y: forecastData.forecast_prices,
+            type: 'scatter', 
+            mode: 'lines',
+            name: `Forecast (${forecastData.summary.primary_model})`,
+            line: { color: '#e74c3c', width: 2, dash: 'dash' },
+            hovertemplate: 'Forecast: $%{y:.2f}<br>%{x}<extra></extra>'
+        });
+        
+        // Add confidence interval for forecast portion only
+        if (forecastData.confidence_interval) {
+            const upperBound = forecastData.forecast_prices.map(price => 
+                price + forecastData.confidence_interval);
+            const lowerBound = forecastData.forecast_prices.map(price => 
+                Math.max(0.01, price - forecastData.confidence_interval));
+            
+            traces.push({
+                x: forecastData.forecast_dates,
+                y: upperBound,
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Upper Confidence',
+                line: { color: 'rgba(231, 76, 60, 0.2)', width: 1 },
+                showlegend: false,
+                hoverinfo: 'skip'
+            });
+            
+            traces.push({
+                x: forecastData.forecast_dates,
+                y: lowerBound,
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Lower Confidence',
+                line: { color: 'rgba(231, 76, 60, 0.2)', width: 1 },
+                fill: 'tonexty',
+                fillcolor: 'rgba(231, 76, 60, 0.1)',
+                showlegend: false,
+                hoverinfo: 'skip'
+            });
+        }
+    } else {
+        // No forecast data, just show historical
+        traces.push({
+            x: stock.historical_data.dates,
+            y: stock.historical_data.prices,
+            type: 'scatter',
+            mode: 'lines',
+            name: 'Historical Price',
+            line: { color: '#3498db', width: 2 }
         });
     }
     
     const layout = {
-        title: 'Stock Price & Forecast',
-        xaxis: { title: 'Date' },
+        title: `${stock.name} Stock Price History ${forecastData ? '& 30-Day Forecast' : ''}`,
+        xaxis: { 
+            title: 'Date',
+            type: 'category'  // This makes Plotly treat dates as categories, skipping gaps
+        },
         yaxis: { title: 'Price ($)' },
-        hovermode: 'x unified'
+        hovermode: 'x unified',
+        margin: { l: 50, r: 20, t: 40, b: 40 },
+        showlegend: true
     };
     
     Plotly.newPlot('priceChart', traces, layout, {responsive: true});
-}
-
-function createRevenueChart(stock) {
-    if (!stock.chart_data.revenue) {
-        document.getElementById('revenueChart').innerHTML = '<p class="text-center text-muted">Revenue data not available</p>';
-        return;
-    }
     
-    // Check if data has variation
-    if (!stock.chart_data.revenue.has_variation) {
-        showConstantDataMessage('revenueChart', 'Revenue Trend', 
-            `Current Revenue: $${stock.chart_data.revenue.values[0].toFixed(2)}B`, 
-            stock.chart_data.revenue.note || 'Quarterly revenue data (constant value indicates same reporting period)');
-        return;
-    }
-    
-    const trace = {
-        x: stock.chart_data.revenue.dates,
-        y: stock.chart_data.revenue.values,
-        type: 'scatter',
-        mode: 'lines+markers',
-        name: 'Revenue',
-        line: { color: '#27ae60' }
-    };
-    
-    const layout = {
-        title: 'Revenue Trend',
-        xaxis: { title: 'Date' },
-        yaxis: { title: 'Revenue (Billions $)' },
-        margin: { l: 50, r: 20, t: 40, b: 40 }
-    };
-    
-    Plotly.newPlot('revenueChart', [trace], layout, {responsive: true});
-}
-
-function createIncomeChart(stock) {
-    if (!stock.chart_data.net_income) {
-        document.getElementById('incomeChart').innerHTML = '<p class="text-center text-muted">Income data not available</p>';
-        return;
-    }
-    
-    // Check if data has variation
-    if (!stock.chart_data.net_income.has_variation) {
-        showConstantDataMessage('incomeChart', 'Net Income', 
-            `Current Net Income: $${stock.chart_data.net_income.values[0].toFixed(2)}B`, 
-            stock.chart_data.net_income.note || 'Quarterly net income data (constant value indicates same reporting period)');
-        return;
-    }
-    
-    const trace = {
-        x: stock.chart_data.net_income.dates,
-        y: stock.chart_data.net_income.values,
-        type: 'scatter',
-        mode: 'markers',
-        name: 'Net Income',
-        marker: { 
-            color: stock.chart_data.net_income.values.map(v => v >= 0 ? '#27ae60' : '#e74c3c'),
-            size: 8
-        }
-    };
-    
-    const layout = {
-        title: 'Net Income',
-        xaxis: { title: 'Date' },
-        yaxis: { title: 'Net Income (Billions $)' },
-        margin: { l: 50, r: 20, t: 40, b: 40 }
-    };
-    
-    Plotly.newPlot('incomeChart', [trace], layout, {responsive: true});
-}
-
-function showConstantDataMessage(chartId, title, valueText, note) {
-    const chartDiv = document.getElementById(chartId);
-    chartDiv.innerHTML = `
-        <div class="text-center p-4" style="height: 400px; display: flex; flex-direction: column; justify-content: center; align-items: center; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 0.375rem;">
-            <h5 class="mb-3">${title}</h5>
-            <div class="alert alert-info mb-3" style="max-width: 500px;">
-                <h6 class="mb-2">${valueText}</h6>
-                <small class="text-muted">${note}</small>
+    // Add forecast button if no forecast data is displayed
+    if (!forecastData) {
+        const chartDiv = document.getElementById('priceChart');
+        const buttonHtml = `
+            <div class="text-center mt-3">
+                <button class="btn btn-primary" onclick="generateAdvancedForecast('${stock.ticker}')">
+                    <i class="fas fa-crystal-ball me-2"></i>Generate 30-Day Forecast
+                </button>
             </div>
-            <p class="text-muted mb-0">
-                <i class="fas fa-info-circle"></i> 
-                This data shows a constant value across all time periods, indicating it represents the same reporting period (e.g., latest quarterly results).
-            </p>
-        </div>
-    `;
+        `;
+        chartDiv.insertAdjacentHTML('afterend', buttonHtml);
+    }
 }
 
-function showError(message) {
-    document.getElementById('noStockSelected').innerHTML = `
-        <div class="card-body text-center py-5">
-            <i class="fas fa-exclamation-triangle fa-4x text-danger mb-3"></i>
-            <h4 class="text-danger">Error</h4>
-            <p class="text-muted">${message}</p>
-        </div>
-    `;
+function createVolumeChart(stock) {
+    if (!stock.historical_data || !stock.historical_data.volumes) {
+        document.getElementById('volumeChart').innerHTML = '<p class="text-center text-muted">Volume data not available</p>';
+        return;
+    }
+    
+    const trace = {
+        x: stock.historical_data.dates,
+        y: stock.historical_data.volumes,
+        type: 'scatter',
+        mode: 'lines',
+        name: 'Volume',
+        line: { color: '#27ae60', width: 2 }
+    };
+    
+    const layout = {
+        title: 'Trading Volume',
+        xaxis: { title: 'Date' },
+        yaxis: { title: 'Volume' },
+        hovermode: 'x unified',
+        margin: { l: 50, r: 20, t: 40, b: 40 }
+    };
+    
+    Plotly.newPlot('volumeChart', [trace], layout, {responsive: true});
+}
+
+function createRangeChart(stock) {
+    if (!stock.historical_data || !stock.historical_data.highs || !stock.historical_data.lows) {
+        document.getElementById('rangeChart').innerHTML = '<p class="text-center text-muted">High/Low data not available</p>';
+        return;
+    }
+    
+    const traces = [
+        {
+            x: stock.historical_data.dates,
+            y: stock.historical_data.highs,
+            type: 'scatter',
+            mode: 'lines',
+            name: 'High',
+            line: { color: '#e74c3c', width: 1 }
+        },
+        {
+            x: stock.historical_data.dates,
+            y: stock.historical_data.lows,
+            type: 'scatter',
+            mode: 'lines',
+            name: 'Low',
+            line: { color: '#3498db', width: 1 },
+            fill: 'tonexty',
+            fillcolor: 'rgba(52, 152, 219, 0.1)'
+        }
+    ];
+    
+    const layout = {
+        title: 'Price Range (High/Low)',
+        xaxis: { title: 'Date' },
+        yaxis: { title: 'Price ($)' },
+        hovermode: 'x unified',
+        margin: { l: 50, r: 20, t: 40, b: 40 }
+    };
+    
+    Plotly.newPlot('rangeChart', traces, layout, {responsive: true});
+}
+
+function generateAdvancedForecast(ticker) {
+    // Show loading state
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generating Forecast...';
+    button.disabled = true;
+    
+    // Call the forecast API
+    fetch('/api/forecast-asset', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            ticker: ticker,
+            days: 30
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update the chart with forecast data
+            createPriceChart(window.currentStock, data);
+            
+            // Update forecast summary
+            updateForecastSummary(data);
+            
+            // Remove the button since forecast is now displayed
+            button.parentElement.remove();
+        } else {
+            alert('Error generating forecast: ' + data.error);
+            button.innerHTML = originalText;
+            button.disabled = false;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error generating forecast: ' + error.message);
+        button.innerHTML = originalText;
+        button.disabled = false;
+    });
+}
+
+function updateForecastSummary(data) {
+    // Update the forecast summary section
+    document.getElementById('forecastCurrent').textContent = `$${data.current_price.toFixed(2)}`;
+    document.getElementById('forecastPrice').textContent = `$${data.predicted_price.toFixed(2)}`;
+    
+    const changeClass = data.change_percent >= 0 ? 'text-success' : 'text-danger';
+    const changeSign = data.change_percent >= 0 ? '+' : '';
+    const changeAmount = data.predicted_price - data.current_price;
+    
+    document.getElementById('forecastChange').innerHTML = 
+        `<span class="${changeClass}">${changeSign}$${changeAmount.toFixed(2)} (${changeSign}${data.change_percent.toFixed(1)}%)</span>`;
+    
+    // Update the note with model information
+    const noteDiv = document.querySelector('.alert-info');
+    if (noteDiv) {
+        noteDiv.innerHTML = `
+            <i class="fas fa-info-circle me-2"></i>
+            <strong>Model:</strong> ${data.summary.primary_model} using ${data.summary.models_used} models. 
+            <strong>Data Source:</strong> ${data.summary.data_source}. 
+            <strong>Confidence Interval:</strong> ±$${data.confidence_interval.toFixed(2)}
+        `;
+    }
 }
 </script>
 {% endblock %} 
