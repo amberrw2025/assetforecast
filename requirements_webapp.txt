@@ -23,6 +23,9 @@ statsmodels>=0.14.0
 # Deep learning (for LSTM model)
 tensorflow>=2.13.0
 
+# Stock data acquisition
+yfinance>=0.2.25
+
 # File handling
 openpyxl>=3.1.0
 xlrd>=2.0.0

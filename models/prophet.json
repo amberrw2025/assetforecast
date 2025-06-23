@@ -9,7 +9,7 @@
     "daily_seasonality": false
   },
   "training_history": {
-    "n_observations": 46883,
+    "n_observations": 46890,
     "date_range": {
       "start": "2023-01-03",
       "end": "2024-12-16"

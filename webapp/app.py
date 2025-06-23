@@ -1,351 +1,315 @@
 """
-Flask web application for forecast accuracy assessment model.
-Provides interactive web interface for model predictions and analysis.
+Flask web application for asset forecasting.
+Multi-model stock prediction interface.
 """
 
 import os
 import pandas as pd
 import numpy as np
-import json
-import plotly.graph_objs as go
-import plotly.utils
 from datetime import datetime, timedelta
-from flask import Flask, render_template, request, jsonify, send_file
-from werkzeug.utils import secure_filename
-import io
-import base64
-from pathlib import Path
-import sys
-
-# Add parent directory to path for imports
-sys.path.append(str(Path(__file__).parent.parent))
-
-from models import ARIMAModel, ProphetModel, LSTMModel, ModelEvaluator
-from config import PROCESSED_DATA_DIR, MODELS_DIR
-
-# Configure upload settings
-UPLOAD_FOLDER = 'uploads'
-ALLOWED_EXTENSIONS = {'csv', 'xlsx', 'xls'}
-MAX_CONTENT_LENGTH = 50 * 1024 * 1024  # 50MB max file size
+from flask import Flask, render_template, request, jsonify
+import yfinance as yf
+from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import PolynomialFeatures
 
 def create_app():
-    """Create and configure the Flask application."""
     app = Flask(__name__)
-    app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-    app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH
-    
-    # Create upload directory
-    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-    
-    # Initialize models
-    models = {}
-    
-    def load_models():
-        """Load trained models."""
-        try:
-            # Load ARIMA model
-            arima = ARIMAModel()
-            arima.load_model(str(MODELS_DIR / 'arima'))
-            models['ARIMA'] = arima
-            
-            # Load Prophet model
-            prophet = ProphetModel()
-            prophet.load_model(str(MODELS_DIR / 'prophet'))
-            models['Prophet'] = prophet
-            
-            # Load LSTM model
-            lstm = LSTMModel()
-            lstm.load_model(str(MODELS_DIR / 'lstm'))
-            models['LSTM'] = lstm
-            
-            print("✅ All models loaded successfully")
-            return True
-        except Exception as e:
-            print(f"❌ Error loading models: {e}")
-            return False
-    
-    def allowed_file(filename):
-        """Check if file extension is allowed."""
-        return '.' in filename and \
-               filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-    
-    def prepare_data(df):
-        """Prepare data for forecasting."""
-        # Ensure date column exists
-        if 'date' not in df.columns:
-            # Try to find date-like column
-            date_columns = [col for col in df.columns if 'date' in col.lower() or 'time' in col.lower()]
-            if date_columns:
-                df['date'] = pd.to_datetime(df[date_columns[0]])
-            else:
-                # Create dummy dates if none found
-                df['date'] = pd.date_range(start='2020-01-01', periods=len(df), freq='D')
-        
-        # Ensure target column exists
-        if 'close_price' not in df.columns:
-            # Try to find price-like column
-            price_columns = [col for col in df.columns if 'price' in col.lower() or 'close' in col.lower()]
-            if price_columns:
-                df['close_price'] = df[price_columns[0]]
-            else:
-                # Use first numeric column
-                numeric_columns = df.select_dtypes(include=[np.number]).columns
-                if len(numeric_columns) > 0:
-                    df['close_price'] = df[numeric_columns[0]]
-                else:
-                    raise ValueError("No suitable target column found")
-        
-        # Clean data
-        df = df.dropna(subset=['close_price'])
-        df = df.sort_values('date')
-        
-        return df
     
     @app.route('/')
     def index():
-        """Main dashboard page."""
         return render_template('index.html')
     
-    @app.route('/upload', methods=['POST'])
-    def upload_file():
-        """Handle file upload."""
-        if 'file' not in request.files:
-            return jsonify({'error': 'No file provided'}), 400
-        
-        file = request.files['file']
-        if file.filename == '':
-            return jsonify({'error': 'No file selected'}), 400
-        
-        if file and allowed_file(file.filename):
-            try:
-                filename = secure_filename(file.filename)
-                filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                file.save(filepath)
-                
-                # Read and prepare data
-                if filename.endswith('.csv'):
-                    df = pd.read_csv(filepath)
-                else:
-                    df = pd.read_excel(filepath)
-                
-                df = prepare_data(df)
-                
-                # Save processed data
-                processed_filepath = os.path.join(app.config['UPLOAD_FOLDER'], 'processed_data.csv')
-                df.to_csv(processed_filepath, index=False)
-                
-                # Generate data summary
-                summary = {
-                    'rows': len(df),
-                    'columns': len(df.columns),
-                    'date_range': {
-                        'start': df['date'].min().strftime('%Y-%m-%d'),
-                        'end': df['date'].max().strftime('%Y-%m-%d')
-                    },
-                    'target_stats': {
-                        'mean': float(df['close_price'].mean()),
-                        'std': float(df['close_price'].std()),
-                        'min': float(df['close_price'].min()),
-                        'max': float(df['close_price'].max())
-                    }
-                }
-                
-                return jsonify({
-                    'success': True,
-                    'message': 'File uploaded and processed successfully',
-                    'summary': summary
-                })
-                
-            except Exception as e:
-                return jsonify({'error': f'Error processing file: {str(e)}'}), 500
-        
-        return jsonify({'error': 'Invalid file type'}), 400
-    
-    @app.route('/forecast', methods=['POST'])
-    def generate_forecast():
-        """Generate forecasts using trained models."""
+    @app.route('/api/forecast-asset', methods=['POST'])
+    def forecast_asset():
         try:
             data = request.get_json()
-            steps = data.get('steps', 30)
-            selected_models = data.get('models', ['ARIMA', 'Prophet', 'LSTM'])
+            ticker = data.get('ticker', '').upper().strip()
+            days = int(data.get('days', 30))
             
-            # Load data
-            data_file = os.path.join(app.config['UPLOAD_FOLDER'], 'processed_data.csv')
-            if not os.path.exists(data_file):
-                return jsonify({'error': 'No data uploaded. Please upload data first.'}), 400
+            if not ticker:
+                return jsonify({'success': False, 'error': 'Ticker required'})
             
-            df = pd.read_csv(data_file)
-            df['date'] = pd.to_datetime(df['date'])
+            # Get stock data
+            stock = yf.Ticker(ticker)
+            hist_data = stock.history(period='1y')
             
-            # Generate forecasts
-            forecasts = {}
-            for model_name in selected_models:
-                if model_name in models:
-                    try:
-                        model = models[model_name]
-                        if model_name == 'Prophet':
-                            forecast = model.predict(df, periods=steps)
+            if hist_data.empty:
+                return jsonify({'success': False, 'error': f'No data for {ticker}'})
+            
+            # Prepare data
+            dates = [d.strftime('%Y-%m-%d') for d in hist_data.index]
+            prices = hist_data['Close'].tolist()
+            
+            # Store all forecasts and model info
+            all_forecasts = {}
+            model_info = {}
+            
+            # 1. Linear Regression Model
+            try:
+                recent = hist_data.tail(60)
+                X = np.arange(len(recent)).reshape(-1, 1)
+                y = recent['Close'].values
+                
+                linear_model = LinearRegression()
+                linear_model.fit(X, y)
+                
+                future_X = np.arange(len(recent), len(recent) + days).reshape(-1, 1)
+                linear_forecast = linear_model.predict(future_X)
+                linear_forecast = np.maximum(linear_forecast, 0.01)
+                
+                all_forecasts['Linear Regression'] = linear_forecast.tolist()
+                model_info['Linear Regression'] = {
+                    'status': 'success',
+                    'type': f'Linear trend on {len(recent)} days',
+                    'slope': float(linear_model.coef_[0])
+                }
+            except Exception as e:
+                model_info['Linear Regression'] = {'status': 'failed', 'error': str(e)[:50]}
+            
+            # 2. Moving Average Model
+            try:
+                prices_array = hist_data['Close'].values
+                short_ma = np.mean(prices_array[-7:])  # 7-day MA
+                long_ma = np.mean(prices_array[-30:])   # 30-day MA
+                
+                if long_ma > 0:
+                    trend = (short_ma - long_ma) / long_ma
+                else:
+                    trend = 0
+                
+                last_price = prices_array[-1]
+                ma_forecast = []
+                
+                for i in range(days):
+                    trend_factor = trend * (0.95 ** i)  # Diminishing trend
+                    next_price = last_price * (1 + trend_factor)
+                    next_price = max(next_price, 0.01)
+                    ma_forecast.append(next_price)
+                    last_price = next_price
+                
+                all_forecasts['Moving Average'] = ma_forecast
+                model_info['Moving Average'] = {
+                    'status': 'success',
+                    'type': '7-day vs 30-day MA trend',
+                    'trend': f'{trend:.4f}'
+                }
+            except Exception as e:
+                model_info['Moving Average'] = {'status': 'failed', 'error': str(e)[:50]}
+            
+            # 3. Exponential Smoothing Model
+            try:
+                prices_array = hist_data['Close'].values
+                alpha = 0.3  # Smoothing parameter
+                smoothed = [prices_array[0]]
+                
+                for price in prices_array[1:]:
+                    smoothed.append(alpha * price + (1 - alpha) * smoothed[-1])
+                
+                # Calculate trend from smoothed data
+                recent_smoothed = smoothed[-10:]
+                if len(recent_smoothed) >= 2:
+                    trend_per_day = (recent_smoothed[-1] - recent_smoothed[0]) / (len(recent_smoothed) - 1)
+                else:
+                    trend_per_day = 0
+                
+                last_smoothed = smoothed[-1]
+                exp_forecast = []
+                
+                for i in range(days):
+                    trend_effect = trend_per_day * (i + 1) * (0.98 ** i)
+                    next_value = last_smoothed + trend_effect
+                    next_value = max(next_value, 0.01)
+                    exp_forecast.append(next_value)
+                
+                all_forecasts['Exponential Smoothing'] = exp_forecast
+                model_info['Exponential Smoothing'] = {
+                    'status': 'success',
+                    'type': f'Exponential smoothing (α={alpha})',
+                    'trend_per_day': f'{trend_per_day:.4f}'
+                }
+            except Exception as e:
+                model_info['Exponential Smoothing'] = {'status': 'failed', 'error': str(e)[:50]}
+            
+            # 4. Polynomial Regression Model
+            try:
+                recent = hist_data.tail(50)
+                if len(recent) >= 10:
+                    X = np.arange(len(recent)).reshape(-1, 1)
+                    y = recent['Close'].values
+                    
+                    # 2nd degree polynomial
+                    poly_features = PolynomialFeatures(degree=2)
+                    X_poly = poly_features.fit_transform(X)
+                    
+                    poly_model = LinearRegression()
+                    poly_model.fit(X_poly, y)
+                    
+                    future_X = np.arange(len(recent), len(recent) + days).reshape(-1, 1)
+                    future_X_poly = poly_features.transform(future_X)
+                    poly_forecast = poly_model.predict(future_X_poly)
+                    
+                    # Constrain predictions to reasonable bounds
+                    current_price = y[-1]
+                    poly_forecast = np.clip(poly_forecast, current_price * 0.5, current_price * 2.0)
+                    poly_forecast = np.maximum(poly_forecast, 0.01)
+                    
+                    all_forecasts['Polynomial Regression'] = poly_forecast.tolist()
+                    model_info['Polynomial Regression'] = {
+                        'status': 'success',
+                        'type': f'2nd degree polynomial on {len(recent)} days',
+                        'r2_score': 'fitted'
+                    }
+                else:
+                    model_info['Polynomial Regression'] = {'status': 'failed', 'error': 'Insufficient data'}
+            except Exception as e:
+                model_info['Polynomial Regression'] = {'status': 'failed', 'error': str(e)[:50]}
+            
+            # 5. Seasonal Trend Model
+            try:
+                prices_array = hist_data['Close'].values
+                
+                if len(prices_array) >= 30:
+                    # Calculate weekly seasonality (7-day pattern)
+                    weekly_pattern = []
+                    for day in range(7):
+                        day_prices = [prices_array[i] for i in range(day, len(prices_array), 7)]
+                        if day_prices:
+                            weekly_pattern.append(np.mean(day_prices))
                         else:
-                            forecast = model.predict(df, steps=steps)
+                            weekly_pattern.append(prices_array[-1])
+                    
+                    # Overall trend
+                    trend_slope = (prices_array[-1] - prices_array[-30]) / 30
+                    
+                    seasonal_forecast = []
+                    last_price = prices_array[-1]
+                    
+                    for i in range(days):
+                        # Apply trend
+                        trend_component = last_price + trend_slope * (i + 1)
                         
-                        forecasts[model_name] = forecast.tolist()
-                    except Exception as e:
-                        forecasts[model_name] = {'error': str(e)}
+                        # Apply seasonality
+                        seasonal_factor = weekly_pattern[i % 7] / np.mean(weekly_pattern)
+                        
+                        forecast_value = trend_component * seasonal_factor
+                        forecast_value = max(forecast_value, 0.01)
+                        seasonal_forecast.append(forecast_value)
+                    
+                    all_forecasts['Seasonal Model'] = seasonal_forecast
+                    model_info['Seasonal Model'] = {
+                        'status': 'success',
+                        'type': 'Trend + 7-day seasonality',
+                        'trend_slope': f'{trend_slope:.4f}'
+                    }
+                else:
+                    model_info['Seasonal Model'] = {'status': 'failed', 'error': 'Need 30+ days for seasonality'}
+            except Exception as e:
+                model_info['Seasonal Model'] = {'status': 'failed', 'error': str(e)[:50]}
             
-            # Create forecast dates
-            last_date = df['date'].max()
-            forecast_dates = pd.date_range(
-                start=last_date + timedelta(days=1),
-                periods=steps,
-                freq='D'
-            ).strftime('%Y-%m-%d').tolist()
+            # 6. Create Ensemble Model
+            successful_forecasts = {name: forecast for name, forecast in all_forecasts.items()}
+            
+            if len(successful_forecasts) >= 2:
+                try:
+                    # Weighted ensemble - give more weight to certain models
+                    weights = {
+                        'Linear Regression': 0.20,
+                        'Moving Average': 0.25,
+                        'Exponential Smoothing': 0.25,
+                        'Polynomial Regression': 0.15,
+                        'Seasonal Model': 0.15
+                    }
+                    
+                    ensemble_forecast = np.zeros(days)
+                    total_weight = 0
+                    
+                    for name, forecast in successful_forecasts.items():
+                        weight = weights.get(name, 0.2)  # Default weight
+                        ensemble_forecast += np.array(forecast) * weight
+                        total_weight += weight
+                    
+                    if total_weight > 0:
+                        ensemble_forecast /= total_weight
+                        
+                        all_forecasts['Ensemble'] = ensemble_forecast.tolist()
+                        model_info['Ensemble'] = {
+                            'status': 'success',
+                            'type': f'Weighted average of {len(successful_forecasts)} models',
+                            'models_combined': list(successful_forecasts.keys())
+                        }
+                except Exception as e:
+                    model_info['Ensemble'] = {'status': 'failed', 'error': str(e)[:50]}
+            
+            # Generate future dates (skip weekends)
+            future_dates = []
+            current_date = hist_data.index[-1]
+            for i in range(days):
+                current_date += timedelta(days=1)
+                while current_date.weekday() >= 5:  # Skip weekends
+                    current_date += timedelta(days=1)
+                future_dates.append(current_date.strftime('%Y-%m-%d'))
+            
+            # Choose primary forecast (prefer ensemble, then best available)
+            if 'Ensemble' in all_forecasts:
+                primary_forecast = all_forecasts['Ensemble']
+                primary_model = 'Ensemble'
+            elif 'Moving Average' in all_forecasts:
+                primary_forecast = all_forecasts['Moving Average']
+                primary_model = 'Moving Average'
+            elif 'Exponential Smoothing' in all_forecasts:
+                primary_forecast = all_forecasts['Exponential Smoothing']
+                primary_model = 'Exponential Smoothing'
+            elif successful_forecasts:
+                primary_model = list(successful_forecasts.keys())[0]
+                primary_forecast = list(successful_forecasts.values())[0]
+            else:
+                return jsonify({'success': False, 'error': 'All forecasting models failed'})
+            
+            # Calculate summary statistics
+            current_price = float(prices[-1])
+            predicted_price = float(primary_forecast[-1])
+            change_percent = ((predicted_price - current_price) / current_price) * 100
+            
+            # Calculate confidence interval based on model agreement
+            if len(successful_forecasts) > 1:
+                final_prices = [forecast[-1] for forecast in successful_forecasts.values()]
+                price_std = np.std(final_prices)
+                confidence_interval = float(price_std * 1.96)  # 95% confidence
+            else:
+                # Use historical volatility for single model
+                returns = hist_data['Close'].pct_change().dropna()
+                volatility = returns.std()
+                confidence_interval = float(volatility * np.sqrt(days) * current_price)
             
             return jsonify({
                 'success': True,
-                'forecasts': forecasts,
-                'dates': forecast_dates,
-                'actual_data': {
-                    'dates': df['date'].dt.strftime('%Y-%m-%d').tolist(),
-                    'values': df['close_price'].tolist()
+                'ticker': ticker,
+                'historical_dates': dates[-60:],
+                'historical_prices': prices[-60:],
+                'forecast_dates': future_dates,
+                'all_forecasts': all_forecasts,
+                'primary_forecast': primary_forecast,
+                'current_price': current_price,
+                'predicted_price': predicted_price,
+                'change_percent': change_percent,
+                'confidence_interval': confidence_interval,
+                'model_info': model_info,
+                'summary': {
+                    'primary_model': primary_model,
+                    'models_used': len(successful_forecasts),
+                    'trend': 'Bullish' if change_percent > 0 else 'Bearish'
+                },
+                'ensemble_info': {
+                    'primary_model': primary_model,
+                    'models_used': len(successful_forecasts)
                 }
             })
             
         except Exception as e:
-            return jsonify({'error': f'Error generating forecast: {str(e)}'}), 500
-    
-    @app.route('/evaluate', methods=['POST'])
-    def evaluate_models():
-        """Evaluate model performance."""
-        try:
-            # Load data
-            data_file = os.path.join(app.config['UPLOAD_FOLDER'], 'processed_data.csv')
-            if not os.path.exists(data_file):
-                return jsonify({'error': 'No data uploaded. Please upload data first.'}), 400
-            
-            df = pd.read_csv(data_file)
-            df['date'] = pd.to_datetime(df['date'])
-            
-            # Split data for evaluation
-            test_size = int(len(df) * 0.2)
-            test_data = df.tail(test_size).copy()
-            
-            # Evaluate models
-            evaluator = ModelEvaluator()
-            for name, model in models.items():
-                evaluator.add_model(model, name)
-            
-            results = evaluator.evaluate_all_models(test_data)
-            
-            # Convert numpy types to native Python types
-            for model_name, metrics in results.items():
-                for metric, value in metrics.items():
-                    if isinstance(value, (np.integer, np.floating)):
-                        results[model_name][metric] = float(value)
-            
-            return jsonify({
-                'success': True,
-                'results': results,
-                'test_size': len(test_data)
-            })
-            
-        except Exception as e:
-            return jsonify({'error': f'Error evaluating models: {str(e)}'}), 500
-    
-    @app.route('/dashboard')
-    def dashboard():
-        """Dashboard with charts and visualizations."""
-        return render_template('dashboard.html')
-    
-    @app.route('/api/data-summary')
-    def data_summary():
-        """Get data summary for dashboard."""
-        try:
-            data_file = os.path.join(app.config['UPLOAD_FOLDER'], 'processed_data.csv')
-            if not os.path.exists(data_file):
-                return jsonify({'error': 'No data available'}), 404
-            
-            df = pd.read_csv(data_file)
-            df['date'] = pd.to_datetime(df['date'])
-            
-            summary = {
-                'total_records': len(df),
-                'date_range': {
-                    'start': df['date'].min().strftime('%Y-%m-%d'),
-                    'end': df['date'].max().strftime('%Y-%m-%d')
-                },
-                'price_stats': {
-                    'mean': float(df['close_price'].mean()),
-                    'std': float(df['close_price'].std()),
-                    'min': float(df['close_price'].min()),
-                    'max': float(df['close_price'].max())
-                },
-                'models_loaded': len(models)
-            }
-            
-            return jsonify(summary)
-            
-        except Exception as e:
-            return jsonify({'error': str(e)}), 500
-    
-    @app.route('/api/chart-data')
-    def chart_data():
-        """Get data for charts."""
-        try:
-            data_file = os.path.join(app.config['UPLOAD_FOLDER'], 'processed_data.csv')
-            if not os.path.exists(data_file):
-                return jsonify({'error': 'No data available'}), 404
-            
-            df = pd.read_csv(data_file)
-            df['date'] = pd.to_datetime(df['date'])
-            
-            # Prepare chart data
-            chart_data = {
-                'dates': df['date'].dt.strftime('%Y-%m-%d').tolist(),
-                'prices': df['close_price'].tolist(),
-                'rolling_mean': df['close_price'].rolling(window=30).mean().tolist(),
-                'rolling_std': df['close_price'].rolling(window=30).std().tolist()
-            }
-            
-            return jsonify(chart_data)
-            
-        except Exception as e:
-            return jsonify({'error': str(e)}), 500
-    
-    @app.route('/download-forecast')
-    def download_forecast():
-        """Download forecast results as CSV."""
-        try:
-            # This would generate and return a CSV file
-            # For now, return a sample
-            data = {
-                'Date': pd.date_range(start='2025-01-01', periods=30, freq='D'),
-                'ARIMA_Forecast': np.random.randn(30) * 100 + 1000,
-                'Prophet_Forecast': np.random.randn(30) * 100 + 1000,
-                'LSTM_Forecast': np.random.randn(30) * 100 + 1000
-            }
-            
-            df = pd.DataFrame(data)
-            
-            # Create CSV in memory
-            output = io.StringIO()
-            df.to_csv(output, index=False)
-            output.seek(0)
-            
-            return send_file(
-                io.BytesIO(output.getvalue().encode('utf-8')),
-                mimetype='text/csv',
-                as_attachment=True,
-                download_name='forecast_results.csv'
-            )
-            
-        except Exception as e:
-            return jsonify({'error': str(e)}), 500
-    
-    # Load models on startup
-    load_models()
+            return jsonify({'success': False, 'error': str(e)})
     
     return app
 
 if __name__ == '__main__':
     app = create_app()
-    app.run(debug=True, host='0.0.0.0', port=5000) 
+    app.run(debug=True, host='0.0.0.0', port=5001)
