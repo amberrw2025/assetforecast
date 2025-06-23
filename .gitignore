@@ -171,28 +171,35 @@ mlartifacts/
 # Project Specific
 # ============================================================================
 # Data directories
-data/raw/
-data/processed/
-data/external/
-data/interim/
-data/temp/
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
 
 # Model artifacts
 models/*.joblib
 models/*.pkl
 models/*.h5
 models/*.model
-models/checkpoints/
+models/*.json
+!models/__init__.py
 
 # Logs
-logs/
-*.log
-log_*.txt
+logs/*
+!logs/.gitkeep
+
+# Environment
+.env
+.env.*
+!.env.example
+!.env.template
 
 # Temporary files
 temp/
 tmp/
 scratch/
+uploads/*
+!uploads/.gitkeep
 
 # API keys and secrets
 .env
@@ -202,11 +209,6 @@ config/secrets.json
 secrets/
 api_keys.txt
 credentials.json
-
-# Uploaded files (web app)
-uploads/
-uploads/*
-!uploads/.gitkeep
 
 # Cache directories
 .cache/

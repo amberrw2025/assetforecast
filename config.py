@@ -35,7 +35,7 @@ REDDIT_USER_AGENT = os.getenv("REDDIT_USER_AGENT", "ForecastModel/1.0")
 # Data sources configuration
 DATA_SOURCES = {
     "start_date": "2023-01-01",
-    "end_date": None,  # Will be set to current date
+    "end_date": "2024-12-31",  # Will be set to current date
     "frequency": "D",  # Daily frequency
     "currency": "USD",  # Base currency for standardization
 }
