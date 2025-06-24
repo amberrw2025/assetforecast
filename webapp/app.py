@@ -4,14 +4,31 @@ Multi-model stock prediction interface.
 """
 
 import os
+import json
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
-from flask import Flask, render_template, request, jsonify, redirect, url_for, flash
+from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, send_from_directory
 from werkzeug.utils import secure_filename
 import yfinance as yf
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import PolynomialFeatures
+import joblib
+from pathlib import Path
+
+# Import advanced models
+try:
+    import sys
+    sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+    from models.arima_model import ARIMAModel
+    from models.prophet_model import ProphetModel
+    from models.lstm_model import LSTMModel
+    from models.enhanced_forecast_model import EnhancedForecastModel
+    ADVANCED_MODELS_AVAILABLE = True
+    print("✅ Advanced models imported successfully")
+except ImportError as e:
+    print(f"⚠️  Advanced models not available: {e}")
+    ADVANCED_MODELS_AVAILABLE = False
 
 def create_app():
     app = Flask(__name__)
@@ -21,6 +38,18 @@ def create_app():
     
     # Ensure upload directory exists
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+    
+    # --- Cache Busting ---
+    @app.after_request
+    def add_header(response):
+        """
+        Add headers to both force latest content and prevent caching.
+        """
+        response.headers['X-UA-Compatible'] = 'IE=Edge,chrome=1'
+        response.headers['Cache-Control'] = 'public, max-age=0, no-cache, no-store, must-revalidate'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+        return response
     
     def allowed_file(filename):
         return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'csv'}
@@ -60,7 +89,8 @@ def create_app():
     
     @app.route('/')
     def index():
-        return render_template('index.html')
+        import time
+        return render_template('index.html', current_timestamp=int(time.time()))
     
     @app.route('/dashboard')
     def dashboard():
@@ -73,6 +103,20 @@ def create_app():
     @app.route('/upload')
     def upload_page():
         return render_template('upload.html')
+    
+    @app.route('/forecast_plots')
+    def forecast_plots():
+        plots_dir = Path(os.path.dirname(__file__)).parent / 'forecast_plots_2024'
+        if not plots_dir.exists():
+            return "Plots directory not found.", 404
+        
+        plot_files = sorted([f for f in os.listdir(plots_dir) if f.endswith('.png')])
+        return render_template('forecast_plots.html', plot_files=plot_files)
+
+    @app.route('/plots/<filename>')
+    def get_plot_image(filename):
+        plots_dir = Path(os.path.dirname(__file__)).parent / 'forecast_plots_2024'
+        return send_from_directory(plots_dir, filename)
     
     @app.route('/api/upload-stock', methods=['POST'])
     def upload_stock():
@@ -271,6 +315,7 @@ def create_app():
             data = request.get_json()
             ticker = data.get('ticker', '').upper().strip()
             days = int(data.get('days', 30))
+            advanced = data.get('advanced', True)  # Use advanced models by default
             
             if not ticker:
                 return jsonify({'success': False, 'error': 'Ticker required'})
@@ -280,7 +325,7 @@ def create_app():
             data_source = 'uploaded'
             
             if hist_data is None:
-                # Fallback to yfinance
+                # Fallback to yfinance - use more data for better models
                 stock = yf.Ticker(ticker)
                 hist_data = stock.history(period='5y')  # Use 5 years for better forecasting
                 data_source = 'yfinance'
@@ -295,6 +340,138 @@ def create_app():
             # Store all forecasts and model info
             all_forecasts = {}
             model_info = {}
+            
+            # Use advanced models if available and requested
+            if advanced and ADVANCED_MODELS_AVAILABLE and len(hist_data) >= 100:
+                try:
+                    # Prepare data for advanced models
+                    df_advanced = hist_data.reset_index()
+                    
+                    # Fix timezone issues for Prophet model
+                    # Check if the original index had timezone info before reset_index()
+                    if hasattr(hist_data.index, 'tz') and hist_data.index.tz is not None:
+                        # The first column after reset_index() contains the original index
+                        if hasattr(df_advanced.iloc[:, 0], 'dt') and df_advanced.iloc[:, 0].dt.tz is not None:
+                            df_advanced.iloc[:, 0] = df_advanced.iloc[:, 0].dt.tz_localize(None)
+                    
+                    # Fix column naming to handle variable number of columns from yfinance
+                    available_columns = list(df_advanced.columns)
+                    
+                    # Create proper column mapping
+                    if len(available_columns) == 6:  # Date + OHLCV
+                        df_advanced.columns = ['date', 'open', 'high', 'low', 'close_price', 'volume']
+                    elif len(available_columns) == 7:  # Date + OHLCV + Dividends
+                        df_advanced.columns = ['date', 'open', 'high', 'low', 'close_price', 'volume', 'dividends']
+                    elif len(available_columns) == 8:  # Date + OHLCV + Dividends + Splits
+                        df_advanced.columns = ['date', 'open', 'high', 'low', 'close_price', 'volume', 'dividends', 'stock_splits']
+                    else:
+                        # Fallback: manually map the essential columns
+                        column_mapping = {}
+                        column_mapping[available_columns[0]] = 'date'  # First column is always date/index
+                        
+                        # Find the main OHLC columns
+                        for i, col in enumerate(available_columns[1:], 1):
+                            col_lower = col.lower()
+                            if 'open' in col_lower:
+                                column_mapping[col] = 'open'
+                            elif 'high' in col_lower:
+                                column_mapping[col] = 'high'
+                            elif 'low' in col_lower:
+                                column_mapping[col] = 'low'
+                            elif 'close' in col_lower:
+                                column_mapping[col] = 'close_price'
+                            elif 'volume' in col_lower:
+                                column_mapping[col] = 'volume'
+                        
+                        df_advanced = df_advanced.rename(columns=column_mapping)
+                    
+                    # Ensure we have the minimum required columns
+                    if 'close_price' not in df_advanced.columns:
+                        # Try to find close price in any remaining column
+                        for col in df_advanced.columns:
+                            if 'close' in col.lower():
+                                df_advanced = df_advanced.rename(columns={col: 'close_price'})
+                                break
+                    
+                    # Remove timezone from date column if it exists
+                    if 'date' in df_advanced.columns and hasattr(df_advanced['date'], 'dt'):
+                        if df_advanced['date'].dt.tz is not None:
+                            df_advanced['date'] = df_advanced['date'].dt.tz_localize(None)
+                    
+                    print(f"✅ Data prepared for advanced models: {df_advanced.columns.tolist()}")
+                    
+                    # 1. ARIMA Model
+                    try:
+                        arima_model = ARIMAModel(order=(2, 1, 2))
+                        arima_model.fit(df_advanced)
+                        arima_forecast = arima_model.predict(df_advanced, steps=days)
+                        arima_forecast = np.maximum(arima_forecast, 0.01)
+                        
+                        all_forecasts['ARIMA'] = arima_forecast.tolist()
+                        model_info['ARIMA'] = {
+                            'status': 'success',
+                            'type': f'ARIMA({arima_model.order}) on {len(hist_data)} days',
+                            'aic': arima_model.training_history.get('aic', 'N/A'),
+                            'confidence': 'high'
+                        }
+                    except Exception as e:
+                        model_info['ARIMA'] = {'status': 'failed', 'error': str(e)[:50]}
+                    
+                    # 2. Prophet Model
+                    try:
+                        prophet_model = ProphetModel(
+                            yearly_seasonality=True,
+                            weekly_seasonality=True,
+                            daily_seasonality=False
+                        )
+                        prophet_model.fit(df_advanced)
+                        prophet_forecast = prophet_model.predict(df_advanced, periods=days)
+                        prophet_forecast = np.maximum(prophet_forecast, 0.01)
+                        
+                        all_forecasts['Prophet'] = prophet_forecast.tolist()
+                        model_info['Prophet'] = {
+                            'status': 'success',
+                            'type': f'Prophet with seasonality on {len(hist_data)} days',
+                            'seasonality': 'yearly + weekly',
+                            'confidence': 'high'
+                        }
+                    except Exception as e:
+                        model_info['Prophet'] = {'status': 'failed', 'error': str(e)[:50]}
+                    
+                    # 3. LSTM Model (if enough data)
+                    if len(hist_data) >= 200:
+                        try:
+                            lstm_model = LSTMModel(
+                                sequence_length=60,
+                                units=50,
+                                layers=2,
+                                dropout=0.2,
+                                learning_rate=0.001
+                            )
+                            lstm_model.fit(df_advanced, epochs=50, batch_size=32)
+                            lstm_forecast = lstm_model.predict(df_advanced, steps=days)
+                            lstm_forecast = np.maximum(lstm_forecast, 0.01)
+                            
+                            all_forecasts['LSTM'] = lstm_forecast.tolist()
+                            model_info['LSTM'] = {
+                                'status': 'success',
+                                'type': f'Deep LSTM on {len(hist_data)} days',
+                                'architecture': '2-layer LSTM with 50 units',
+                                'confidence': 'very high'
+                            }
+                        except Exception as e:
+                            model_info['LSTM'] = {'status': 'failed', 'error': str(e)[:50]}
+                
+                except Exception as e:
+                    print(f"❌ Advanced models failed: {e}")
+                    print(f"Data shape: {hist_data.shape if hist_data is not None else 'None'}")
+                    print(f"Data columns: {hist_data.columns.tolist() if hist_data is not None else 'None'}")
+                    import traceback
+                    print(f"Full traceback: {traceback.format_exc()}")
+            
+            # Fallback to basic models if advanced models failed or not available
+            if not all_forecasts:
+                advanced = False
             
             # 1. Linear Regression Model
             try:
@@ -463,34 +640,210 @@ def create_app():
             
             if len(successful_forecasts) >= 2:
                 try:
-                    # Weighted ensemble - give more weight to certain models
-                    weights = {
-                        'Linear Regression': 0.20,
-                        'Moving Average': 0.25,
-                        'Exponential Smoothing': 0.25,
-                        'Polynomial Regression': 0.15,
-                        'Seasonal Model': 0.15
-                    }
+                    # Create a matrix of all successful forecasts
+                    forecast_matrix = np.array(list(successful_forecasts.values()))
+                    
+                    # Calculate standard deviation across models for each day
+                    daily_std = np.std(forecast_matrix, axis=0)
+                    
+                    # Dynamic weights based on model sophistication and data availability
+                    weights = {}
+                    if advanced:
+                        # Advanced model weights (prioritize sophisticated models)
+                        weights = {
+                            'ARIMA': 0.30,
+                            'Prophet': 0.30, 
+                            'LSTM': 0.35,
+                            'Linear Regression': 0.05,
+                            'Moving Average': 0.10,
+                            'Exponential Smoothing': 0.10,
+                            'Polynomial Regression': 0.05,
+                            'Seasonal Model': 0.10
+                        }
+                    else:
+                        # Basic model weights
+                        weights = {
+                            'Linear Regression': 0.20,
+                            'Moving Average': 0.25,
+                            'Exponential Smoothing': 0.25,
+                            'Polynomial Regression': 0.15,
+                            'Seasonal Model': 0.15
+                        }
+                    
+                    # Add feature engineering - Technical indicators
+                    prices_array = hist_data['Close'].values
+                    
+                    # Calculate technical indicators for context
+                    if len(prices_array) >= 50:
+                        # RSI (Relative Strength Index)
+                        delta = np.diff(prices_array)
+                        gain = np.where(delta > 0, delta, 0)
+                        loss = np.where(delta < 0, -delta, 0)
+                        avg_gain = np.mean(gain[-14:]) if len(gain) >= 14 else np.mean(gain)
+                        avg_loss = np.mean(loss[-14:]) if len(loss) >= 14 else np.mean(loss)
+                        rsi = 100 - (100 / (1 + (avg_gain / avg_loss if avg_loss > 0 else 1)))
+                        
+                        # Bollinger Bands
+                        sma_20 = np.mean(prices_array[-20:])
+                        std_20 = np.std(prices_array[-20:])
+                        upper_band = sma_20 + (2 * std_20)
+                        lower_band = sma_20 - (2 * std_20)
+                        current_price = prices_array[-1]
+                        bb_position = (current_price - lower_band) / (upper_band - lower_band)
+                        
+                        # MACD
+                        ema_12 = prices_array[-1]  # Simplified
+                        ema_26 = np.mean(prices_array[-26:]) if len(prices_array) >= 26 else prices_array[-1]
+                        macd = ema_12 - ema_26
+                        
+                        # Volatility adjustment
+                        volatility = np.std(prices_array[-30:]) / np.mean(prices_array[-30:])
+                        
+                        # Adjust ensemble weights based on technical indicators
+                        if rsi > 70:  # Overbought - reduce bullish weights
+                            for model in ['Linear Regression', 'LSTM']:
+                                if model in weights:
+                                    weights[model] *= 0.8
+                        elif rsi < 30:  # Oversold - increase bullish weights
+                            for model in ['Prophet', 'ARIMA']:
+                                if model in weights:
+                                    weights[model] *= 1.2
+                        
+                        # High volatility - favor more conservative models
+                        if volatility > 0.05:
+                            for model in ['Moving Average', 'Exponential Smoothing']:
+                                if model in weights:
+                                    weights[model] *= 1.3
                     
                     ensemble_forecast = np.zeros(days)
                     total_weight = 0
                     
                     for name, forecast in successful_forecasts.items():
-                        weight = weights.get(name, 0.2)  # Default weight
+                        weight = weights.get(name, 0.1)  # Default weight
                         ensemble_forecast += np.array(forecast) * weight
                         total_weight += weight
                     
                     if total_weight > 0:
                         ensemble_forecast /= total_weight
                         
+                        # Enhanced confidence interval calculation
+                        # Use model agreement + historical volatility
+                        model_disagreement = np.std(forecast_matrix, axis=0)
+                        historical_volatility = np.std(prices_array[-60:]) if len(prices_array) >= 60 else np.std(prices_array)
+                        
+                        confidence_factor = 1.96  # 95% confidence
+                        upper_bound = ensemble_forecast + (model_disagreement + historical_volatility * 0.1) * confidence_factor
+                        lower_bound = ensemble_forecast - (model_disagreement + historical_volatility * 0.1) * confidence_factor
+                        lower_bound = np.maximum(lower_bound, 0.01).tolist()
+                        
                         all_forecasts['Ensemble'] = ensemble_forecast.tolist()
                         model_info['Ensemble'] = {
                             'status': 'success',
-                            'type': f'Weighted average of {len(successful_forecasts)} models',
-                            'models_combined': list(successful_forecasts.keys())
+                            'type': f'Advanced weighted ensemble of {len(successful_forecasts)} models',
+                            'models_combined': list(successful_forecasts.keys()),
+                            'upper_bound': upper_bound.tolist(),
+                            'lower_bound': lower_bound,
+                            'weighting': 'dynamic based on technical indicators',
+                            'confidence': 'very high' if advanced else 'high'
                         }
+                        
+                        # Create realistic forecast with market volatility
+                        try:
+                            # Calculate historical daily volatility
+                            returns = hist_data['Close'].pct_change().dropna()
+                            daily_volatility = returns.std()
+                            
+                            # Create realistic forecast by adding volatility to ensemble
+                            realistic_forecast = []
+                            current_realistic_price = ensemble_forecast[0]
+                            
+                            for i in range(len(ensemble_forecast)):
+                                # Get the base trend from ensemble
+                                if i == 0:
+                                    trend_change = 0
+                                else:
+                                    trend_change = (ensemble_forecast[i] - ensemble_forecast[i-1]) / ensemble_forecast[i-1]
+                                
+                                # Add realistic daily volatility (random walk)
+                                np.random.seed(42 + i)  # Reproducible randomness
+                                random_shock = np.random.normal(0, daily_volatility)
+                                
+                                # Apply trend + volatility
+                                current_realistic_price = current_realistic_price * (1 + trend_change + random_shock * 0.7)
+                                
+                                # Ensure price stays positive
+                                current_realistic_price = max(current_realistic_price, 0.01)
+                                realistic_forecast.append(current_realistic_price)
+                            
+                            all_forecasts['Realistic Forecast'] = realistic_forecast
+                            model_info['Realistic Forecast'] = {
+                                'status': 'success',
+                                'type': f'Ensemble + market volatility simulation',
+                                'volatility': f'{daily_volatility:.4f}',
+                                'description': 'Adds realistic market noise to smooth ensemble forecast',
+                                'confidence': 'medium-high'
+                            }
+                        except Exception as e:
+                            model_info['Realistic Forecast'] = {'status': 'failed', 'error': str(e)[:50]}
                 except Exception as e:
                     model_info['Ensemble'] = {'status': 'failed', 'error': str(e)[:50]}
+            
+            # === ENHANCED FORECASTING WITH EXTERNAL DATA ===
+            try:
+                if successful_forecasts and ADVANCED_MODELS_AVAILABLE:
+                    enhanced_model = EnhancedForecastModel()
+                    
+                    # Generate enhanced forecasts using external data
+                    enhanced_result = enhanced_model.generate_enhanced_forecast(
+                        ticker=ticker,
+                        hist_data=hist_data,
+                        base_forecasts=successful_forecasts,
+                        days=days
+                    )
+                    
+                    if enhanced_result['forecasts']:
+                        # Add enhanced forecasts to the main forecasts
+                        all_forecasts.update(enhanced_result['forecasts'])
+                        
+                        # Add enhanced model info
+                        for model_name in enhanced_result['forecasts']:
+                            model_info[model_name] = {
+                                'status': 'success',
+                                'type': 'Enhanced with external data',
+                                'data_sources': ['Economic indicators', 'Sentiment analysis', 'Fundamental metrics', 'Technical indicators'],
+                                'confidence': 'very high',
+                                'external_bias': f"{enhanced_result['external_summary'].get('overall_bias', 0.0):.3f}",
+                                'color': '#9c27b0' if 'Enhanced_Ensemble' in model_name else '#6f42c1'
+                            }
+                        
+                        # Update color mapping for enhanced models
+                        model_colors = {
+                            'Linear Regression': '#28a745',
+                            'Moving Average': '#dc3545', 
+                            'Exponential Smoothing': '#ffc107',
+                            'Polynomial Regression': '#17a2b8',
+                            'Seasonal Model': '#6c757d',
+                            'Ensemble': '#007bff',
+                            'Realistic Forecast': '#fd7e14',
+                            'Enhanced_Ensemble': '#9c27b0',
+                            'Linear Regression_Enhanced': '#20c997',
+                            'Moving Average_Enhanced': '#e83e8c',
+                            'Exponential Smoothing_Enhanced': '#ffc107',
+                            'ARIMA_Enhanced': '#6610f2',
+                            'Prophet_Enhanced': '#fd7e14',
+                            'LSTM_Enhanced': '#6f42c1'
+                        }
+                        
+                        # Log external data impact
+                        external_summary = enhanced_result.get('external_summary', {})
+                        print(f"📊 Enhanced forecasting for {ticker}:")
+                        print(f"   Economic impact: {external_summary.get('economic_impact', 0.0):.3f}")
+                        print(f"   Sentiment impact: {external_summary.get('sentiment_impact', 0.0):.3f}")
+                        print(f"   Overall bias: {external_summary.get('overall_bias', 0.0):.3f}")
+                        
+            except Exception as e:
+                print(f"❌ Enhanced forecasting failed: {e}")
+                # Continue with regular forecasting
             
             # Generate future dates (skip weekends, but ensure continuous business days)
             future_dates = []
@@ -505,8 +858,11 @@ def create_app():
                     future_dates.append(current_date.strftime('%Y-%m-%d'))
                     days_generated += 1
             
-            # Choose primary forecast (prefer ensemble, then best available)
-            if 'Ensemble' in all_forecasts:
+            # Choose primary forecast (prefer enhanced ensemble, then ensemble, then best available)
+            if 'Enhanced_Ensemble' in all_forecasts:
+                primary_forecast = all_forecasts['Enhanced_Ensemble']
+                primary_model = 'Enhanced_Ensemble'
+            elif 'Ensemble' in all_forecasts:
                 primary_forecast = all_forecasts['Ensemble']
                 primary_model = 'Ensemble'
             elif 'Moving Average' in all_forecasts:
@@ -547,37 +903,352 @@ def create_app():
             for model_name, forecast_data in all_forecasts.items():
                 connected_all_forecasts[model_name] = [current_price] + forecast_data
             
+            # Create historical data in the format expected by frontend
+            historical_data = [
+                {'date': date, 'price': price} 
+                for date, price in zip(dates[-60:], prices[-60:])
+            ]
+            
+            # Create confidence bounds for the frontend
+            if 'Ensemble' in model_info and 'upper_bound' in model_info['Ensemble']:
+                upper_bound = model_info['Ensemble']['upper_bound']
+                lower_bound = model_info['Ensemble']['lower_bound']
+            else:
+                # Fallback confidence bounds
+                primary_array = np.array(primary_forecast)
+                std_dev = np.std(primary_array) if len(primary_array) > 1 else primary_array[0] * 0.05
+                upper_bound = (primary_array + std_dev).tolist()
+                lower_bound = (primary_array - std_dev).tolist()
+                lower_bound = np.maximum(lower_bound, 0.01).tolist()
+            
+            # Add colors for each model (enhanced models already have colors set above)
+            if 'model_colors' not in locals():
+                model_colors = {
+                    'Linear Regression': '#28a745',
+                    'Moving Average': '#dc3545', 
+                    'Exponential Smoothing': '#ffc107',
+                    'Polynomial Regression': '#17a2b8',
+                    'Seasonal Model': '#6c757d',
+                    'Ensemble': '#007bff',
+                    'Realistic Forecast': '#fd7e14',  # Orange color for realistic forecast
+                    'Enhanced_Ensemble': '#9c27b0',
+                    'ARIMA': '#6610f2',
+                    'Prophet': '#20c997',
+                    'LSTM': '#e83e8c'
+                }
+            
+            for model_name in model_info:
+                if model_name in model_colors:
+                    model_info[model_name]['color'] = model_colors[model_name]
+                else:
+                    model_info[model_name]['color'] = '#343a40'
+
             return jsonify({
-                'success': True,
                 'ticker': ticker,
-                'historical_dates': dates[-60:],
-                'historical_prices': prices[-60:],
-                'forecast_dates': connected_forecast_dates,
-                'forecast_prices': connected_forecast_prices,
-                'future_dates_only': future_dates,
-                'all_forecasts': all_forecasts,
-                'connected_all_forecasts': connected_all_forecasts,
-                'primary_forecast': primary_forecast,
+                'historical': historical_data,
+                'forecasts': all_forecasts,
+                'future_dates': future_dates,
+                'model_info': model_info,
+                'upper_bound': upper_bound,
+                'lower_bound': lower_bound,
                 'current_price': current_price,
                 'predicted_price': predicted_price,
                 'change_percent': change_percent,
-                'confidence_interval': confidence_interval,
-                'model_info': model_info,
                 'summary': {
                     'primary_model': primary_model,
                     'models_used': len(successful_forecasts),
                     'trend': 'Bullish' if change_percent > 0 else 'Bearish',
                     'data_source': data_source,
                     'data_points': len(hist_data)
-                },
-                'ensemble_info': {
-                    'primary_model': primary_model,
-                    'models_used': len(successful_forecasts)
                 }
             })
             
         except Exception as e:
             return jsonify({'success': False, 'error': str(e)})
+    
+    @app.route('/api/external-data/<ticker>')
+    def get_external_data(ticker):
+        """Get external data factors for a given ticker"""
+        try:
+            if not ADVANCED_MODELS_AVAILABLE:
+                return jsonify({'success': False, 'error': 'Enhanced models not available'})
+            
+            enhanced_model = EnhancedForecastModel()
+            
+            # Get sample historical data for the ticker
+            hist_data = yf.Ticker(ticker).history(period="1y")
+            if hist_data.empty:
+                return jsonify({'success': False, 'error': 'No data available for ticker'})
+            
+            # Get external data
+            start_date = (hist_data.index[0] - timedelta(days=30)).strftime('%Y-%m-%d')
+            end_date = hist_data.index[-1].strftime('%Y-%m-%d')
+            
+            economic_data = enhanced_model.get_economic_indicators(start_date, end_date)
+            sentiment_score = enhanced_model.get_sentiment_score(ticker)
+            fundamental_metrics = enhanced_model.get_fundamental_metrics(ticker)
+            technical_indicators = enhanced_model.calculate_technical_indicators(hist_data['Close'])
+            
+            # Calculate current impacts
+            adjustments = enhanced_model._calculate_adjustments(
+                economic_data, sentiment_score, fundamental_metrics, technical_indicators
+            )
+            
+            return jsonify({
+                'success': True,
+                'ticker': ticker,
+                'external_factors': {
+                    'economic': {
+                        'current_data': economic_data.tail(1).to_dict('records')[0] if not economic_data.empty else {},
+                        'impact': adjustments.get('economic_factor', 0.0),
+                        'description': 'Federal funds rate, unemployment, treasury rates, market volatility (VIX)'
+                    },
+                    'sentiment': {
+                        'score': sentiment_score,
+                        'impact': adjustments.get('sentiment_factor', 0.0),
+                        'description': 'Social media sentiment, news analysis, market trends'
+                    },
+                    'fundamental': {
+                        'metrics': fundamental_metrics,
+                        'description': 'P/E ratio, P/B ratio, ROE, Beta and other financial health indicators'
+                    },
+                    'technical': {
+                        'indicators': technical_indicators,
+                        'impact': adjustments.get('technical_factor', 0.0),
+                        'description': 'RSI, moving averages, volatility, momentum indicators'
+                    },
+                    'overall_bias': adjustments.get('overall_bias', 0.0),
+                    'interpretation': {
+                        'bias_direction': 'Bullish' if adjustments.get('overall_bias', 0.0) > 0 else 'Bearish' if adjustments.get('overall_bias', 0.0) < 0 else 'Neutral',
+                        'confidence': 'High' if abs(adjustments.get('overall_bias', 0.0)) > 0.05 else 'Medium' if abs(adjustments.get('overall_bias', 0.0)) > 0.02 else 'Low'
+                    }
+                }
+            })
+            
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)})
+    
+    @app.route('/api/dashboard-data')
+    def api_dashboard_data():
+        """Get data for the main dashboard"""
+        try:
+            # Load the main processed dataset
+            data_file = os.path.join(os.path.dirname(__file__), '..', 'uploads', 'processed_data.csv')
+            df = pd.read_csv(data_file, parse_dates=['date'])
+            
+            # 1. Price Time Series data (for a representative stock)
+            sample_stock = df[df['ticker'] == 'AZN.L'].copy()
+            time_series_data = {
+                'dates': sample_stock['date'].dt.strftime('%Y-%m-%d').tolist(),
+                'prices': sample_stock['close_price'].tolist()
+            }
+            
+            # Placeholder for model performance
+            model_performance = {
+                'models': ['ARIMA', 'Prophet', 'LSTM', 'Ensemble'],
+                'mape': [5.2, 4.8, 6.5, 4.1],  # Example data
+                'rmse': [120.5, 115.2, 130.0, 110.8] # Example data
+            }
+            
+            # Placeholder for forecast accuracy
+            forecast_accuracy = {
+                'horizon': ['1-day', '7-day', '30-day'],
+                'accuracy': [98.5, 92.1, 85.4] # Example data
+            }
+
+            return jsonify({
+                'success': True,
+                'time_series': time_series_data,
+                'model_performance': model_performance,
+                'forecast_accuracy': forecast_accuracy
+            })
+
+        except Exception as e:
+            return jsonify({'success': False, 'error': f'Failed to load dashboard data: {str(e)}'})
+    
+    @app.route('/api/search-tickers')
+    def search_tickers():
+        """Search for stock tickers"""
+        try:
+            query = request.args.get('q', '').upper()
+            if not query:
+                return jsonify([])
+
+            data_file = os.path.join(os.path.dirname(__file__), '..', 'data', 'combined_ftse_sp500_data.csv')
+            df = pd.read_csv(data_file)
+            
+            # Get unique stocks
+            all_tickers = df[['ticker', 'company_name']].drop_duplicates()
+            
+            # Filter based on query (ticker or company name)
+            mask = all_tickers['ticker'].str.contains(query) | all_tickers['company_name'].str.contains(query, case=False)
+            matched_tickers = all_tickers[mask]
+            
+            # Format for response with correct field names
+            results = []
+            for _, row in matched_tickers.head(10).iterrows():
+                results.append({
+                    'symbol': row['ticker'],
+                    'name': row['company_name']
+                })
+            
+            return jsonify(results)
+
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)})
+    
+    @app.route('/api/backtest-asset', methods=['POST'])
+    def backtest_asset():
+        """Run a backtest for a given ticker."""
+        try:
+            data = request.get_json()
+            ticker = data.get('ticker', '').upper().strip()
+            days = int(data.get('days', 30))
+
+            if not ticker:
+                return jsonify({'success': False, 'error': 'Ticker required'})
+
+            # Get stock data, but for a period ending `days` ago
+            end_date = datetime.now() - timedelta(days=days)
+            start_date = end_date - timedelta(days=365) # 1 year of data for backtesting
+            
+            stock = yf.Ticker(ticker)
+            hist_data = stock.history(start=start_date.strftime('%Y-%m-%d'), end=end_date.strftime('%Y-%m-%d'))
+            
+            if hist_data.empty:
+                return jsonify({'success': False, 'error': f'Not enough historical data for backtest on {ticker}'})
+
+            # The "actual" data is from the end of our backtest period onwards
+            actual_data = stock.history(start=end_date.strftime('%Y-%m-%d'), period=f"{days+5}d") # get a bit extra
+            
+            if actual_data.empty or len(actual_data) < days:
+                return jsonify({'success': False, 'error': f'Not enough actual data for {days}-day backtest'})
+                
+            actual_dates = [d.strftime('%Y-%m-%d') for d in actual_data.index[:days]]
+            actual_prices = actual_data['Close'].tolist()[:days]
+
+            # Now, run the forecast logic on the historical slice of data
+            # Prepare data for models (same format as forecast_asset)
+            dates = [d.strftime('%Y-%m-%d') for d in hist_data.index]
+            prices = hist_data['Close'].tolist()
+            
+            if len(prices) < 30:
+                return jsonify({'success': False, 'error': 'Not enough historical data for backtesting'})
+
+            # Run forecasting models on historical data
+            all_forecasts = {}
+            model_info = {}
+            successful_forecasts = {}
+            
+            # Basic models
+            try:
+                from models.base_model import LinearRegressionModel, MovingAverageModel, ExponentialSmoothingModel
+                
+                # Linear Regression
+                lr_model = LinearRegressionModel()
+                lr_forecast = lr_model.forecast(prices, days)
+                if lr_forecast:
+                    all_forecasts['Linear Regression'] = lr_forecast
+                    successful_forecasts['Linear Regression'] = lr_forecast
+                    model_info['Linear Regression'] = {'method': 'Statistical', 'color': '#28a745'}
+                
+                # Moving Average
+                ma_model = MovingAverageModel()
+                ma_forecast = ma_model.forecast(prices, days)
+                if ma_forecast:
+                    all_forecasts['Moving Average'] = ma_forecast
+                    successful_forecasts['Moving Average'] = ma_forecast
+                    model_info['Moving Average'] = {'method': 'Statistical', 'color': '#dc3545'}
+                
+                # Exponential Smoothing
+                es_model = ExponentialSmoothingModel()
+                es_forecast = es_model.forecast(prices, days)
+                if es_forecast:
+                    all_forecasts['Exponential Smoothing'] = es_forecast
+                    successful_forecasts['Exponential Smoothing'] = es_forecast
+                    model_info['Exponential Smoothing'] = {'method': 'Statistical', 'color': '#ffc107'}
+                    
+            except Exception as e:
+                print(f"Basic models failed in backtest: {e}")
+
+            # Advanced models
+            try:
+                from models.arima_model import ARIMAModel
+                from models.prophet_model import ProphetModel
+                from models.lstm_model import LSTMModel
+                
+                # ARIMA
+                try:
+                    arima_model = ARIMAModel()
+                    arima_forecast = arima_model.forecast(prices, days)
+                    if arima_forecast and len(arima_forecast) == days:
+                        all_forecasts['ARIMA'] = arima_forecast
+                        successful_forecasts['ARIMA'] = arima_forecast
+                        model_info['ARIMA'] = {'method': 'Advanced', 'color': '#6f42c1'}
+                except Exception as e:
+                    print(f"ARIMA backtest failed: {e}")
+                
+                # Prophet
+                try:
+                    prophet_model = ProphetModel()
+                    # Prophet needs dates and prices
+                    df_prophet = pd.DataFrame({
+                        'ds': pd.to_datetime(dates),
+                        'y': prices
+                    })
+                    prophet_forecast = prophet_model.forecast_dataframe(df_prophet, days)
+                    if prophet_forecast and len(prophet_forecast) == days:
+                        all_forecasts['Prophet'] = prophet_forecast
+                        successful_forecasts['Prophet'] = prophet_forecast
+                        model_info['Prophet'] = {'method': 'Advanced', 'color': '#20c997'}
+                except Exception as e:
+                    print(f"Prophet backtest failed: {e}")
+                
+                # LSTM
+                try:
+                    lstm_model = LSTMModel()
+                    lstm_forecast = lstm_model.forecast(prices, days)
+                    if lstm_forecast and len(lstm_forecast) == days:
+                        all_forecasts['LSTM'] = lstm_forecast
+                        successful_forecasts['LSTM'] = lstm_forecast
+                        model_info['LSTM'] = {'method': 'Advanced', 'color': '#fd7e14'}
+                except Exception as e:
+                    print(f"LSTM backtest failed: {e}")
+                    
+            except Exception as e:
+                print(f"Advanced models import failed in backtest: {e}")
+            
+            # Create ensemble if we have successful forecasts
+            if successful_forecasts:
+                try:
+                    from models.ensemble_model import EnsembleModel
+                    ensemble_model = EnsembleModel()
+                    ensemble_forecast = ensemble_model.forecast(successful_forecasts, days)
+                    if ensemble_forecast:
+                        all_forecasts['Ensemble'] = ensemble_forecast
+                        model_info['Ensemble'] = {'method': 'Ensemble', 'color': '#007bff'}
+                except Exception as e:
+                    print(f"Ensemble backtest failed: {e}")
+            
+            # If no models worked, create a simple fallback
+            if not all_forecasts:
+                # Simple linear trend as fallback
+                if len(prices) >= 2:
+                    slope = (prices[-1] - prices[-30]) / 30 if len(prices) >= 30 else (prices[-1] - prices[0]) / len(prices)
+                    fallback_forecast = [prices[-1] + slope * (i + 1) for i in range(days)]
+                    all_forecasts['Linear Trend'] = fallback_forecast
+                    model_info['Linear Trend'] = {'method': 'Fallback', 'color': '#6c757d'}
+
+            return jsonify({
+                'success': True,
+                'dates': actual_dates,
+                'actual': actual_prices,
+                'forecasts': all_forecasts,
+                'model_info': model_info
+            })
+
+        except Exception as e:
+            return jsonify({'success': False, 'error': f'Backtest failed: {str(e)}'})
     
     return app
 
