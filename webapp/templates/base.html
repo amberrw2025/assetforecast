@@ -229,30 +229,21 @@
             </button>
             
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                     <li class="nav-item">
-                        <a class="nav-link" href="/">
-                            <i class="fas fa-home me-1"></i>
-                            Home
-                        </a>
+                        <a class="nav-link" href="{{ url_for('index') }}">Home</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/dashboard">
-                            <i class="fas fa-tachometer-alt me-1"></i>
-                            Dashboard
-                        </a>
+                        <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/stocks">
-                            <i class="fas fa-chart-area me-1"></i>
-                            Stocks
-                        </a>
+                        <a class="nav-link" href="{{ url_for('stocks') }}">Stocks</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/upload">
-                            <i class="fas fa-upload me-1"></i>
-                            Upload Data
-                        </a>
+                        <a class="nav-link" href="{{ url_for('forecast_plots') }}">Forecast Plots</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('upload_page') }}">Upload Data</a>
                     </li>
                 </ul>
             </div>

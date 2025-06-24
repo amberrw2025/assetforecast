@@ -234,24 +234,9 @@
     </div>
 </div>
 
+<!-- Key Metrics moved to single full-width section -->
 <div class="row">
-    <!-- Data Overview -->
-    <div class="col-md-8">
-        <div class="card mb-4">
-            <div class="card-header bg-dark text-white">
-                <h5 class="mb-0">
-                    <i class="fas fa-chart-line me-2"></i>
-                    Price Time Series
-                </h5>
-            </div>
-            <div class="card-body">
-                <div id="priceChart" class="chart-container"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Key Metrics -->
-    <div class="col-md-4">
+    <div class="col-12">
         <div class="card mb-4">
             <div class="card-header bg-dark text-white">
                 <h5 class="mb-0">
@@ -268,38 +253,6 @@
                         <p class="mt-2">Loading metrics...</p>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="row">
-    <!-- Model Performance -->
-    <div class="col-md-6">
-        <div class="card mb-4">
-            <div class="card-header bg-dark text-white">
-                <h5 class="mb-0">
-                    <i class="fas fa-chart-bar me-2"></i>
-                    Model Performance Comparison
-                </h5>
-            </div>
-            <div class="card-body">
-                <div id="performanceChart" class="chart-container"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Forecast Accuracy -->
-    <div class="col-md-6">
-        <div class="card mb-4">
-            <div class="card-header bg-dark text-white">
-                <h5 class="mb-0">
-                    <i class="fas fa-bullseye me-2"></i>
-                    Forecast Accuracy
-                </h5>
-            </div>
-            <div class="card-body">
-                <div id="accuracyChart" class="chart-container"></div>
             </div>
         </div>
     </div>
@@ -397,21 +350,8 @@
     }
 
     function loadChartData() {
-        // Load chart data
-        fetch('/api/chart-data')
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    return;
-                }
-                
-                createPriceChart(data);
-                createPerformanceChart();
-                createAccuracyChart();
-            })
-            .catch(error => {
-                console.error('Error loading chart data:', error);
-            });
+        // Chart data loading removed - keeping function for compatibility
+        console.log('Chart data loading disabled');
     }
 
     function updateMetrics(data) {
@@ -453,77 +393,7 @@
         `;
     }
 
-    function createPriceChart(data) {
-        const traces = [
-            {
-                x: data.dates,
-                y: data.prices,
-                type: 'scatter',
-                mode: 'lines',
-                name: 'Price',
-                line: { color: '#2c3e50', width: 2 }
-            },
-            {
-                x: data.dates,
-                y: data.rolling_mean,
-                type: 'scatter',
-                mode: 'lines',
-                name: '30-day Moving Average',
-                line: { color: '#3498db', width: 2, dash: 'dash' }
-            }
-        ];
-
-        const layout = {
-            title: 'Price Time Series with Moving Average',
-            xaxis: { title: 'Date' },
-            yaxis: { title: 'Price ($)' },
-            hovermode: 'x unified',
-            showlegend: true,
-            height: 400
-        };
-
-        Plotly.newPlot('priceChart', traces, layout);
-    }
-
-    function createPerformanceChart() {
-        // Sample performance data - in real app, this would come from model evaluation
-        const data = [
-            {
-                x: ['ARIMA', 'Prophet', 'LSTM'],
-                y: [0.045, 0.052, 0.038],
-                type: 'bar',
-                name: 'RMSE',
-                marker: { color: ['#e74c3c', '#f39c12', '#27ae60'] }
-            }
-        ];
-
-        const layout = {
-            title: 'Model Performance (RMSE)',
-            yaxis: { title: 'RMSE' },
-            height: 400
-        };
-
-        Plotly.newPlot('performanceChart', data, layout);
-    }
-
-    function createAccuracyChart() {
-        // Sample accuracy data
-        const data = [
-            {
-                values: [85, 78, 92],
-                labels: ['ARIMA', 'Prophet', 'LSTM'],
-                type: 'pie',
-                marker: { colors: ['#e74c3c', '#f39c12', '#27ae60'] }
-            }
-        ];
-
-        const layout = {
-            title: 'Forecast Accuracy (%)',
-            height: 400
-        };
-
-        Plotly.newPlot('accuracyChart', data, layout);
-    }
+    // Chart creation functions removed - Price Time Series, Model Performance, and Forecast Accuracy charts disabled
 
     function showNoDataMessage() {
         const container = document.getElementById('metricsContainer');

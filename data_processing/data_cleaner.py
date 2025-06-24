@@ -138,14 +138,18 @@ class DataCleaner:
         
         # Ensure date column is datetime and handle timezone issues
         try:
-            df[date_column] = pd.to_datetime(df[date_column])
-        except ValueError as e:
-            if "Tz-aware datetime.datetime cannot be converted to datetime64" in str(e):
-                # Handle timezone-aware datetime objects by converting to UTC first
-                logger.info("Converting timezone-aware datetime objects to UTC")
-                df[date_column] = pd.to_datetime(df[date_column], utc=True)
-            else:
-                raise e
+            # Convert to datetime, making timezone-aware objects naive (in UTC)
+            if pd.api.types.is_datetime64_any_dtype(df[date_column]):
+                 if df[date_column].dt.tz is not None:
+                    df[date_column] = df[date_column].dt.tz_convert(None)
+            df[date_column] = pd.to_datetime(df[date_column], utc=False)
+
+        except Exception as e:
+            logger.error(f"Error converting date column: {e}")
+            # Fallback for mixed or problematic types
+            df[date_column] = pd.to_datetime(df[date_column], errors='coerce', utc=True)
+            df[date_column] = df[date_column].dt.tz_convert(None)
+
         
         # Sort by date
         df = df.sort_values(date_column)
@@ -382,7 +386,46 @@ class DataCleaner:
         logger.info(f"Feature creation completed. Final shape: {df.shape}")
         return df
     
-    def clean_and_prepare_data(self, datasets: Dict[str, pd.DataFrame]) -> pd.DataFrame:
+    def clean_single_dataset(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Cleans a single dataframe."""
+        if 'date' not in df.columns:
+            # This is not a time series dataset, return as is
+            return df
+        
+        df = self.handle_missing_values(df)
+        df = self.detect_and_handle_outliers(df)
+        df = self.standardize_time_series(df)
+        return df
+
+    def merge_datasets(self, datasets: list) -> pd.DataFrame:
+        """Merge multiple cleaned datasets."""
+        if not datasets:
+            return pd.DataFrame()
+        
+        # Separate financial data from others
+        financial_df = None
+        other_dfs = []
+        for df in datasets:
+            if 'close_price' in df.columns:
+                financial_df = df
+            else:
+                other_dfs.append(df)
+        
+        if financial_df is None:
+            # If no financial data, merge what we have
+            merged_df = other_dfs[0]
+            for df in other_dfs[1:]:
+                merged_df = pd.merge(merged_df, df, on='date', how='outer')
+            return merged_df
+
+        # Merge other datasets into financial_df
+        merged_df = financial_df
+        for df in other_dfs:
+            merged_df = pd.merge(merged_df, df, on='date', how='outer')
+        
+        return merged_df
+
+    def clean_and_prepare_data(self, datasets: dict) -> pd.DataFrame:
         """
         Complete data cleaning and preparation pipeline.
         
@@ -393,39 +436,51 @@ class DataCleaner:
             pd.DataFrame: Cleaned and prepared dataset
         """
         logger.info("Starting complete data cleaning and preparation pipeline")
-        
-        # Step 1: Handle missing values in each dataset
+
         cleaned_datasets = {}
         for name, dataset in datasets.items():
             logger.info(f"Cleaning dataset: {name}")
-            cleaned_dataset = self.handle_missing_values(dataset)
-            cleaned_datasets[name] = cleaned_dataset
-        
-        # Step 2: Detect and handle outliers
-        for name, dataset in cleaned_datasets.items():
+            
+            # Handle missing values
+            dataset = self.handle_missing_values(dataset)
+            
+            # Handle outliers
             logger.info(f"Handling outliers in dataset: {name}")
-            cleaned_datasets[name] = self.detect_and_handle_outliers(dataset)
+            dataset = self.detect_and_handle_outliers(dataset)
+            
+            # Standardize time series
+            if 'date' in dataset.columns:
+                 logger.info(f"Standardizing time series for dataset: {name}")
+                 dataset = self.standardize_time_series(dataset)
+
+            cleaned_datasets[name] = dataset
+
+        # Merge datasets
+        logger.info("Merging cleaned datasets")
         
-        # Step 3: Standardize time series
+        # Get financial data if available
+        financial_df = cleaned_datasets.pop('financial', None)
+        
+        if financial_df is None:
+            logger.error("No financial data found after cleaning. Cannot proceed.")
+            return pd.DataFrame()
+
+        # Merge all other datasets into the financial one
+        merged_df = financial_df
         for name, dataset in cleaned_datasets.items():
-            logger.info(f"Standardizing time series for dataset: {name}")
-            cleaned_datasets[name] = self.standardize_time_series(dataset)
-        
-        # Step 4: Standardize currency
-        for name, dataset in cleaned_datasets.items():
-            logger.info(f"Standardizing currency for dataset: {name}")
-            cleaned_datasets[name] = self.standardize_currency(dataset)
-        
-        # Step 5: Merge datasets
-        logger.info("Merging all datasets")
-        merged_df = self.merge_datasets(cleaned_datasets)
-        
-        # Step 6: Create additional features
-        logger.info("Creating additional features")
-        final_df = self.create_features(merged_df)
-        
-        logger.info(f"Data cleaning and preparation completed. Final shape: {final_df.shape}")
-        return final_df
+            if 'date' in dataset.columns:
+                merged_df = pd.merge(merged_df, dataset, on='date', how='outer', suffixes=(f'_{name}', ''))
+            else:
+                logger.warning(f"Dataset '{name}' has no 'date' column, cannot merge.")
+
+        # Final cleaning steps on merged data
+        logger.info("Performing final cleaning on merged dataset")
+        merged_df = self.handle_missing_values(merged_df)
+        merged_df.sort_values(by='date', inplace=True)
+        merged_df.reset_index(drop=True, inplace=True)
+
+        logger.info(f"Data cleaning and preparation finished. Final shape: {merged_df.shape}")
+        return merged_df
     
     def save_cleaned_data(self, df: pd.DataFrame, filename: str = "cleaned_dataset.csv"):
         """

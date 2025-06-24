@@ -11,6 +11,9 @@ from datetime import datetime, timedelta
 import os
 import time
 
+# Import start date from config
+from config import DATA_SOURCES
+
 def get_ftse100_companies():
     """
     Get FTSE 100 companies with their Yahoo Finance tickers.
@@ -59,14 +62,13 @@ def get_sp500_companies():
         }
     }
 
-def download_company_data(ticker, company_name, period='3y'):
+def download_company_data(ticker, company_name):
     """
     Download stock data for a specific company.
     
     Args:
         ticker (str): Yahoo Finance ticker symbol
         company_name (str): Full company name
-        period (str): Time period for data
     
     Returns:
         pd.DataFrame: Stock data with date and close_price columns
@@ -74,9 +76,11 @@ def download_company_data(ticker, company_name, period='3y'):
     print(f"📈 Downloading {company_name} ({ticker})...")
     
     try:
+        start_date = DATA_SOURCES.get("start_date", "2020-01-01")
+        
         # Download data
         stock = yf.Ticker(ticker)
-        data = stock.history(period=period)
+        data = stock.history(start=start_date)
         
         if data.empty:
             print(f"❌ No data found for {ticker}")

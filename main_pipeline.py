@@ -9,6 +9,7 @@ from datetime import datetime
 from pathlib import Path
 import sys
 import traceback
+import concurrent.futures
 
 # Add project root to path
 project_root = Path(__file__).parent
@@ -41,56 +42,52 @@ class ForecastModelPipeline:
         
     def run_data_acquisition(self) -> bool:
         """
-        Run the complete data acquisition process.
+        Run the complete data acquisition process in parallel.
         
         Returns:
             bool: True if successful, False otherwise
         """
         logger.info("Starting data acquisition phase")
         
-        try:
-            # Step 1: Collect financial data
-            logger.info("Collecting financial data...")
-            financial_data = self.financial_collector.collect_all_companies_data()
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            # Submit data collection tasks
+            future_financial = executor.submit(self.financial_collector.collect_all_companies_data)
+            future_economic = executor.submit(self.economic_collector.collect_all_economic_data)
+            future_sentiment = executor.submit(self.sentiment_collector.collect_all_sentiment_data)
             
-            if not financial_data.empty:
-                self.raw_datasets['financial'] = financial_data
-                logger.info(f"Financial data collected: {len(financial_data)} records")
-            else:
-                logger.warning("No financial data collected")
+            # Process results as they complete
+            try:
+                financial_data = future_financial.result()
+                if not financial_data.empty:
+                    self.raw_datasets['financial'] = financial_data
+                    logger.info(f"Financial data collected: {len(financial_data)} records")
+                else:
+                    logger.warning("No financial data collected")
+
+                economic_data = future_economic.result()
+                if economic_data:
+                    self.raw_datasets.update(economic_data)
+                    total_economic_records = sum(len(df) for df in economic_data.values())
+                    logger.info(f"Economic data collected: {total_economic_records} records across {len(economic_data)} sources")
+                else:
+                    logger.warning("No economic data collected")
+
+                sentiment_data = future_sentiment.result()
+                if sentiment_data:
+                    self.raw_datasets.update(sentiment_data)
+                    total_sentiment_records = sum(len(df) for df in sentiment_data.values())
+                    logger.info(f"Sentiment data collected: {total_sentiment_records} records across {len(sentiment_data)} sources")
+                else:
+                    logger.warning("No sentiment data collected")
+
+                self._save_raw_data()
+                logger.info("Data acquisition phase completed successfully")
+                return True
             
-            # Step 2: Collect economic data
-            logger.info("Collecting economic data...")
-            economic_data = self.economic_collector.collect_all_economic_data()
-            
-            if economic_data:
-                self.raw_datasets.update(economic_data)
-                total_economic_records = sum(len(df) for df in economic_data.values())
-                logger.info(f"Economic data collected: {total_economic_records} records across {len(economic_data)} sources")
-            else:
-                logger.warning("No economic data collected")
-            
-            # Step 3: Collect sentiment data
-            logger.info("Collecting sentiment data...")
-            sentiment_data = self.sentiment_collector.collect_all_sentiment_data()
-            
-            if sentiment_data:
-                self.raw_datasets.update(sentiment_data)
-                total_sentiment_records = sum(len(df) for df in sentiment_data.values())
-                logger.info(f"Sentiment data collected: {total_sentiment_records} records across {len(sentiment_data)} sources")
-            else:
-                logger.warning("No sentiment data collected")
-            
-            # Save raw data
-            self._save_raw_data()
-            
-            logger.info("Data acquisition phase completed successfully")
-            return True
-            
-        except Exception as e:
-            logger.error(f"Error in data acquisition phase: {str(e)}")
-            logger.error(traceback.format_exc())
-            return False
+            except Exception as e:
+                logger.error(f"Error in data acquisition phase: {str(e)}")
+                logger.error(traceback.format_exc())
+                return False
     
     def run_data_cleaning(self) -> bool:
         """
@@ -106,8 +103,12 @@ class ForecastModelPipeline:
                 logger.error("No raw datasets available. Run data acquisition first.")
                 return False
             
-            # Clean and prepare all datasets
-            self.cleaned_dataset = self.data_cleaner.clean_and_prepare_data(self.raw_datasets)
+            # Clean and prepare all datasets in parallel
+            with concurrent.futures.ProcessPoolExecutor() as executor:
+                cleaned_datasets = list(executor.map(self.data_cleaner.clean_single_dataset, self.raw_datasets.values()))
+
+            # Merge cleaned datasets
+            self.cleaned_dataset = self.data_cleaner.merge_datasets(cleaned_datasets)
             
             if self.cleaned_dataset is not None and not self.cleaned_dataset.empty:
                 logger.info(f"Data cleaning completed. Final dataset shape: {self.cleaned_dataset.shape}")
