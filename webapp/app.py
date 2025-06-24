@@ -4,310 +4,200 @@ Multi-model stock prediction interface.
 """
 
 import os
+import json
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, send_from_directory
+from werkzeug.utils import secure_filename
 import yfinance as yf
-from sklearn.linear_model import LinearRegression
-from sklearn.preprocessing import PolynomialFeatures
+from pathlib import Path
+
+# Import advanced models
+try:
+    import sys
+    sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+    from models.arima_model import ARIMAModel
+    from models.prophet_model import ProphetModel
+    from models.enhanced_forecast_model import EnhancedForecastModel
+    ADVANCED_MODELS_AVAILABLE = True
+    print("✅ Advanced models imported successfully")
+except ImportError as e:
+    print(f"⚠️  Advanced models not available: {e}")
+    ADVANCED_MODELS_AVAILABLE = False
 
 def create_app():
     app = Flask(__name__)
+    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'a-default-secret-key')
+    app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(__file__), '..', 'uploads')
+    app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+    
+    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+    
+    @app.after_request
+    def add_header(response):
+        response.headers['X-UA-Compatible'] = 'IE=Edge,chrome=1'
+        response.headers['Cache-Control'] = 'public, max-age=0, no-cache, no-store, must-revalidate'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+        return response
+    
+    def allowed_file(filename):
+        return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'csv'}
     
     @app.route('/')
     def index():
         return render_template('index.html')
+
+    @app.route('/dashboard')
+    def dashboard():
+        return render_template('dashboard.html')
     
+    @app.route('/stocks')
+    def stocks():
+        return render_template('stocks.html')
+    
+    @app.route('/upload')
+    def upload_page():
+        return render_template('upload.html')
+    
+    @app.route('/forecast_plots')
+    def forecast_plots():
+        plots_dir = Path(os.path.dirname(__file__)).parent / 'forecast_plots_2024'
+        if not plots_dir.exists():
+            return "Plots directory not found.", 404
+        
+        plot_files = sorted([f for f in os.listdir(plots_dir) if f.endswith('.png')])
+        return render_template('forecast_plots.html', plot_files=plot_files)
+
+    @app.route('/plots/<filename>')
+    def get_plot_image(filename):
+        plots_dir = Path(os.path.dirname(__file__)).parent / 'forecast_plots_2024'
+        return send_from_directory(plots_dir, filename)
+
     @app.route('/api/forecast-asset', methods=['POST'])
     def forecast_asset():
+        """Main endpoint to generate and return asset forecasts."""
         try:
-            data = request.get_json()
-            ticker = data.get('ticker', '').upper().strip()
-            days = int(data.get('days', 30))
+            # 1. Get and validate request data
+            req_data = request.get_json()
+            ticker = req_data.get('ticker', '').upper()
+            forecast_days = int(req_data.get('forecast_days', 30))
+            use_enhanced = req_data.get('use_enhanced', False)
             
-            if not ticker:
-                return jsonify({'success': False, 'error': 'Ticker required'})
-            
-            # Get stock data
-            stock = yf.Ticker(ticker)
-            hist_data = stock.history(period='1y')
-            
+            if not ticker or not ADVANCED_MODELS_AVAILABLE:
+                return jsonify({'success': False, 'error': 'Invalid request or models not available'}), 400
+
+            # 2. Fetch and prepare data
+            hist_data = yf.download(ticker, period='5y', progress=False)
             if hist_data.empty:
-                return jsonify({'success': False, 'error': f'No data for {ticker}'})
+                return jsonify({'success': False, 'error': f'No data for {ticker}'}), 404
             
-            # Prepare data
-            dates = [d.strftime('%Y-%m-%d') for d in hist_data.index]
-            prices = hist_data['Close'].tolist()
+            df_for_models = hist_data[['Close']].copy().reset_index()
+            df_for_models.columns = ['date', 'y']
+            df_for_models['date'] = pd.to_datetime(df_for_models['date'])
+
+            # 3. Run selected models
+            successful_forecasts = {}
             
-            # Store all forecasts and model info
-            all_forecasts = {}
-            model_info = {}
-            
-            # 1. Linear Regression Model
+            # --- ARIMA ---
             try:
-                recent = hist_data.tail(60)
-                X = np.arange(len(recent)).reshape(-1, 1)
-                y = recent['Close'].values
-                
-                linear_model = LinearRegression()
-                linear_model.fit(X, y)
-                
-                future_X = np.arange(len(recent), len(recent) + days).reshape(-1, 1)
-                linear_forecast = linear_model.predict(future_X)
-                linear_forecast = np.maximum(linear_forecast, 0.01)
-                
-                all_forecasts['Linear Regression'] = linear_forecast.tolist()
-                model_info['Linear Regression'] = {
-                    'status': 'success',
-                    'type': f'Linear trend on {len(recent)} days',
-                    'slope': float(linear_model.coef_[0])
-                }
+                arima_model = ARIMAModel()
+                arima_model.fit(df_for_models)
+                forecast = arima_model.predict(df=df_for_models, steps=forecast_days)
+                successful_forecasts['arima'] = np.array(forecast).tolist()
             except Exception as e:
-                model_info['Linear Regression'] = {'status': 'failed', 'error': str(e)[:50]}
-            
-            # 2. Moving Average Model
+                print(f"❌ ARIMA model failed: {e}")
+
+            # --- Prophet ---
             try:
-                prices_array = hist_data['Close'].values
-                short_ma = np.mean(prices_array[-7:])  # 7-day MA
-                long_ma = np.mean(prices_array[-30:])   # 30-day MA
-                
-                if long_ma > 0:
-                    trend = (short_ma - long_ma) / long_ma
-                else:
-                    trend = 0
-                
-                last_price = prices_array[-1]
-                ma_forecast = []
-                
-                for i in range(days):
-                    trend_factor = trend * (0.95 ** i)  # Diminishing trend
-                    next_price = last_price * (1 + trend_factor)
-                    next_price = max(next_price, 0.01)
-                    ma_forecast.append(next_price)
-                    last_price = next_price
-                
-                all_forecasts['Moving Average'] = ma_forecast
-                model_info['Moving Average'] = {
-                    'status': 'success',
-                    'type': '7-day vs 30-day MA trend',
-                    'trend': f'{trend:.4f}'
-                }
+                prophet_model = ProphetModel()
+                prophet_model.fit(df_for_models)
+                forecast = prophet_model.predict(df=df_for_models, periods=forecast_days)
+                successful_forecasts['prophet'] = np.array(forecast).tolist()
             except Exception as e:
-                model_info['Moving Average'] = {'status': 'failed', 'error': str(e)[:50]}
+                print(f"❌ Prophet model failed: {e}")
+
+            # 4. Create Ensemble Forecast
+            ensemble_forecast = []
+            valid_forecasts = [f for f in successful_forecasts.values() if f]
+            if len(valid_forecasts) > 1:
+                min_len = min(len(f) for f in valid_forecasts)
+                trimmed = [f[:min_len] for f in valid_forecasts]
+                ensemble_forecast = np.mean(trimmed, axis=0).tolist()
             
-            # 3. Exponential Smoothing Model
-            try:
-                prices_array = hist_data['Close'].values
-                alpha = 0.3  # Smoothing parameter
-                smoothed = [prices_array[0]]
-                
-                for price in prices_array[1:]:
-                    smoothed.append(alpha * price + (1 - alpha) * smoothed[-1])
-                
-                # Calculate trend from smoothed data
-                recent_smoothed = smoothed[-10:]
-                if len(recent_smoothed) >= 2:
-                    trend_per_day = (recent_smoothed[-1] - recent_smoothed[0]) / (len(recent_smoothed) - 1)
-                else:
-                    trend_per_day = 0
-                
-                last_smoothed = smoothed[-1]
-                exp_forecast = []
-                
-                for i in range(days):
-                    trend_effect = trend_per_day * (i + 1) * (0.98 ** i)
-                    next_value = last_smoothed + trend_effect
-                    next_value = max(next_value, 0.01)
-                    exp_forecast.append(next_value)
-                
-                all_forecasts['Exponential Smoothing'] = exp_forecast
-                model_info['Exponential Smoothing'] = {
-                    'status': 'success',
-                    'type': f'Exponential smoothing (α={alpha})',
-                    'trend_per_day': f'{trend_per_day:.4f}'
-                }
-            except Exception as e:
-                model_info['Exponential Smoothing'] = {'status': 'failed', 'error': str(e)[:50]}
-            
-            # 4. Polynomial Regression Model
-            try:
-                recent = hist_data.tail(50)
-                if len(recent) >= 10:
-                    X = np.arange(len(recent)).reshape(-1, 1)
-                    y = recent['Close'].values
-                    
-                    # 2nd degree polynomial
-                    poly_features = PolynomialFeatures(degree=2)
-                    X_poly = poly_features.fit_transform(X)
-                    
-                    poly_model = LinearRegression()
-                    poly_model.fit(X_poly, y)
-                    
-                    future_X = np.arange(len(recent), len(recent) + days).reshape(-1, 1)
-                    future_X_poly = poly_features.transform(future_X)
-                    poly_forecast = poly_model.predict(future_X_poly)
-                    
-                    # Constrain predictions to reasonable bounds
-                    current_price = y[-1]
-                    poly_forecast = np.clip(poly_forecast, current_price * 0.5, current_price * 2.0)
-                    poly_forecast = np.maximum(poly_forecast, 0.01)
-                    
-                    all_forecasts['Polynomial Regression'] = poly_forecast.tolist()
-                    model_info['Polynomial Regression'] = {
-                        'status': 'success',
-                        'type': f'2nd degree polynomial on {len(recent)} days',
-                        'r2_score': 'fitted'
-                    }
-                else:
-                    model_info['Polynomial Regression'] = {'status': 'failed', 'error': 'Insufficient data'}
-            except Exception as e:
-                model_info['Polynomial Regression'] = {'status': 'failed', 'error': str(e)[:50]}
-            
-            # 5. Seasonal Trend Model
-            try:
-                prices_array = hist_data['Close'].values
-                
-                if len(prices_array) >= 30:
-                    # Calculate weekly seasonality (7-day pattern)
-                    weekly_pattern = []
-                    for day in range(7):
-                        day_prices = [prices_array[i] for i in range(day, len(prices_array), 7)]
-                        if day_prices:
-                            weekly_pattern.append(np.mean(day_prices))
-                        else:
-                            weekly_pattern.append(prices_array[-1])
-                    
-                    # Overall trend
-                    trend_slope = (prices_array[-1] - prices_array[-30]) / 30
-                    
-                    seasonal_forecast = []
-                    last_price = prices_array[-1]
-                    
-                    for i in range(days):
-                        # Apply trend
-                        trend_component = last_price + trend_slope * (i + 1)
-                        
-                        # Apply seasonality
-                        seasonal_factor = weekly_pattern[i % 7] / np.mean(weekly_pattern)
-                        
-                        forecast_value = trend_component * seasonal_factor
-                        forecast_value = max(forecast_value, 0.01)
-                        seasonal_forecast.append(forecast_value)
-                    
-                    all_forecasts['Seasonal Model'] = seasonal_forecast
-                    model_info['Seasonal Model'] = {
-                        'status': 'success',
-                        'type': 'Trend + 7-day seasonality',
-                        'trend_slope': f'{trend_slope:.4f}'
-                    }
-                else:
-                    model_info['Seasonal Model'] = {'status': 'failed', 'error': 'Need 30+ days for seasonality'}
-            except Exception as e:
-                model_info['Seasonal Model'] = {'status': 'failed', 'error': str(e)[:50]}
-            
-            # 6. Create Ensemble Model
-            successful_forecasts = {name: forecast for name, forecast in all_forecasts.items()}
-            
-            if len(successful_forecasts) >= 2:
+            # 5. Run Enhanced (VIX Simulation) Forecast if requested
+            enhanced_forecast = []
+            if use_enhanced:
                 try:
-                    # Weighted ensemble - give more weight to certain models
-                    weights = {
-                        'Linear Regression': 0.20,
-                        'Moving Average': 0.25,
-                        'Exponential Smoothing': 0.25,
-                        'Polynomial Regression': 0.15,
-                        'Seasonal Model': 0.15
-                    }
+                    enhanced_model = EnhancedForecastModel()
+                    forecast_start_date = hist_data.index[-1] + timedelta(days=1)
+                    forecast_dates_pd = pd.date_range(start=forecast_start_date, periods=forecast_days, freq='D')
                     
-                    ensemble_forecast = np.zeros(days)
-                    total_weight = 0
+                    economic_data = enhanced_model.get_economic_indicators(
+                        start_date=forecast_start_date.strftime('%Y-%m-%d'),
+                        end_date=forecast_dates_pd[-1].strftime('%Y-%m-%d'),
+                        ticker=ticker
+                    )
                     
-                    for name, forecast in successful_forecasts.items():
-                        weight = weights.get(name, 0.2)  # Default weight
-                        ensemble_forecast += np.array(forecast) * weight
-                        total_weight += weight
-                    
-                    if total_weight > 0:
-                        ensemble_forecast /= total_weight
-                        
-                        all_forecasts['Ensemble'] = ensemble_forecast.tolist()
-                        model_info['Ensemble'] = {
-                            'status': 'success',
-                            'type': f'Weighted average of {len(successful_forecasts)} models',
-                            'models_combined': list(successful_forecasts.keys())
-                        }
+                    enhanced_results = enhanced_model.generate_enhanced_forecast(
+                        ticker=ticker, hist_data=hist_data, forecast_dates=forecast_dates_pd,
+                        vix_forecast_period_data=economic_data
+                    )
+                    sim_path = enhanced_results.get('forecasts', {}).get('VIX_Simulated_Path')
+                    if sim_path:
+                        enhanced_forecast = sim_path
                 except Exception as e:
-                    model_info['Ensemble'] = {'status': 'failed', 'error': str(e)[:50]}
+                    print(f"❌ Enhanced simulation failed: {e}")
             
-            # Generate future dates (skip weekends)
-            future_dates = []
-            current_date = hist_data.index[-1]
-            for i in range(days):
-                current_date += timedelta(days=1)
-                while current_date.weekday() >= 5:  # Skip weekends
-                    current_date += timedelta(days=1)
-                future_dates.append(current_date.strftime('%Y-%m-%d'))
-            
-            # Choose primary forecast (prefer ensemble, then best available)
-            if 'Ensemble' in all_forecasts:
-                primary_forecast = all_forecasts['Ensemble']
-                primary_model = 'Ensemble'
-            elif 'Moving Average' in all_forecasts:
-                primary_forecast = all_forecasts['Moving Average']
-                primary_model = 'Moving Average'
-            elif 'Exponential Smoothing' in all_forecasts:
-                primary_forecast = all_forecasts['Exponential Smoothing']
-                primary_model = 'Exponential Smoothing'
-            elif successful_forecasts:
-                primary_model = list(successful_forecasts.keys())[0]
-                primary_forecast = list(successful_forecasts.values())[0]
-            else:
-                return jsonify({'success': False, 'error': 'All forecasting models failed'})
-            
-            # Calculate summary statistics
-            current_price = float(prices[-1])
-            predicted_price = float(primary_forecast[-1])
-            change_percent = ((predicted_price - current_price) / current_price) * 100
-            
-            # Calculate confidence interval based on model agreement
-            if len(successful_forecasts) > 1:
-                final_prices = [forecast[-1] for forecast in successful_forecasts.values()]
-                price_std = np.std(final_prices)
-                confidence_interval = float(price_std * 1.96)  # 95% confidence
-            else:
-                # Use historical volatility for single model
-                returns = hist_data['Close'].pct_change().dropna()
-                volatility = returns.std()
-                confidence_interval = float(volatility * np.sqrt(days) * current_price)
-            
-            return jsonify({
+            # 6. Prepare final JSON response
+            last_date = hist_data.index[-1]
+            forecast_dates = [last_date + timedelta(days=i) for i in range(1, forecast_days + 1)]
+
+            response = {
                 'success': True,
                 'ticker': ticker,
-                'historical_dates': dates[-60:],
-                'historical_prices': prices[-60:],
-                'forecast_dates': future_dates,
-                'all_forecasts': all_forecasts,
-                'primary_forecast': primary_forecast,
-                'current_price': current_price,
-                'predicted_price': predicted_price,
-                'change_percent': change_percent,
-                'confidence_interval': confidence_interval,
-                'model_info': model_info,
-                'summary': {
-                    'primary_model': primary_model,
-                    'models_used': len(successful_forecasts),
-                    'trend': 'Bullish' if change_percent > 0 else 'Bearish'
+                'historical_data': {
+                    'dates': hist_data.index.strftime('%Y-%m-%d').tolist(),
+                    'prices': hist_data['Close'].values.flatten().tolist()
                 },
-                'ensemble_info': {
-                    'primary_model': primary_model,
-                    'models_used': len(successful_forecasts)
-                }
-            })
+                'forecast_dates': [d.strftime('%Y-%m-%d') for d in forecast_dates],
+                'arima_forecast': successful_forecasts.get('arima', []),
+                'prophet_forecast': successful_forecasts.get('prophet', []),
+                'ensemble_forecast': ensemble_forecast,
+            }
+            if enhanced_forecast:
+                response['enhanced_forecast'] = enhanced_forecast
             
+            return jsonify(response)
+
         except Exception as e:
-            return jsonify({'success': False, 'error': str(e)})
+            print(f"🔥 Unhandled exception in forecast_asset: {e}")
+            import traceback
+            traceback.print_exc()
+            return jsonify({'success': False, 'error': 'A critical error occurred on the server.'}), 500
     
+    @app.route('/api/search-tickers')
+    def search_tickers():
+        """Provides ticker suggestions for the search bar."""
+        query = request.args.get('q', '').upper()
+        if not query:
+            return jsonify([])
+        
+        # This is a placeholder. For a real app, use a database or a pre-compiled list.
+        # For now, we'll use a simple hardcoded list of popular tickers.
+        all_tickers = {
+            "AAPL": "Apple Inc.", "MSFT": "Microsoft Corporation", "GOOGL": "Alphabet Inc.",
+            "AMZN": "Amazon.com, Inc.", "TSLA": "Tesla, Inc.", "NVDA": "NVIDIA Corporation",
+            "JPM": "JPMorgan Chase & Co.", "JNJ": "Johnson & Johnson", "V": "Visa Inc.",
+            "WMT": "Walmart Inc.", "PG": "Procter & Gamble Company",
+            "AZN.L": "AstraZeneca PLC", "HSBA.L": "HSBC Holdings PLC", "ULVR.L": "Unilever PLC"
+        }
+        
+        matched = {t: n for t, n in all_tickers.items() if query in t or query in n.upper()}
+        results = [{'symbol': t, 'name': n} for t, n in matched.items()]
+        return jsonify(results[:10])
+
     return app
 
 if __name__ == '__main__':

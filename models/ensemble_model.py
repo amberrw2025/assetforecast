@@ -215,9 +215,20 @@ class EnsembleModel(BaseForecastModel):
         normalized_weights = [w / total_weight for w in valid_weights]
         
         # Calculate weighted average
-        weighted_pred = np.zeros_like(predictions[0])
         
-        for pred, weight in zip(predictions, normalized_weights):
+        # Ensure all predictions are 1D arrays of the same length
+        max_len = max(len(p) for p in predictions)
+        processed_predictions = []
+        for p in predictions:
+            p = np.ravel(p) # Flatten to 1D
+            if len(p) < max_len:
+                # Pad with last value if lengths are different
+                p = np.pad(p, (0, max_len - len(p)), 'edge')
+            processed_predictions.append(p)
+
+        weighted_pred = np.zeros(max_len)
+        
+        for pred, weight in zip(processed_predictions, normalized_weights):
             weighted_pred += pred * weight
         
         return weighted_pred
