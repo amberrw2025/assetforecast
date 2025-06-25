@@ -4,14 +4,18 @@ Multi-model stock prediction interface.
 """
 
 import os
-import json
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
-from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, send_from_directory
-from werkzeug.utils import secure_filename
+from flask import Flask, render_template, request, jsonify, send_from_directory # Added send_from_directory for plots
+from flask_caching import Cache
 import yfinance as yf
+from dotenv import load_dotenv # <<< KEEPING THIS FROM AMBER
 from pathlib import Path
+import traceback
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Import advanced models
 try:
@@ -19,15 +23,36 @@ try:
     sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
     from models.arima_model import ARIMAModel
     from models.prophet_model import ProphetModel
-    from models.enhanced_forecast_model import EnhancedForecastModel
+    from models.enhanced_forecast_model import EnhancedForecastModel # <<< KEEPING THIS FROM NEW
     ADVANCED_MODELS_AVAILABLE = True
     print("✅ Advanced models imported successfully")
 except ImportError as e:
     print(f"⚠️  Advanced models not available: {e}")
     ADVANCED_MODELS_AVAILABLE = False
 
+# --- Global Cache Initialization ---
+cache = Cache(config={
+    'CACHE_TYPE': 'SimpleCache',
+    'CACHE_DEFAULT_TIMEOUT': 300
+})
+
+@cache.memoize(timeout=300)
+def get_yfinance_data(ticker, period="2y"):
+    """Cached function to fetch data from yfinance."""
+    yf_ticker = yf.Ticker(ticker)
+    data = yf_ticker.history(period=period)
+    if data.empty:
+        return None
+    # Ensure the DatetimeIndex is timezone-naive
+    if hasattr(data.index, 'tz') and data.index.tz is not None:
+        data.index = data.index.tz_localize(None)
+    return data
+
 def create_app():
     app = Flask(__name__)
+    cache.init_app(app) # <<< IMPORTANT: Initialize cache with the app here
+    
+    # --- New app configurations from 'new' branch ---
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'a-default-secret-key')
     app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(__file__), '..', 'uploads')
     app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
@@ -45,6 +70,7 @@ def create_app():
     def allowed_file(filename):
         return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'csv'}
     
+    # --- Routes from 'new' branch (more general web app structure) ---
     @app.route('/')
     def index():
         return render_template('index.html')
@@ -77,7 +103,7 @@ def create_app():
 
     @app.route('/api/forecast-asset', methods=['POST'])
     def forecast_asset():
-        """Main endpoint to generate and return asset forecasts."""
+        """Main endpoint to generate and return asset forecasts (from 'new' branch)."""
         try:
             # 1. Get and validate request data
             req_data = request.get_json()
@@ -88,9 +114,9 @@ def create_app():
             if not ticker or not ADVANCED_MODELS_AVAILABLE:
                 return jsonify({'success': False, 'error': 'Invalid request or models not available'}), 400
 
-            # 2. Fetch and prepare data
-            hist_data = yf.download(ticker, period='5y', progress=False)
-            if hist_data.empty:
+            # 2. Fetch and prepare data (USING CACHED FUNCTION FROM AMBER)
+            hist_data = get_yfinance_data(ticker, period="5y") # Using get_yfinance_data
+            if hist_data is None or hist_data.empty:
                 return jsonify({'success': False, 'error': f'No data for {ticker}'}), 404
             
             df_for_models = hist_data[['Close']].copy().reset_index()
@@ -173,7 +199,6 @@ def create_app():
 
         except Exception as e:
             print(f"🔥 Unhandled exception in forecast_asset: {e}")
-            import traceback
             traceback.print_exc()
             return jsonify({'success': False, 'error': 'A critical error occurred on the server.'}), 500
     
@@ -191,7 +216,8 @@ def create_app():
             "AMZN": "Amazon.com, Inc.", "TSLA": "Tesla, Inc.", "NVDA": "NVIDIA Corporation",
             "JPM": "JPMorgan Chase & Co.", "JNJ": "Johnson & Johnson", "V": "Visa Inc.",
             "WMT": "Walmart Inc.", "PG": "Procter & Gamble Company",
-            "AZN.L": "AstraZeneca PLC", "HSBA.L": "HSBC Holdings PLC", "ULVR.L": "Unilever PLC"
+            "AZN.L": "AstraZeneca PLC", "HSBA.L": "HSBC Holdings PLC", "ULVR.L": "Unilever PLC",
+            "VOD.L": "Vodafone Group Plc", "BP.L": "BP Plc", "SHEL.L": "Shell Plc" # Added more FTSE
         }
         
         matched = {t: n for t, n in all_tickers.items() if query in t or query in n.upper()}
