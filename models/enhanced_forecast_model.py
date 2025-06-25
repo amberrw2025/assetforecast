@@ -7,6 +7,11 @@ import numpy as np
 from typing import Dict, Any, Optional, List
 import yfinance as yf
 from datetime import datetime, timedelta
+from fredapi import Fred
+import os
+from dotenv import load_dotenv
+from pathlib import Path
+import logging
 
 # Optional imports for enhanced functionality
 try:
@@ -15,52 +20,62 @@ try:
 except ImportError:
     TEXTBLOB_AVAILABLE = False
 
-try:
-    from loguru import logger
-except ImportError:
-    import logging
-    logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
+project_root = Path(__file__).parent.parent
+# Load only the specific .env file
+dotenv_path = project_root / '.env'
+if dotenv_path.exists():
+    load_dotenv(dotenv_path=dotenv_path, override=True)
 
 class EnhancedForecastModel:
     """Enhanced forecasting with external data integration."""
     
     def __init__(self):
         self.external_weights = {
-            'economic': 0.3,
-            'sentiment': 0.2,
+            'economic': 0.4, # Increased weight for VIX
+            'sentiment': 0.1,
             'technical': 0.4,
             'fundamental': 0.1
         }
         
-    def get_economic_indicators(self, start_date: str, end_date: str) -> pd.DataFrame:
+    def get_economic_indicators(self, start_date: str, end_date: str, ticker: str = "") -> pd.DataFrame:
         """
-        Fetch economic indicators that affect stock prices.
+        Fetches economic indicators like the VIX or VFTSE Index.
+        Dynamically selects the index based on the ticker.
         
         Args:
             start_date (str): Start date for data
             end_date (str): End date for data
+            ticker (str): Stock ticker
             
         Returns:
             pd.DataFrame: Economic indicators data
         """
+        # Determine which volatility index to use
+        is_uk_stock = ticker.endswith('.L')
+        volatility_ticker = '^VFTSE' if is_uk_stock else '^VIX'
+        indicator_name = 'VFTSE' if is_uk_stock else 'VIX'
+        
+        print(f"   Fetching {indicator_name} data for {ticker}...")
+
         try:
-            # Generate sample economic data for now
-            dates = pd.date_range(start=start_date, end=end_date, freq='D')
-            np.random.seed(42)
+            # Fetch the data from yfinance
+            data = yf.download(volatility_ticker, start=start_date, end=end_date, progress=False)
             
-            economic_data = {
-                'fed_rate': np.random.uniform(0.5, 5.0, len(dates)),
-                'unemployment': np.random.uniform(3.0, 8.0, len(dates)),
-                'treasury_10y': np.random.uniform(1.0, 6.0, len(dates)),
-                'vix': np.random.uniform(12, 35, len(dates))
-            }
-            
-            df = pd.DataFrame(economic_data, index=dates)
-            return df
+            if data.empty:
+                raise ValueError(f"No {indicator_name} data returned from yfinance.")
+
+            # We only need the 'Close' price, let's rename it to be clear
+            data = data[['Close']].rename(columns={'Close': indicator_name})
+            return data
         except Exception as e:
-            print(f"Error fetching economic data: {e}")
-            return pd.DataFrame()
+            print(f"   ⚠️ Could not download {indicator_name} data: {e}")
+            print(f"   Falling back to randomly generated data for simulation.")
+            dates = pd.date_range(start=start_date, end=end_date, freq='D')
+            fallback_data = np.random.uniform(10, 35, size=len(dates)) # Typical VIX range
+            fallback_df = pd.DataFrame(fallback_data, index=dates, columns=[indicator_name])
+            return fallback_df
     
     def get_sentiment_score(self, ticker: str) -> float:
         """
@@ -127,127 +142,73 @@ class EnhancedForecastModel:
         except:
             return {'rsi': 50.0, 'volatility': 0.2}
     
-    def generate_enhanced_forecast(self, ticker: str, hist_data: pd.DataFrame, 
-                                 base_forecasts: Dict[str, List[float]], 
-                                 days: int) -> Dict[str, Any]:
+    def generate_enhanced_forecast(self, 
+                                 ticker: str,
+                                 hist_data: pd.DataFrame,
+                                 forecast_dates: pd.DatetimeIndex,
+                                 vix_forecast_period_data: pd.DataFrame) -> Dict[str, Any]:
         """
-        Generate enhanced forecast using external data sources.
+        Generates a more realistic stock price path using a volatility index
+        (VIX or VFTSE) as a guide for daily price movements.
         
         Args:
-            ticker (str): Stock ticker
-            hist_data (pd.DataFrame): Historical price data
-            base_forecasts (Dict[str, List[float]]): Base model forecasts
-            days (int): Number of days to forecast
+            ticker (str): Stock ticker (for potential future use).
+            hist_data (pd.DataFrame): Historical price data to get the starting price.
+            forecast_dates (pd.DatetimeIndex): The dates for the forecast period.
+            vix_forecast_period_data (pd.DataFrame): VIX data for the forecast period.
             
         Returns:
-            Dict[str, Any]: Enhanced forecast with external factors
+            Dict[str, Any]: A dictionary containing the simulated forecast path.
         """
         try:
-            # Get external data
-            start_date = (hist_data.index[0] - timedelta(days=90)).strftime('%Y-%m-%d')
-            end_date = hist_data.index[-1].strftime('%Y-%m-%d')
+            # Get the last closing price from history as our starting point
+            last_price = hist_data['Close'].iloc[-1]
             
-            economic_data = self.get_economic_indicators(start_date, end_date)
-            sentiment_score = self.get_sentiment_score(ticker)
-            fundamental_metrics = self.get_fundamental_metrics(ticker)
-            technical_indicators = self.calculate_technical_indicators(hist_data['Close'])
+            # Ensure last_price is a float
+            if isinstance(last_price, (pd.Series, pd.DataFrame)):
+                last_price = last_price.iloc[0]
+
+            simulated_prices = []
             
-            # Calculate adjustments
-            adjustments = self._calculate_adjustments(
-                economic_data, sentiment_score, fundamental_metrics, technical_indicators
-            )
+            # Determine which column to use from the economic data
+            indicator_name = 'VFTSE' if ticker.endswith('.L') else 'VIX'
             
-            # Apply adjustments to forecasts
-            enhanced_forecasts = {}
-            for model_name, forecast in base_forecasts.items():
-                if model_name != 'Ensemble':
-                    adjusted = self._apply_adjustments(forecast, adjustments)
-                    enhanced_forecasts[f'{model_name}_Enhanced'] = adjusted
-            
-            # Create enhanced ensemble
-            if enhanced_forecasts:
-                ensemble = self._create_ensemble(enhanced_forecasts)
-                enhanced_forecasts['Enhanced_Ensemble'] = ensemble
-            
+            if indicator_name not in vix_forecast_period_data.columns:
+                print(f"   ⚠️ {indicator_name} data not available for simulation period. Cannot generate simulated path.")
+                return {'forecasts': {'VIX_Simulated_Path': None}}
+
+            # Align VIX data with forecast dates
+            aligned_vix = vix_forecast_period_data.reindex(forecast_dates, method='ffill').fillna(method='bfill')
+
+            # Extract VIX values
+            vix_values = aligned_vix.iloc[:, 0].values
+
+            for date in forecast_dates:
+                if date in aligned_vix.index:
+                    vix_value = aligned_vix.loc[date, indicator_name]
+                    
+                    # Ensure vix_value is a float
+                    if isinstance(vix_value, (pd.Series, pd.DataFrame)):
+                        vix_value = vix_value.iloc[0]
+
+                    # Simple model: volatility translates to price movement
+                    # Scale it down significantly to represent daily change
+                    daily_change_percentage = (vix_value / 1000) * (np.random.randn() * 0.5 + np.sign(np.random.randn()))
+                    
+                    last_price = last_price * (1 + daily_change_percentage)
+                    simulated_prices.append(last_price)
+                else:
+                    # If no VIX data for a specific day, keep the price constant
+                    simulated_prices.append(last_price)
+
             return {
-                'forecasts': enhanced_forecasts,
-                'external_summary': {
-                    'economic_impact': adjustments.get('economic_factor', 0.0),
-                    'sentiment_impact': adjustments.get('sentiment_factor', 0.0),
-                    'overall_bias': adjustments.get('overall_bias', 0.0)
-                }
+                'forecasts': {'VIX_Simulated_Path': simulated_prices},
+                'external_summary': {}
             }
             
         except Exception as e:
-            print(f"Error in enhanced forecast: {e}")
+            print(f"Error in VIX-simulated forecast generation: {e}")
             return {'forecasts': {}, 'external_summary': {}}
-    
-    def _calculate_adjustments(self, economic_data, sentiment_score, fundamentals, technical):
-        """
-        Calculate adjustment factors based on external data.
-        
-        Args:
-            economic_data (pd.DataFrame): Economic indicators
-            sentiment_score (float): Sentiment score
-            fundamental_metrics (Dict[str, float]): Fundamental metrics
-            technical_indicators (Dict[str, float]): Technical indicators
-            
-        Returns:
-            Dict[str, float]: Adjustment factors
-        """
-        try:
-            # Economic factor
-            if not economic_data.empty:
-                latest = economic_data.tail(1).iloc[0]
-                economic_factor = -0.02 * (latest['fed_rate'] - 2.0)
-                economic_factor = np.clip(economic_factor, -0.2, 0.2)
-            else:
-                economic_factor = 0.0
-            
-            # Sentiment factor
-            sentiment_factor = sentiment_score * 0.1
-            
-            # Technical factor
-            rsi = technical.get('rsi', 50.0)
-            if rsi > 70:
-                technical_factor = -0.05
-            elif rsi < 30:
-                technical_factor = 0.05
-            else:
-                technical_factor = 0.0
-            
-            overall_bias = (economic_factor * 0.4 + sentiment_factor * 0.3 + technical_factor * 0.3)
-            
-            return {
-                'economic_factor': economic_factor,
-                'sentiment_factor': sentiment_factor,
-                'technical_factor': technical_factor,
-                'overall_bias': overall_bias
-            }
-        except:
-            return {'economic_factor': 0.0, 'sentiment_factor': 0.0, 'technical_factor': 0.0, 'overall_bias': 0.0}
-    
-    def _apply_adjustments(self, forecast, adjustments):
-        """
-        Apply external adjustments to a forecast.
-        
-        Args:
-            forecast (List[float]): Original forecast
-            adjustments (Dict[str, float]): Adjustment factors
-            
-        Returns:
-            List[float]: Adjusted forecast
-        """
-        try:
-            bias = adjustments.get('overall_bias', 0.0)
-            adjusted = []
-            for i, price in enumerate(forecast):
-                bias_effect = bias * (0.9 ** i)  # Diminishing effect
-                adjusted_price = price * (1 + bias_effect)
-                adjusted.append(max(adjusted_price, 0.01))
-            return adjusted
-        except:
-            return forecast
     
     def _create_ensemble(self, forecasts):
         """

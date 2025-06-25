@@ -5,28 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Forecast Accuracy Assessment{% endblock %}</title>
     
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
+    <!-- Bootstrap CSS (from both, kept latest version) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome (from Amber) -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <!-- Plotly.js -->
+    <!-- Plotly.js (from Amber) - essential for complex charts -->
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    <!-- Chart.js -->
+    <!-- Chart.js (from both) -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
+        /* Global Font: Inter (as per general instructions) */
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
         :root {
             --primary-color: #000000;
             --secondary-color: #ffffff;
             --accent-color: #000000;
-            --success-color: #000000;
-            --warning-color: #000000;
+            --success-color: #000000; /* Re-evaluate if this should be a proper success color */
+            --warning-color: #000000; /* Re-evaluate if this should be a proper warning color */
             --light-bg: #ffffff;
             --dark-bg: #000000;
         }
         
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--light-bg);
             color: #000000;
         }
@@ -34,6 +38,8 @@
         .navbar {
             background-color: var(--dark-bg);
             box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            border-bottom-left-radius: 0.5rem; /* Rounded corners for navbar */
+            border-bottom-right-radius: 0.5rem;
         }
         
         .navbar-brand {
@@ -52,7 +58,7 @@
         
         .card {
             border: 2px solid #000000;
-            border-radius: 0;
+            border-radius: 0.5rem; /* Rounded corners for cards */
             box-shadow: 0 4px 20px rgba(0,0,0,0.3);
             transition: transform 0.3s ease;
             background-color: #ffffff;
@@ -65,21 +71,23 @@
         .card-header {
             background-color: var(--dark-bg);
             color: white;
-            border-radius: 0 !important;
+            border-top-left-radius: 0.5rem !important; /* Rounded top corners for card header */
+            border-top-right-radius: 0.5rem !important;
             font-weight: bold;
             border-bottom: 2px solid #000000;
         }
         
-        .btn-primary {
+        .btn-primary, .btn-success, .btn-warning { /* Combined button styles for consistency */
             background-color: #000000;
             border: 2px solid #000000;
-            border-radius: 0;
+            border-radius: 0.5rem; /* Rounded corners for buttons */
             padding: 10px 25px;
             font-weight: 500;
             color: #ffffff;
+            transition: all 0.3s ease; /* Added transition for hover effect */
         }
         
-        .btn-primary:hover {
+        .btn-primary:hover, .btn-success:hover, .btn-warning:hover {
             background-color: #ffffff;
             color: #000000;
             border: 2px solid #000000;
@@ -87,40 +95,10 @@
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
         }
         
-        .btn-success {
-            background-color: #000000;
-            border: 2px solid #000000;
-            border-radius: 0;
-            padding: 10px 25px;
-            font-weight: 500;
-            color: #ffffff;
-        }
-        
-        .btn-success:hover {
-            background-color: #ffffff;
-            color: #000000;
-            border: 2px solid #000000;
-        }
-        
-        .btn-warning {
-            background-color: #000000;
-            border: 2px solid #000000;
-            border-radius: 0;
-            padding: 10px 25px;
-            font-weight: 500;
-            color: #ffffff;
-        }
-        
-        .btn-warning:hover {
-            background-color: #ffffff;
-            color: #000000;
-            border: 2px solid #000000;
-        }
-        
         .stats-card {
             background-color: #000000;
             color: white;
-            border-radius: 0;
+            border-radius: 0.5rem; /* Rounded corners for stats card */
             padding: 20px;
             margin-bottom: 20px;
             border: 2px solid #000000;
@@ -139,7 +117,7 @@
         
         .upload-area {
             border: 2px solid #000000;
-            border-radius: 0;
+            border-radius: 0.5rem; /* Rounded corners for upload area */
             padding: 40px;
             text-align: center;
             background-color: #ffffff;
@@ -168,13 +146,13 @@
         }
         
         .alert {
-            border-radius: 0;
+            border-radius: 0.5rem; /* Rounded corners for alerts */
             border: 2px solid #000000;
         }
         
         .table {
-            border-radius: 0;
-            overflow: hidden;
+            border-radius: 0.5rem; /* Rounded corners for table container */
+            overflow: hidden; /* Ensures rounded corners apply to content */
         }
         
         .table thead th {
@@ -188,6 +166,8 @@
             color: white;
             padding: 20px 0;
             margin-top: 50px;
+            border-top-left-radius: 0.5rem; /* Rounded corners for footer */
+            border-top-right-radius: 0.5rem;
         }
         
         .chart-container {
@@ -197,19 +177,21 @@
         }
         
         .model-card {
-            border-left: 4px solid #000000;
+            border-left: 4px solid #000000; /* Kept from Amber for model distinction */
+            border-radius: 0.5rem; /* Rounded corners for model cards */
         }
         
+        /* Specific model card colors (retained from Amber, using black as base) */
         .model-card.arima {
-            border-left-color: #000000;
+            border-left-color: #000000; /* Could be a different accent color */
         }
         
         .model-card.prophet {
-            border-left-color: #000000;
+            border-left-color: #000000; /* Could be a different accent color */
         }
         
-        .model-card.lstm {
-            border-left-color: #000000;
+        .model-card.lstm { /* Keeping LSTM style even if model is not currently imported for display consistency */
+            border-left-color: #000000; /* Could be a different accent color */
         }
     </style>
     
@@ -226,13 +208,19 @@
         <div class="collapse navbar-collapse" id="navbarNav">
           <ul class="navbar-nav ms-auto">
             <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('index') }}">Dashboard</a>
+              <a class="nav-link" href="{{ url_for('index') }}">Home</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('commodities') }}">Commodities</a>
+              <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('commodities') }}">Stocks</a>
+              <a class="nav-link" href="{{ url_for('stocks') }}">Stocks</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('upload_page') }}">Upload Data</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('forecast_plots') }}">Forecast Plots</a>
             </li>
           </ul>
         </div>
@@ -251,9 +239,114 @@
         </div>
     </footer>
 
-    <!-- Bootstrap Bundle with Popper -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Bootstrap Bundle with Popper (kept latest version from 'new') -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
-    {% block extra_js %}{% endblock %}
-</body>
-</html>
+    <!-- jQuery (from new) - often used with Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+
+    <!-- Custom JavaScript (from new) -->
+    <script>
+        // Global variables
+        let currentData = null;
+        let currentForecasts = null;
+
+        // Upload functionality
+        function showUploadModal() {
+            const modal = new bootstrap.Modal(document.getElementById('uploadModal'));
+            modal.show();
+        }
+
+        // File upload handling
+        document.getElementById('fileInput')?.addEventListener('change', handleFileSelect); // Use optional chaining for robustness
+        
+        const uploadArea = document.getElementById('uploadArea');
+        
+        if (uploadArea) { // Ensure uploadArea exists before adding listeners
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+            
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('dragover');
+            });
+            
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    handleFile(files[0]);
+                }
+            });
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                handleFile(file);
+            }
+        }
+
+        function handleFile(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            // Show progress
+            const uploadProgressDiv = document.getElementById('uploadProgress');
+            const progressBar = document.querySelector('.progress-bar'); // This should be inside uploadProgressDiv usually
+            
+            if (uploadProgressDiv) uploadProgressDiv.style.display = 'block';
+            if (progressBar) progressBar.style.width = '0%'; // Reset progress bar
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                // Manually handle progress if needed, but fetch doesn't expose it directly for simple body
+                if (response.ok) {
+                    if (progressBar) progressBar.style.width = '100%'; // Simulate completion
+                    return response.json();
+                } else {
+                    return response.json().then(errorData => {
+                        throw new Error(errorData.error || `Server responded with status ${response.status}`);
+                    });
+                }
+            })
+            .then(data => {
+                if (data.success) {
+                    showAlert('success', 'File uploaded successfully!');
+                    currentData = data.summary; // Assuming `data.summary` exists after a successful upload
+                    updateDashboard(); // Call to update dashboard with new data
+                    const uploadModalInstance = bootstrap.Modal.getInstance(document.getElementById('uploadModal'));
+                    if (uploadModalInstance) {
+                        uploadModalInstance.hide();
+                    }
+                } else {
+                    // This block might not be reached if an error is thrown in the .then(response => ...)
+                    showAlert('danger', data.error || 'Upload failed');
+                }
+            })
+            .catch(error => {
+                showAlert('danger', 'Error uploading file: ' + error.message);
+            })
+            .finally(() => {
+                if (uploadProgressDiv) uploadProgressDiv.style.display = 'none';
+            });
+        }
+
+        // Alert system
+        function showAlert(type, message) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            
+            const container = document.querySelector('.container');
+            if (container) { // Ensure container exists
+                container.insertBefore(alertDiv, container.firstChild);
+            }

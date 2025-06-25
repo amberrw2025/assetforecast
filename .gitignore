@@ -356,4 +356,9 @@ test_results/
 *.pyc
 *.pyo
 *.pyd
-*~ 
+*~
+
+# Environment variables
+.env
+.env.*
+!.env.example 

@@ -7,10 +7,10 @@ import os
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_from_directory # Added send_from_directory for plots
 from flask_caching import Cache
 import yfinance as yf
-from dotenv import load_dotenv
+from dotenv import load_dotenv # <<< KEEPING THIS FROM AMBER
 from pathlib import Path
 import traceback
 
@@ -23,7 +23,7 @@ try:
     sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
     from models.arima_model import ARIMAModel
     from models.prophet_model import ProphetModel
-    from models.lstm_model import LSTMModel
+    from models.enhanced_forecast_model import EnhancedForecastModel # <<< KEEPING THIS FROM NEW
     ADVANCED_MODELS_AVAILABLE = True
     print("✅ Advanced models imported successfully")
 except ImportError as e:
@@ -50,213 +50,179 @@ def get_yfinance_data(ticker, period="2y"):
 
 def create_app():
     app = Flask(__name__)
-    cache.init_app(app)
+    cache.init_app(app) # <<< IMPORTANT: Initialize cache with the app here
     
+    # --- New app configurations from 'new' branch ---
+    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'a-default-secret-key')
+    app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(__file__), '..', 'uploads')
+    app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+    
+    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+    
+    @app.after_request
+    def add_header(response):
+        response.headers['X-UA-Compatible'] = 'IE=Edge,chrome=1'
+        response.headers['Cache-Control'] = 'public, max-age=0, no-cache, no-store, must-revalidate'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+        return response
+    
+    def allowed_file(filename):
+        return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'csv'}
+    
+    # --- Routes from 'new' branch (more general web app structure) ---
     @app.route('/')
     def index():
-        return render_template('commodities.html')
+        return render_template('index.html')
 
-    @app.route('/commodities')
-    def commodities():
-        return render_template('commodities.html')
+    @app.route('/dashboard')
+    def dashboard():
+        return render_template('dashboard.html')
     
-    @app.route('/api/commodity-data/<string:commodity>')
-    def get_commodity_data(commodity):
-        """Get commodity overview data."""
+    @app.route('/stocks')
+    def stocks():
+        return render_template('stocks.html')
+    
+    @app.route('/upload')
+    def upload_page():
+        return render_template('upload.html')
+    
+    @app.route('/forecast_plots')
+    def forecast_plots():
+        plots_dir = Path(os.path.dirname(__file__)).parent / 'forecast_plots_2024'
+        if not plots_dir.exists():
+            return "Plots directory not found.", 404
+        
+        plot_files = sorted([f for f in os.listdir(plots_dir) if f.endswith('.png')])
+        return render_template('forecast_plots.html', plot_files=plot_files)
+
+    @app.route('/plots/<filename>')
+    def get_plot_image(filename):
+        plots_dir = Path(os.path.dirname(__file__)).parent / 'forecast_plots_2024'
+        return send_from_directory(plots_dir, filename)
+
+    @app.route('/api/forecast-asset', methods=['POST'])
+    def forecast_asset():
+        """Main endpoint to generate and return asset forecasts (from 'new' branch)."""
         try:
-            # Fetch data for a longer period to calculate all metrics
-            hist_data = get_yfinance_data(commodity, period="2y")
+            # 1. Get and validate request data
+            req_data = request.get_json()
+            ticker = req_data.get('ticker', '').upper()
+            forecast_days = int(req_data.get('forecast_days', 30))
+            use_enhanced = req_data.get('use_enhanced', False)
+            
+            if not ticker or not ADVANCED_MODELS_AVAILABLE:
+                return jsonify({'success': False, 'error': 'Invalid request or models not available'}), 400
+
+            # 2. Fetch and prepare data (USING CACHED FUNCTION FROM AMBER)
+            hist_data = get_yfinance_data(ticker, period="5y") # Using get_yfinance_data
             if hist_data is None or hist_data.empty:
-                return jsonify({'success': False, 'error': f'No data available for {commodity}'})
-
-            close_prices = hist_data['Close']
+                return jsonify({'success': False, 'error': f'No data for {ticker}'}), 404
             
-            # Calculate metrics
-            current_price = close_prices.iloc[-1]
-            previous_price = close_prices.iloc[-2]
-            change_percent = ((current_price - previous_price) / previous_price) * 100
+            df_for_models = hist_data[['Close']].copy().reset_index()
+            df_for_models.columns = ['date', 'y']
+            df_for_models['date'] = pd.to_datetime(df_for_models['date'])
+
+            # 3. Run selected models
+            successful_forecasts = {}
             
-            returns = close_prices.pct_change().dropna()
-            volatility = returns.std() * np.sqrt(252) * 100 # Annualized volatility
+            # --- ARIMA ---
+            try:
+                arima_model = ARIMAModel()
+                arima_model.fit(df_for_models)
+                forecast = arima_model.predict(df=df_for_models, steps=forecast_days)
+                successful_forecasts['arima'] = np.array(forecast).tolist()
+            except Exception as e:
+                print(f"❌ ARIMA model failed: {e}")
 
-            # Date range
-            date_range = {
-                'start': hist_data.index.min().strftime('%Y-%m-%d'),
-                'end': hist_data.index.max().strftime('%Y-%m-%d')
-            }
-            
-            # 52-week high/low
-            year_high = close_prices.last('365D').max()
-            year_low = close_prices.last('365D').min()
-            
-            # Volatility over 30 and 90 days
-            vol_30d = returns.last('30D').std() * np.sqrt(252) * 100
-            vol_90d = returns.last('90D').std() * np.sqrt(252) * 100
-            
-            # Max Drawdown
-            cumulative_returns = (1 + returns).cumprod()
-            peak = cumulative_returns.expanding(min_periods=1).max()
-            drawdown = (cumulative_returns/peak) - 1
-            max_drawdown = drawdown.min() * 100
+            # --- Prophet ---
+            try:
+                prophet_model = ProphetModel()
+                prophet_model.fit(df_for_models)
+                forecast = prophet_model.predict(df=df_for_models, periods=forecast_days)
+                successful_forecasts['prophet'] = np.array(forecast).tolist()
+            except Exception as e:
+                print(f"❌ Prophet model failed: {e}")
 
-            # Sharpe Ratio (risk-free rate is assumed to be 0)
-            sharpe_ratio = (returns.mean() / returns.std()) * np.sqrt(252) if returns.std() > 0 else 0
-
-            return jsonify({
-                'success': True,
-                'data': {
-                    'current_price': current_price,
-                    'change_percent': change_percent,
-                    'volatility': volatility,
-                    'records': len(hist_data),
-                    'date_range': date_range,
-                    'year_high': year_high,
-                    'year_low': year_low,
-                    'avg_price': close_prices.mean(),
-                    'vol_30d': vol_30d,
-                    'vol_90d': vol_90d,
-                    'max_drawdown': max_drawdown,
-                    'sharpe_ratio': sharpe_ratio
-                }
-            })
-        except Exception as e:
-            traceback.print_exc()
-            return jsonify({'success': False, 'error': f'Error fetching commodity data: {str(e)}'})
-
-    @app.route('/api/commodity-historical/<commodity>')
-    def get_commodity_historical(commodity):
-        """Get historical commodity price data for charting"""
-        try:
-            hist_data = get_yfinance_data(commodity, period="1y")
-            if hist_data is None:
-                return jsonify({'success': False, 'error': f'No historical data available for {commodity}'})
-            
-            return jsonify({
-                'success': True,
-                'data': {
-                    'dates': hist_data.index.strftime('%Y-%m-%d').tolist(),
-                    'prices': hist_data['Close'].tolist(),
-                }
-            })
-        except Exception as e:
-            return jsonify({'success': False, 'error': f'Error fetching historical data: {str(e)}'})
-
-    @app.route('/api/forecast-commodity', methods=['POST'])
-    def forecast_commodity():
-        """Generate commodity price forecast using an advanced model ensemble."""
-        try:
-            data = request.get_json()
-            commodity = data.get('commodity', '').strip()
-            days = int(data.get('days', 30))
-
-            if not commodity:
-                return jsonify({'success': False, 'error': 'Commodity symbol required'})
-
-            hist_data = get_yfinance_data(commodity, period="3y")
-            
-            if hist_data is None or len(hist_data) < 100:
-                return jsonify({'success': False, 'error': f'Insufficient historical data for {commodity}'})
-
-            # --- Advanced Model Forecasting ---
-            forecasts = {}
-            model_info = []
-
-            df_model = hist_data.reset_index().rename(columns={'Date': 'date', 'Close': 'close_price'})
-            
-            # 1. ARIMA Model
-            if ADVANCED_MODELS_AVAILABLE:
-                try:
-                    arima_model = ARIMAModel(order=(5, 1, 0))
-                    arima_model.fit(df_model)
-                    forecasts['ARIMA'] = arima_model.predict(df_model, steps=days).tolist()
-                    model_info.append('ARIMA')
-                except Exception as e:
-                    print(f"Commodity ARIMA failed: {e}")
-
-                # 2. Prophet Model
-                try:
-                    prophet_model = ProphetModel(yearly_seasonality=True, weekly_seasonality=False)
-                    prophet_model.fit(df_model)
-                    forecasts['Prophet'] = prophet_model.predict(df_model, periods=days).tolist()
-                    model_info.append('Prophet')
-                except Exception as e:
-                    print(f"Commodity Prophet failed: {e}")
-
-                # 3. LSTM Model
-                try:
-                    lstm_model = LSTMModel(sequence_length=60, units=50, layers=2)
-                    lstm_model.fit(df_model, epochs=50)
-                    forecasts['LSTM'] = lstm_model.predict(df_model, steps=days).tolist()
-                    model_info.append('LSTM')
-                except Exception as e:
-                    print(f"Commodity LSTM failed: {e}")
-
-            if not forecasts:
-                return jsonify({'success': False, 'error': 'All advanced forecasting models failed.'})
-
-            # Create a weighted ensemble forecast
-            ensemble_forecast = np.zeros(days)
-            weights = {'ARIMA': 0.3, 'Prophet': 0.4, 'LSTM': 0.3}
-            total_weight = 0
-
-            for model_name, forecast_data in forecasts.items():
-                if model_name in weights and len(forecast_data) == days:
-                    weight = weights[model_name]
-                    ensemble_forecast += np.array(forecast_data) * weight
-                    total_weight += weight
-            
-            if total_weight > 0:
-                ensemble_forecast /= total_weight
-            
-            current_price = hist_data['Close'].iloc[-1]
-            predicted_price = ensemble_forecast[-1]
-            price_change = ((predicted_price - current_price) / current_price) * 100
-            
-            trend = "Neutral"
-            if price_change > 1: trend = "Bullish"
-            if price_change > 3: trend = "Strong Bullish"
-            if price_change < -1: trend = "Bearish"
-            if price_change < -3: trend = "Strong Bearish"
-
-            forecast_dates = [ (hist_data.index[-1] + timedelta(days=i)).strftime('%Y-%m-%d') for i in range(1, days + 1) ]
-
-            valid_forecasts = [np.array(f) for f in forecasts.values() if len(f) == days]
+            # 4. Create Ensemble Forecast
+            ensemble_forecast = []
+            valid_forecasts = [f for f in successful_forecasts.values() if f]
             if len(valid_forecasts) > 1:
-                forecast_matrix = np.array(valid_forecasts)
-                std_dev = np.std(forecast_matrix, axis=0)
-                upper_band = (ensemble_forecast + std_dev * 1.96).tolist()
-                lower_band = (ensemble_forecast - std_dev * 1.96).tolist()
-            else: 
-                std_dev = np.std(ensemble_forecast) * 0.1
-                upper_band = (ensemble_forecast + std_dev).tolist()
-                lower_band = (ensemble_forecast - std_dev).tolist()
-                
-            return jsonify({
+                min_len = min(len(f) for f in valid_forecasts)
+                trimmed = [f[:min_len] for f in valid_forecasts]
+                ensemble_forecast = np.mean(trimmed, axis=0).tolist()
+            
+            # 5. Run Enhanced (VIX Simulation) Forecast if requested
+            enhanced_forecast = []
+            if use_enhanced:
+                try:
+                    enhanced_model = EnhancedForecastModel()
+                    forecast_start_date = hist_data.index[-1] + timedelta(days=1)
+                    forecast_dates_pd = pd.date_range(start=forecast_start_date, periods=forecast_days, freq='D')
+                    
+                    economic_data = enhanced_model.get_economic_indicators(
+                        start_date=forecast_start_date.strftime('%Y-%m-%d'),
+                        end_date=forecast_dates_pd[-1].strftime('%Y-%m-%d'),
+                        ticker=ticker
+                    )
+                    
+                    enhanced_results = enhanced_model.generate_enhanced_forecast(
+                        ticker=ticker, hist_data=hist_data, forecast_dates=forecast_dates_pd,
+                        vix_forecast_period_data=economic_data
+                    )
+                    sim_path = enhanced_results.get('forecasts', {}).get('VIX_Simulated_Path')
+                    if sim_path:
+                        enhanced_forecast = sim_path
+                except Exception as e:
+                    print(f"❌ Enhanced simulation failed: {e}")
+            
+            # 6. Prepare final JSON response
+            last_date = hist_data.index[-1]
+            forecast_dates = [last_date + timedelta(days=i) for i in range(1, forecast_days + 1)]
+
+            response = {
                 'success': True,
-                'forecast': {
-                    'predicted_price': predicted_price,
-                    'confidence': min(95, 70 + len(model_info) * 10),
-                    'trend': trend,
-                    'models_used': len(model_info),
-                    'model_details': ', '.join(model_info),
-                    'insights': [f"Forecast combines {', '.join(model_info)} models for robustness."],
-                    'price_change_percent': price_change,
-                },
+                'ticker': ticker,
                 'historical_data': {
-                    'dates': hist_data.index[-60:].strftime('%Y-%m-%d').tolist(),
-                    'prices': hist_data['Close'][-60:].tolist()
+                    'dates': hist_data.index.strftime('%Y-%m-%d').tolist(),
+                    'prices': hist_data['Close'].values.flatten().tolist()
                 },
-                'forecast_data': {
-                    'dates': forecast_dates,
-                    'values': ensemble_forecast.tolist(),
-                    'upper_band': upper_band,
-                    'lower_band': lower_band
-                }
-            })
+                'forecast_dates': [d.strftime('%Y-%m-%d') for d in forecast_dates],
+                'arima_forecast': successful_forecasts.get('arima', []),
+                'prophet_forecast': successful_forecasts.get('prophet', []),
+                'ensemble_forecast': ensemble_forecast,
+            }
+            if enhanced_forecast:
+                response['enhanced_forecast'] = enhanced_forecast
+            
+            return jsonify(response)
 
         except Exception as e:
+            print(f"🔥 Unhandled exception in forecast_asset: {e}")
             traceback.print_exc()
-            return jsonify({'success': False, 'error': f'Forecast generation failed: {str(e)}'})
+            return jsonify({'success': False, 'error': 'A critical error occurred on the server.'}), 500
+    
+    @app.route('/api/search-tickers')
+    def search_tickers():
+        """Provides ticker suggestions for the search bar."""
+        query = request.args.get('q', '').upper()
+        if not query:
+            return jsonify([])
+        
+        # This is a placeholder. For a real app, use a database or a pre-compiled list.
+        # For now, we'll use a simple hardcoded list of popular tickers.
+        all_tickers = {
+            "AAPL": "Apple Inc.", "MSFT": "Microsoft Corporation", "GOOGL": "Alphabet Inc.",
+            "AMZN": "Amazon.com, Inc.", "TSLA": "Tesla, Inc.", "NVDA": "NVIDIA Corporation",
+            "JPM": "JPMorgan Chase & Co.", "JNJ": "Johnson & Johnson", "V": "Visa Inc.",
+            "WMT": "Walmart Inc.", "PG": "Procter & Gamble Company",
+            "AZN.L": "AstraZeneca PLC", "HSBA.L": "HSBC Holdings PLC", "ULVR.L": "Unilever PLC",
+            "VOD.L": "Vodafone Group Plc", "BP.L": "BP Plc", "SHEL.L": "Shell Plc" # Added more FTSE
+        }
+        
+        matched = {t: n for t, n in all_tickers.items() if query in t or query in n.upper()}
+        results = [{'symbol': t, 'name': n} for t, n in matched.items()]
+        return jsonify(results[:10])
 
     return app
 

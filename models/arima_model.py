@@ -51,6 +51,9 @@ class ARIMAModel(BaseForecastModel):
         # Set date as index
         df = df.set_index(self.date_column)
         
+        # Resample to business day frequency to ensure regularity
+        df = df.asfreq('B').fillna(method='ffill')
+
         # Get target series
         target_series = df[self.target_column].dropna()
         

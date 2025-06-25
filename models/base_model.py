@@ -31,7 +31,7 @@ class BaseForecastModel(ABC):
         self.model = None
         self.is_fitted = False
         self.feature_columns = []
-        self.target_column = 'close_price'
+        self.target_column = 'y'
         self.date_column = 'date'
         self.model_params = kwargs
         self.training_history = {}

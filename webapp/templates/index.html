@@ -332,81 +332,133 @@
             e.preventDefault();
             const ticker = assetInput.value.trim().toUpperCase();
             const forecastDays = document.getElementById('days').value;
-            const advanced = document.getElementById('advanced').value;
+            const useEnhanced = document.getElementById('advanced').value === 'true';
 
             if (!ticker) {
                 alert('Please enter an asset ticker.');
                 return;
             }
 
+            // --- 1. Set up UI for loading state ---
             currentTicker = ticker;
-            resultsSection.style.display = 'block';
-            loadingIndicator.style.display = 'block';
-            forecastChartContainer.style.display = 'none';
-            forecastSummary.style.display = 'none';
-
-            tableContainer.style.display = 'none';
-            tickerName.textContent = ticker;
+            $('#tickerName').text(ticker);
+            $('#resultsSection').show();
+            $('#loadingIndicator').show();
+            $('#forecastChart').hide();
+            $('#tableContainer').hide();
+            $('#error-message').hide(); // Hide any previous errors
             
-            // Clear previous results
-            if(forecastChart) forecastChart.destroy();
-            forecastSummary.innerHTML = '';
-            tableHeader.innerHTML = '';
-            tableBody.innerHTML = '';
+            if (window.forecastChart instanceof Chart) {
+                window.forecastChart.destroy();
+            }
 
-
+            // --- 2. Fetch data from the server ---
             fetch('/api/forecast-asset', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ticker: ticker, days: forecastDays, advanced: advanced })
+                body: JSON.stringify({ ticker, forecast_days: forecastDays, use_enhanced: useEnhanced })
             })
             .then(response => {
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    return response.json().then(err => { throw new Error(err.error || 'Server error') });
                 }
                 return response.json();
             })
             .then(data => {
-                loadingIndicator.style.display = 'none';
-                console.log('Forecast response:', data); // Debug log
-                console.log('Response type:', typeof data); // Debug log
-                console.log('Has error property:', 'error' in data); // Debug log
-                
-                if (data.error) {
-                    alert('Error generating forecast: ' + data.error);
-                    resultsSection.style.display = 'none';
-                } else if (data.success === false) {
-                    alert('Error generating forecast: ' + (data.error || 'Unknown error'));
-                    resultsSection.style.display = 'none';
-                } else {
-                    currentForecastData = data;
-                    forecastChartContainer.style.display = 'block';
-                    forecastSummary.style.display = 'flex';
-                    resultsSection.style.display = 'block';
-
-                    tableContainer.style.display = 'block';
-                    showExternalDataBtn.style.display = 'block';
-                    updateUI(data, ticker);
+                // --- 3. Process the successful response ---
+                if (!data.success) {
+                    throw new Error(data.error || 'The API returned a failure response.');
                 }
+                
+                const datasets = [];
+                const historicalData = data.historical_data;
+                let hasForecastData = false;
+
+                // Add Historical Data
+                if (historicalData && historicalData.dates && historicalData.prices) {
+                    datasets.push({
+                        label: 'Historical Price',
+                        data: historicalData.prices,
+                        borderColor: 'rgba(0, 0, 0, 0.7)',
+                        backgroundColor: 'rgba(0, 0, 0, 0.1)',
+                        tension: 0.1,
+                        pointRadius: 0,
+                        borderWidth: 2
+                    });
+                }
+
+                const forecastColors = {
+                    arima: 'rgba(255, 99, 132, 1)',
+                    prophet: 'rgba(54, 162, 235, 1)',
+                    ensemble: 'rgba(75, 192, 192, 1)',
+                    enhanced: 'rgba(255, 159, 64, 1)'
+                };
+                
+                const forecasts = {
+                    arima: data.arima_forecast,
+                    prophet: data.prophet_forecast,
+                    ensemble: data.ensemble_forecast,
+                    enhanced: data.enhanced_forecast
+                };
+
+                for (const modelName in forecasts) {
+                    const forecast = forecasts[modelName];
+                    if (forecast && forecast.length > 0) {
+                        hasForecastData = true;
+                        const lastHistoricalPrice = historicalData.prices[historicalData.prices.length - 1];
+                        const fullData = [...Array(historicalData.prices.length - 1).fill(null), lastHistoricalPrice, ...forecast];
+                        
+                        datasets.push({
+                            label: `${modelName.charAt(0).toUpperCase() + modelName.slice(1)} Forecast`,
+                            data: fullData,
+                            borderColor: forecastColors[modelName] || 'rgba(153, 102, 255, 1)',
+                            backgroundColor: 'rgba(0,0,0,0)',
+                            borderDash: [5, 5],
+                            tension: 0.1,
+                            pointRadius: 0,
+                            borderWidth: 2
+                        });
+                    }
+                }
+
+                if (!hasForecastData) {
+                    throw new Error('No valid forecast data was returned from the server.');
+                }
+                
+                // --- 4. Create and render the chart ---
+                const allLabels = [...historicalData.dates, ...data.forecast_dates];
+                const ctx = document.getElementById('forecastChart').getContext('2d');
+                window.forecastChart = new Chart(ctx, {
+                    type: 'line',
+                    data: { labels: allLabels, datasets: datasets },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'top' },
+                            title: { display: true, text: `Forecast for ${currentTicker}` }
+                        },
+                        scales: {
+                            x: { title: { display: true, text: 'Date' } },
+                            y: { title: { display: true, text: 'Price' } }
+                        }
+                    }
+                });
+                
+                // --- 5. Finalize UI ---
+                $('#loadingIndicator').hide();
+                $('#forecastChart').show();
+                // Future implementation: populate table and summary
+                // $('#tableContainer').show();
+
             })
             .catch(error => {
-                console.error('Error:', error);
-                console.error('Error type:', typeof error);
-                console.error('Error message:', error.message);
-                console.error('Error details:', error);
-                loadingIndicator.style.display = 'none';
-                
-                let errorMessage = 'Unknown error';
-                if (error && error.message) {
-                    errorMessage = error.message;
-                } else if (typeof error === 'string') {
-                    errorMessage = error;
-                } else {
-                    errorMessage = 'Network or parsing error';
-                }
-                
-                alert('Error generating forecast: ' + errorMessage);
-                resultsSection.style.display = 'none';
+                // --- 6. Handle any errors ---
+                console.error('Forecast Error:', error);
+                $('#loadingIndicator').hide();
+                // You could display this error message in a dedicated div
+                alert(`Failed to generate forecast: ${error.message}`);
+                $('#resultsSection').hide();
             });
         });
         
