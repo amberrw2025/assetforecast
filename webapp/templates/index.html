@@ -1,145 +1,166 @@
-<!-- Cache Buster: {{ current_timestamp }} -->
 {% extends "base.html" %}
 
-{% block title %}Asset Forecaster{% endblock %}
+{% block title %}Asset Forecaster - Home{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
     <div class="row justify-content-center align-items-center min-vh-100">
-        <div class="col-md-8 col-lg-6">
-            <div class="text-center">
-                <!-- Main Question -->
-                <h1 class="display-4 fw-bold mb-4 text-dark">
-                    Which asset do you want me to forecast?
+        <div class="col-md-10 col-lg-8">
+            <!-- Header Section -->
+            <div class="text-center mb-5">
+                <h1 class="display-3 fw-bold mb-3 text-dark">
+                    <i class="fas fa-chart-line me-3"></i>
+                    Asset Forecaster
                 </h1>
-                
-                <!-- Input Form -->
-                <div class="card shadow-lg border-0">
-                    <div class="card-body p-5">
-                        <form id="forecastForm">
-                            <div class="mb-4 position-relative">
-                                <input type="text" 
-                                       class="form-control form-control-lg text-center" 
-                                       id="assetInput" 
-                                       placeholder="Enter stock ticker (e.g., AAPL, TSLA, NVDA)"
-                                       style="font-size: 1.5rem; padding: 20px;"
-                                       autocomplete="off">
-                                <div id="autocomplete-list" class="autocomplete-items"></div>
-                            </div>
-                            
-                            <!-- Forecast Options -->
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <label for="days" class="form-label">Forecast Days:</label>
-                                    <select class="form-control" id="days">
-                                        <option value="7">7 days</option>
-                                        <option value="14">14 days</option>
-                                        <option value="30" selected>30 days</option>
-                                        <option value="60">60 days</option>
-                                        <option value="90">90 days</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="advanced" class="form-label">Model Type:</label>
-                                    <select class="form-control" id="advanced">
-                                        <option value="true" selected>🧠 Advanced Models (ARIMA, Prophet, LSTM)</option>
-                                        <option value="false">📊 Basic Models (Linear, Moving Average)</option>
-                                    </select>
-                                </div>
-                            </div>
-                            
-                            <button type="submit" 
-                                    class="btn btn-dark btn-lg px-5 py-3" 
-                                    id="forecastBtn">
-                                <i class="fas fa-crystal-ball me-2"></i>
-                                Generate Forecast
-                            </button>
-                            <button type="button" 
-                                    class="btn btn-outline-dark btn-lg px-3 py-3 ms-2" 
-                                    onclick="testAPI()">
-                                <i class="fas fa-bug me-2"></i>
-                                Test API
-                            </button>
-                        </form>
-                    </div>
+                <p class="lead text-muted">
+                    Advanced AI-powered forecasting for stocks and commodities using ARIMA, Prophet, and Ensemble models
+                </p>
+            </div>
+            
+            <!-- Main Selection Card -->
+            <div class="card shadow-lg border-0 mb-4">
+                <div class="card-header bg-dark text-white text-center">
+                    <h4 class="mb-0">
+                        <i class="fas fa-search me-2"></i>
+                        Select Asset for Forecasting
+                    </h4>
                 </div>
-                
-                <!-- Results Section -->
-                <div id="resultsSection" class="mt-5" style="display: none;">
-                    <div id="historicalData" style="display:none;"></div>
-                    <div class="card shadow border-0">
-                        <div class="card-header bg-dark text-white">
-                            <h5 class="mb-0">
-                                <i class="fas fa-chart-line me-2"></i>
-                                Forecast Results for <span id="tickerName"></span>
-                            </h5>
+                <div class="card-body p-5">
+                    <form id="assetSelectionForm">
+                        <div class="row mb-4">
+                            <!-- Asset Type Selection -->
+                            <div class="col-md-6">
+                                <label for="assetType" class="form-label fw-bold">Asset Type:</label>
+                                <select class="form-select form-select-lg" id="assetType" onchange="updateAssetOptions()">
+                                    <option value="">Choose asset type...</option>
+                                    <option value="stocks">📈 Stocks (FTSE 100 & S&P 500)</option>
+                                    <option value="commodities">🥇 Commodities (Precious Metals, Energy, Agricultural)</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Asset Selection -->
+                            <div class="col-md-6">
+                                <label for="assetSelect" class="form-label fw-bold">Select Asset:</label>
+                                <select class="form-select form-select-lg" id="assetSelect" disabled>
+                                    <option value="">First select asset type...</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="card-body">
-                            <!-- Loading indicator -->
-                            <div id="loadingIndicator" class="text-center py-5">
-                                <div class="spinner-border text-dark" role="status">
-                                    <span class="visually-hidden">Loading...</span>
-                                </div>
-                                <p class="mt-3 text-dark">Generating forecast...</p>
+                        
+                        <!-- Forecast Parameters -->
+                        <div class="row mb-4">
+                            <div class="col-md-3">
+                                <label for="historyPeriod" class="form-label fw-bold">Historical Data:</label>
+                                <select class="form-select" id="historyPeriod">
+                                    <option value="1mo">1 Month</option>
+                                    <option value="3mo">3 Months</option>
+                                    <option value="6mo">6 Months</option>
+                                    <option value="1y">1 Year</option>
+                                    <option value="2y" selected>2 Years</option>
+                                    <option value="5y">5 Years</option>
+                                    <option value="max">Maximum</option>
+                                </select>
                             </div>
                             
-                            <!-- Chart container -->
-                            <div style="height: 500px; position: relative; background-color: #f8f9fa; border: 1px solid #dee2e6;">
-                                <canvas id="forecastChart"></canvas>
+                            <div class="col-md-3">
+                                <label for="forecastDays" class="form-label fw-bold">Forecast Period:</label>
+                                <select class="form-select" id="forecastDays">
+                                    <option value="7">7 days</option>
+                                    <option value="14">14 days</option>
+                                    <option value="30" selected>30 days</option>
+                                    <option value="60">60 days</option>
+                                    <option value="90">90 days</option>
+                                </select>
                             </div>
                             
-                            <!-- Forecast Summary -->
-                            <div id="forecastSummary" class="row mt-4"></div>
-
-
-
-                            <!-- Data Table -->
-                            <div id="tableContainer" class="mt-4" style="display: none;">
-                                <button class="btn btn-secondary btn-sm mb-2" type="button" data-bs-toggle="collapse" data-bs-target="#forecastTableCollapse" aria-expanded="false" aria-controls="forecastTableCollapse">
-                                    <i class="fas fa-table me-2"></i>
-                                    Show/Hide Forecast Data
+                            <div class="col-md-3">
+                                <label for="modelType" class="form-label fw-bold">Model Type:</label>
+                                <select class="form-select" id="modelType">
+                                    <option value="advanced" selected>🧠 Advanced (ARIMA + Prophet + Ensemble)</option>
+                                    <option value="basic">📊 Basic (Linear Trend)</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-3 d-flex align-items-end">
+                                <button type="button" 
+                                        class="btn btn-dark btn-lg w-100" 
+                                        onclick="generateForecast()"
+                                        id="forecastBtn"
+                                        disabled>
+                                    <i class="fas fa-crystal-ball me-2"></i>
+                                    Generate Forecast
                                 </button>
-                                <div class="collapse" id="forecastTableCollapse">
-                                    <div class="table-responsive" style="max-height: 400px;">
-                                        <table class="table table-striped table-bordered">
-                                            <thead class="table-dark">
-                                                <tr id="tableHeader"></tr>
-                                            </thead>
-                                            <tbody id="tableBody"></tbody>
-                                        </table>
-                                    </div>
-                                </div>
                             </div>
-                            
-                            <!-- External Data Toggle Button -->
-                            <div class="mt-3">
-                                <button class="btn btn-info btn-sm" id="showExternalDataBtn" style="display: none;">
-                                    <i class="fas fa-database me-2"></i>
-                                    Show External Data Factors
+                        </div>
+                        
+                        <!-- Quick Actions -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <button type="button" 
+                                        class="btn btn-outline-primary w-100"
+                                        onclick="goToStocksPage()">
+                                    <i class="fas fa-chart-line me-2"></i>
+                                    Go to Stocks Page
                                 </button>
                             </div>
-                            
-                            <!-- External Data Factors Section -->
-                            <div id="externalDataSection" class="mt-4" style="display: none;">
-                                <div class="card">
-                                    <div class="card-header d-flex justify-content-between align-items-center">
-                                        <h6 class="mb-0">
-                                            <i class="fas fa-database me-2"></i>
-                                            External Data Factors
-                                        </h6>
-                                        <button class="btn btn-sm btn-outline-secondary" id="refreshExternalDataBtn">
-                                            <i class="fas fa-sync-alt"></i>
-                                        </button>
-                                    </div>
-                                    <div class="card-body">
-                                        <div id="externalDataContent">
-                                            <div class="spinner-border text-primary" role="status">
-                                                <span class="visually-hidden">Loading...</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                            <div class="col-md-6">
+                                <button type="button" 
+                                        class="btn btn-outline-success w-100"
+                                        onclick="goToCommoditiesPage()">
+                                    <i class="fas fa-coins me-2"></i>
+                                    Go to Commodities Page
+                                </button>
                             </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+
+            
+            <!-- Forecast Results Section -->
+            <div id="resultsSection" class="card shadow-lg" style="display: none;">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-area me-2"></i>
+                        Forecast Results for <span id="selectedAssetName"></span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Loading State -->
+                    <div id="loadingState" class="text-center py-5">
+                        <div class="spinner-border text-dark" role="status" style="width: 3rem; height: 3rem;">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-3 h5">Generating forecast...</p>
+                    </div>
+                    
+                    <!-- Results Content -->
+                    <div id="resultsContent" style="display: none;">
+                        <!-- Summary Stats -->
+                        <div id="forecastSummary" class="row mb-4">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
+                        
+                        <!-- Chart -->
+                        <div id="chartContainer" style="height: 500px;" class="mb-4">
+                            <!-- Chart will be rendered here -->
+                        </div>
+                        
+                        <!-- Actions -->
+                        <div class="text-center">
+                            <button class="btn btn-primary me-2" onclick="viewDetailedAnalysis()">
+                                <i class="fas fa-chart-line me-2"></i>
+                                View Detailed Analysis
+                            </button>
+                            <button class="btn btn-success me-2" onclick="exportForecast()">
+                                <i class="fas fa-download me-2"></i>
+                                Export Data
+                            </button>
+                            <button class="btn btn-secondary" onclick="resetSelection()">
+                                <i class="fas fa-undo me-2"></i>
+                                New Forecast
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -149,778 +170,352 @@
 </div>
 
 <style>
+    /* Home page black and white styling */
     body {
         background-color: #ffffff;
+        color: #000000;
         min-height: 100vh;
-        color: #000000;
     }
     
-    .card {
-        background: #ffffff;
-        border: 2px solid #000000 !important;
-    }
-    
-    .form-control {
-        border: 2px solid #000000;
-        background-color: #ffffff;
-        color: #000000;
-    }
-    
-    .form-control:focus {
-        border-color: #000000;
-        box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.25);
-        background-color: #ffffff;
-        color: #000000;
-    }
-    
-    .form-select {
-        border: 2px solid #000000;
-        background-color: #ffffff;
-        color: #000000;
-    }
-    
-    .form-select:focus {
-        border-color: #000000;
-        box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.25);
-        background-color: #ffffff;
-        color: #000000;
-    }
-    
-    .btn-dark {
-        background-color: #000000;
-        border: 2px solid #000000;
-        color: #ffffff;
-        border-radius: 0;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        transition: all 0.3s ease;
-    }
-    
-    .btn-dark:hover {
-        background-color: #ffffff;
-        color: #000000;
-        border: 2px solid #000000;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-    }
-    
-    .text-dark {
+    .display-3 {
         color: #000000 !important;
     }
     
-    .bg-dark {
-        background-color: #000000 !important;
+    .text-muted {
+        color: #666666 !important;
     }
     
-    .card-header {
-        border-bottom: 2px solid #000000;
+    .bg-light {
+        background-color: #f8f9fa !important;
+        color: #000000 !important;
     }
     
-    .spinner-border {
-        border-color: #000000;
-        border-right-color: transparent;
-    }
-    
-    .form-label {
-        font-weight: 600;
-        color: #000000;
-    }
-    
-    .shadow-lg {
-        box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.3) !important;
-    }
-    
-    .shadow {
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.3) !important;
-    }
-    
-    h1 {
-        font-weight: 700;
-    }
-
-    .autocomplete-items {
-        position: absolute;
-        border: 1px solid #d4d4d4;
-        border-bottom: none;
-        border-top: none;
-        z-index: 99;
-        top: 100%;
-        left: 0;
-        right: 0;
-    }
-    .autocomplete-items div {
-        padding: 10px;
-        cursor: pointer;
-        background-color: #fff; 
-        border-bottom: 1px solid #d4d4d4; 
-    }
-    .autocomplete-items div:hover {
-        background-color: #e9e9e9; 
-    }
-    .autocomplete-active {
-        background-color: DodgerBlue !important; 
-        color: #ffffff; 
+    /* Override any remaining color classes */
+    .text-primary, .text-success, .text-info, .text-warning, .text-danger {
+        color: #000000 !important;
     }
 </style>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('Chart.js available:', typeof Chart !== 'undefined');
-        const form = document.getElementById('forecastForm');
-        const assetInput = document.getElementById('assetInput');
+    // Asset data
+    const stocks = [
+        // FTSE 100
+        {value: 'AZN.L', text: 'AstraZeneca PLC (AZN.L)', market: 'FTSE 100'},
+        {value: 'SHEL.L', text: 'Shell plc (SHEL.L)', market: 'FTSE 100'},
+        {value: 'BP.L', text: 'BP p.l.c. (BP.L)', market: 'FTSE 100'},
+        {value: 'RR.L', text: 'Rolls-Royce Holdings (RR.L)', market: 'FTSE 100'},
+        {value: 'VOD.L', text: 'Vodafone Group (VOD.L)', market: 'FTSE 100'},
+        {value: 'AAL.L', text: 'Anglo American plc (AAL.L)', market: 'FTSE 100'},
+        {value: 'FRES.L', text: 'Fresnillo plc (FRES.L)', market: 'FTSE 100'},
+        {value: 'STJ.L', text: 'St. James\'s Place (STJ.L)', market: 'FTSE 100'},
+        {value: 'BATS.L', text: 'British American Tobacco (BATS.L)', market: 'FTSE 100'},
+        {value: 'ENT.L', text: 'Entain Plc (ENT.L)', market: 'FTSE 100'},
+        
+        // S&P 500
+        {value: 'AAPL', text: 'Apple Inc. (AAPL)', market: 'S&P 500'},
+        {value: 'MSFT', text: 'Microsoft Corporation (MSFT)', market: 'S&P 500'},
+        {value: 'GOOGL', text: 'Alphabet Inc. (GOOGL)', market: 'S&P 500'},
+        {value: 'AMZN', text: 'Amazon.com Inc. (AMZN)', market: 'S&P 500'},
+        {value: 'NVDA', text: 'NVIDIA Corporation (NVDA)', market: 'S&P 500'},
+        {value: 'XOM', text: 'Exxon Mobil Corporation (XOM)', market: 'S&P 500'},
+        {value: 'CVX', text: 'Chevron Corporation (CVX)', market: 'S&P 500'},
+        {value: 'KO', text: 'The Coca-Cola Company (KO)', market: 'S&P 500'},
+        {value: 'PEP', text: 'PepsiCo Inc. (PEP)', market: 'S&P 500'},
+        {value: 'WMT', text: 'Walmart Inc. (WMT)', market: 'S&P 500'}
+    ];
+    
+    const commodities = [
+        // Precious Metals
+        {value: 'GC=F', text: 'Gold Futures (GC=F)', category: 'Precious Metals'},
+        {value: 'SI=F', text: 'Silver Futures (SI=F)', category: 'Precious Metals'},
+        {value: 'PL=F', text: 'Platinum Futures (PL=F)', category: 'Precious Metals'},
+        
+        // Energy
+        {value: 'CL=F', text: 'Crude Oil WTI (CL=F)', category: 'Energy'},
+        {value: 'BZ=F', text: 'Brent Crude Oil (BZ=F)', category: 'Energy'},
+        {value: 'NG=F', text: 'Natural Gas (NG=F)', category: 'Energy'},
+        
+        // Agricultural
+        {value: 'ZC=F', text: 'Corn Futures (ZC=F)', category: 'Agricultural'},
+        {value: 'ZW=F', text: 'Wheat Futures (ZW=F)', category: 'Agricultural'}
+    ];
+    
+    function updateAssetOptions() {
+        const assetType = document.getElementById('assetType').value;
+        const assetSelect = document.getElementById('assetSelect');
         const forecastBtn = document.getElementById('forecastBtn');
-        const resultsSection = document.getElementById('resultsSection');
-        const loadingIndicator = document.getElementById('loadingIndicator');
-        const forecastChartContainer = document.getElementById('forecastChart');
-        const tickerName = document.getElementById('tickerName');
-        const forecastSummary = document.getElementById('forecastSummary');
-        const historicalData = document.getElementById('historicalData');
-
-        const tableContainer = document.getElementById('tableContainer');
-        const tableHeader = document.getElementById('tableHeader');
-        const tableBody = document.getElementById('tableBody');
         
-        const showExternalDataBtn = document.getElementById('showExternalDataBtn');
-        const externalDataSection = document.getElementById('externalDataSection');
-        const externalDataContent = document.getElementById('externalDataContent');
-        const refreshExternalDataBtn = document.getElementById('refreshExternalDataBtn');
+        // Clear current options
+        assetSelect.innerHTML = '';
         
-        let currentTicker = '';
-        let currentForecastData = null;
-        let forecastChart = null;
-
-        function closeAllLists(elmnt) {
-            var x = document.getElementsByClassName("autocomplete-items");
-            for (var i = 0; i < x.length; i++) {
-                if (elmnt != x[i] && elmnt != assetInput) {
-                    x[i].parentNode.removeChild(x[i]);
-                }
-            }
-        }
-
-        document.addEventListener("click", function (e) {
-            closeAllLists(e.target);
-        });
-
-        assetInput.addEventListener('input', function(e) {
-            const query = this.value;
-            closeAllLists();
-            if (!query) return;
-
-            fetch(`/api/search-tickers?q=${query}`)
-                .then(response => response.json())
-                .then(data => {
-                    const list = document.createElement('div');
-                    list.setAttribute('id', 'autocomplete-list');
-                    list.setAttribute('class', 'autocomplete-items');
-                    this.parentNode.appendChild(list);
-
-                    data.forEach(item => {
-                        const div = document.createElement('div');
-                        div.innerHTML = `<strong>${item.symbol}</strong> - ${item.name}`;
-                        div.addEventListener('click', function() {
-                            assetInput.value = item.symbol;
-                            closeAllLists();
-                        });
-                        list.appendChild(div);
-                    });
-                });
-        });
-
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const ticker = assetInput.value.trim().toUpperCase();
-            const forecastDays = document.getElementById('days').value;
-            const useEnhanced = document.getElementById('advanced').value === 'true';
-
-            if (!ticker) {
-                alert('Please enter an asset ticker.');
-                return;
-            }
-
-            // --- 1. Set up UI for loading state ---
-            currentTicker = ticker;
-            $('#tickerName').text(ticker);
-            $('#resultsSection').show();
-            $('#loadingIndicator').show();
-            $('#forecastChart').hide();
-            $('#tableContainer').hide();
-            $('#error-message').hide(); // Hide any previous errors
+        if (assetType === 'stocks') {
+            assetSelect.disabled = false;
+            assetSelect.innerHTML = '<option value="">Select a stock...</option>';
             
-            if (window.forecastChart instanceof Chart) {
-                window.forecastChart.destroy();
-            }
-
-            // --- 2. Fetch data from the server ---
-            fetch('/api/forecast-asset', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ticker, forecast_days: forecastDays, use_enhanced: useEnhanced })
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(err => { throw new Error(err.error || 'Server error') });
-                }
-                return response.json();
-            })
-            .then(data => {
-                // --- 3. Process the successful response ---
-                if (!data.success) {
-                    throw new Error(data.error || 'The API returned a failure response.');
-                }
-                
-                const datasets = [];
-                const historicalData = data.historical_data;
-                let hasForecastData = false;
-
-                // Add Historical Data
-                if (historicalData && historicalData.dates && historicalData.prices) {
-                    datasets.push({
-                        label: 'Historical Price',
-                        data: historicalData.prices,
-                        borderColor: 'rgba(0, 0, 0, 0.7)',
-                        backgroundColor: 'rgba(0, 0, 0, 0.1)',
-                        tension: 0.1,
-                        pointRadius: 0,
-                        borderWidth: 2
-                    });
-                }
-
-                const forecastColors = {
-                    arima: 'rgba(255, 99, 132, 1)',
-                    prophet: 'rgba(54, 162, 235, 1)',
-                    ensemble: 'rgba(75, 192, 192, 1)',
-                    enhanced: 'rgba(255, 159, 64, 1)'
-                };
-                
-                const forecasts = {
-                    arima: data.arima_forecast,
-                    prophet: data.prophet_forecast,
-                    ensemble: data.ensemble_forecast,
-                    enhanced: data.enhanced_forecast
-                };
-
-                for (const modelName in forecasts) {
-                    const forecast = forecasts[modelName];
-                    if (forecast && forecast.length > 0) {
-                        hasForecastData = true;
-                        const lastHistoricalPrice = historicalData.prices[historicalData.prices.length - 1];
-                        const fullData = [...Array(historicalData.prices.length - 1).fill(null), lastHistoricalPrice, ...forecast];
-                        
-                        datasets.push({
-                            label: `${modelName.charAt(0).toUpperCase() + modelName.slice(1)} Forecast`,
-                            data: fullData,
-                            borderColor: forecastColors[modelName] || 'rgba(153, 102, 255, 1)',
-                            backgroundColor: 'rgba(0,0,0,0)',
-                            borderDash: [5, 5],
-                            tension: 0.1,
-                            pointRadius: 0,
-                            borderWidth: 2
-                        });
-                    }
-                }
-
-                if (!hasForecastData) {
-                    throw new Error('No valid forecast data was returned from the server.');
-                }
-                
-                // --- 4. Create and render the chart ---
-                const allLabels = [...historicalData.dates, ...data.forecast_dates];
-                const ctx = document.getElementById('forecastChart').getContext('2d');
-                window.forecastChart = new Chart(ctx, {
-                    type: 'line',
-                    data: { labels: allLabels, datasets: datasets },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { position: 'top' },
-                            title: { display: true, text: `Forecast for ${currentTicker}` }
-                        },
-                        scales: {
-                            x: { title: { display: true, text: 'Date' } },
-                            y: { title: { display: true, text: 'Price' } }
-                        }
-                    }
-                });
-                
-                // --- 5. Finalize UI ---
-                $('#loadingIndicator').hide();
-                $('#forecastChart').show();
-                // Future implementation: populate table and summary
-                // $('#tableContainer').show();
-
-            })
-            .catch(error => {
-                // --- 6. Handle any errors ---
-                console.error('Forecast Error:', error);
-                $('#loadingIndicator').hide();
-                // You could display this error message in a dedicated div
-                alert(`Failed to generate forecast: ${error.message}`);
-                $('#resultsSection').hide();
+            // Group by market
+            const ftseStocks = stocks.filter(s => s.market === 'FTSE 100');
+            const spStocks = stocks.filter(s => s.market === 'S&P 500');
+            
+            // Add FTSE 100 group
+            const ftseGroup = document.createElement('optgroup');
+            ftseGroup.label = 'FTSE 100';
+            ftseStocks.forEach(stock => {
+                const option = document.createElement('option');
+                option.value = stock.value;
+                option.textContent = stock.text;
+                ftseGroup.appendChild(option);
             });
-        });
-        
-        function updateUI(data, ticker) {
-            try {
-                console.log('UpdateUI called with data:', data);
-                console.log('Data structure check:', {
-                    hasHistorical: 'historical' in data,
-                    hasForecasts: 'forecasts' in data,
-                    hasFutureDates: 'future_dates' in data,
-                    hasModelInfo: 'model_info' in data
-                });
-                
-                historicalData.textContent = JSON.stringify(data.historical);
-                displayForecastChart(data);
-                displayForecastSummary(data.forecasts, data.future_dates, data.model_info);
-                populateDataTable(data.forecasts, data.future_dates);
-            } catch (error) {
-                console.error('Error in updateUI:', error);
-                alert('Error updating UI: ' + error.message);
-            }
-        }
-
-        function displayForecastChart(data) {
-            console.log('displayForecastChart called with data:', data);
+            assetSelect.appendChild(ftseGroup);
             
-            if (!data.historical || !Array.isArray(data.historical)) {
-                console.error('No historical data for chart');
-                return;
-            }
-            
-            if (!data.forecasts || Object.keys(data.forecasts).length === 0) {
-                console.error('No forecasts for chart');
-                return;
-            }
-            
-            if (!data.future_dates || !Array.isArray(data.future_dates)) {
-                console.error('No future dates for chart');
-                return;
-            }
-            
-            const historicalDates = data.historical.map(d => d.date);
-            const historicalPrices = data.historical.map(d => d.price);
-            
-            // Use the Ensemble forecast (smooth trend) and Realistic Forecast (with volatility)
-            const ensembleForecast = data.forecasts.Ensemble || data.forecasts[Object.keys(data.forecasts)[0]];
-            const realisticForecast = data.forecasts['Realistic Forecast'];
-            
-            if (!ensembleForecast || ensembleForecast.length === 0) {
-                console.error('No ensemble forecast for chart');
-                return;
-            }
-            
-            const allDates = historicalDates.concat(data.future_dates);
-
-            const chartData = {
-                labels: allDates,
-                datasets: [
-                    {
-                        label: 'Historical Price',
-                        data: historicalPrices,
-                        borderColor: '#343a40',
-                        backgroundColor: 'rgba(52, 58, 64, 0.1)',
-                        borderWidth: 3,
-                        pointRadius: 0
-                    }
-                ]
-            };
-
-            // Add realistic forecast if available
-            if (realisticForecast) {
-                chartData.datasets.push({
-                    label: 'Realistic Forecast',
-                    data: historicalPrices.map(() => null).concat(realisticForecast),
-                    borderColor: '#fd7e14',
-                    backgroundColor: 'rgba(253, 126, 20, 0.1)',
-                    borderWidth: 3,
-                    pointRadius: 0,
-                    tension: 0.1,
-                    borderDash: [5, 5]
-                });
-            } else {
-                // Fallback to ensemble if realistic forecast not available
-                chartData.datasets.push({
-                    label: 'Forecast',
-                    data: historicalPrices.map(() => null).concat(ensembleForecast),
-                    borderColor: '#007bff',
-                    backgroundColor: 'rgba(0, 123, 255, 0.1)',
-                    borderWidth: 3,
-                    pointRadius: 0,
-                    tension: 0.1,
-                    borderDash: [5, 5]
-                });
-            }
-
-            // Add confidence interval
-            chartData.datasets.push(
-                {
-                    label: 'Confidence Interval',
-                    data: historicalPrices.map(() => null).concat(data.upper_bound),
-                    borderColor: 'rgba(0, 123, 255, 0.3)',
-                    backgroundColor: 'rgba(0, 123, 255, 0.2)',
-                    borderWidth: 1,
-                    pointRadius: 0,
-                    fill: '+1'
-                },
-                {
-                    label: '',
-                    data: historicalPrices.map(() => null).concat(data.lower_bound),
-                    borderColor: 'rgba(0, 123, 255, 0.3)',
-                    backgroundColor: 'rgba(0, 123, 255, 0.2)',
-                    borderWidth: 1,
-                    pointRadius: 0,
-                    fill: false
-                }
-            );
-
-            const config = {
-                type: 'line',
-                data: chartData,
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: {
-                        mode: 'index',
-                        intersect: false,
-                    },
-                    plugins: {
-                        title: { display: true, text: `Forecast for ${currentTicker}`, font: { size: 18 } },
-                        legend: { position: 'top' },
-                        tooltip: {
-                            mode: 'index',
-                            intersect: false,
-                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                            titleColor: 'white',
-                            bodyColor: 'white',
-                            borderColor: '#007bff',
-                            borderWidth: 2,
-                            cornerRadius: 6,
-                            displayColors: true,
-                            callbacks: {
-                                title: function(context) {
-                                    return `Date: ${context[0].label}`;
-                                },
-                                label: function(context) {
-                                    const label = context.dataset.label || '';
-                                    if (label === 'Confidence Interval' || label === '') {
-                                        return null; // Hide confidence interval tooltips
-                                    }
-                                    const value = context.parsed.y;
-                                    if (value !== null) {
-                                        return `${label}: $${value.toFixed(2)}`;
-                                    }
-                                    return null;
-                                },
-                                afterBody: function(context) {
-                                    // Add extra information for forecast points
-                                    const dataIndex = context[0].dataIndex;
-                                    const historicalLength = currentForecastData?.historical?.length || 0;
-                                    
-                                    if (dataIndex >= historicalLength) {
-                                        const forecastDay = dataIndex - historicalLength + 1;
-                                        return [`Forecast Day: ${forecastDay}`];
-                                    }
-                                    return [];
-                                }
-                            },
-                            filter: function(tooltipItem) {
-                                // Only show tooltips for non-null values
-                                return tooltipItem.parsed.y !== null;
-                            }
-                        }
-                    },
-                    scales: {
-                        x: { 
-                            title: { display: true, text: 'Date' },
-                            grid: {
-                                color: 'rgba(0, 0, 0, 0.1)'
-                            }
-                        },
-                        y: { 
-                            title: { display: true, text: 'Price (USD)' },
-                            grid: {
-                                color: 'rgba(0, 0, 0, 0.1)'
-                            }
-                        }
-                    },
-                    hover: {
-                        mode: 'index',
-                        intersect: false,
-                        animationDuration: 400
-                    }
-                }
-            };
-            
-            if(forecastChart) forecastChart.destroy();
-            const ctx = forecastChartContainer.getContext('2d');
-            forecastChart = new Chart(ctx, config);
-        }
-        
-        function displayForecastSummary(forecasts, futureDates, modelInfo) {
-            console.log('displayForecastSummary called with:', {forecasts, futureDates, modelInfo});
-            
-            forecastSummary.innerHTML = ''; 
-            
-            if (!forecasts || Object.keys(forecasts).length === 0) {
-                console.error('No forecasts available');
-                forecastSummary.innerHTML = '<div class="alert alert-warning">No forecast data available</div>';
-                return;
-            }
-            
-            if (!futureDates || futureDates.length === 0) {
-                console.error('No future dates available');
-                forecastSummary.innerHTML = '<div class="alert alert-warning">No future dates available</div>';
-                return;
-            }
-            
-            // Use only the Ensemble forecast for summary
-            const ensembleForecast = forecasts.Ensemble || forecasts[Object.keys(forecasts)[0]];
-            
-            if (!ensembleForecast || ensembleForecast.length === 0) {
-                console.error('No ensemble forecast available');
-                forecastSummary.innerHTML = '<div class="alert alert-warning">No forecast data available</div>';
-                return;
-            }
-            
-            const lastForecast = ensembleForecast[ensembleForecast.length - 1];
-            const firstForecast = ensembleForecast[0];
-            const lastDate = futureDates[futureDates.length - 1];
-            
-            // Calculate change percentage
-            const changePercent = ((lastForecast - firstForecast) / firstForecast) * 100;
-            const changeClass = changePercent >= 0 ? 'text-success' : 'text-danger';
-            const changeIcon = changePercent >= 0 ? 'fas fa-arrow-up' : 'fas fa-arrow-down';
-            
-            const summaryCard = document.createElement('div');
-            summaryCard.className = 'col-12 mb-3';
-            summaryCard.innerHTML = `
-                <div class="card h-100" style="border-left: 5px solid #007bff;">
-                    <div class="card-body text-center">
-                        <h5 class="card-title text-dark">Combined Forecast</h5>
-                        <div class="row">
-                            <div class="col-md-4">
-                                <h6 class="text-muted">Current Price</h6>
-                                <h4 class="text-dark">$${firstForecast.toFixed(2)}</h4>
-                            </div>
-                            <div class="col-md-4">
-                                <h6 class="text-muted">Predicted Price (${futureDates.length}-day)</h6>
-                                <h4 class="text-dark">$${lastForecast.toFixed(2)}</h4>
-                            </div>
-                            <div class="col-md-4">
-                                <h6 class="text-muted">Expected Change</h6>
-                                <h4 class="${changeClass}">
-                                    <i class="${changeIcon} me-2"></i>
-                                    ${Math.abs(changePercent).toFixed(2)}%
-                                </h4>
-                            </div>
-                        </div>
-                        <p class="text-muted mt-2">
-                            <small>Forecast combines ${Object.keys(forecasts).length} models | 
-                            ${modelInfo.Ensemble && modelInfo.Ensemble.confidence ? 'Confidence: ' + modelInfo.Ensemble.confidence : 'Standard confidence'} |
-                            ${modelInfo.Ensemble && modelInfo.Ensemble.weighting ? 'Dynamic weighting' : 'Standard weighting'}</small>
-                        </p>
-                    </div>
-                </div>
-            `;
-            forecastSummary.appendChild(summaryCard);
-        }
-        
-        function populateDataTable(forecasts, futureDates) {
-            console.log('populateDataTable called with:', {forecasts, futureDates});
-            
-            tableHeader.innerHTML = '<th>Date</th><th>Combined Forecast</th><th>Confidence Range</th>';
-            tableBody.innerHTML = '';
-            
-            if (!forecasts || Object.keys(forecasts).length === 0) {
-                console.error('No forecasts for table');
-                tableBody.innerHTML = '<tr><td colspan="3" class="text-center">No forecast data available</td></tr>';
-                return;
-            }
-            
-            if (!futureDates || futureDates.length === 0) {
-                console.error('No future dates for table');
-                tableBody.innerHTML = '<tr><td colspan="3" class="text-center">No future dates available</td></tr>';
-                return;
-            }
-            
-            // Use only the Ensemble forecast
-            const ensembleForecast = forecasts.Ensemble || forecasts[Object.keys(forecasts)[0]];
-            
-            if (!ensembleForecast || ensembleForecast.length === 0) {
-                console.error('No ensemble forecast for table');
-                tableBody.innerHTML = '<tr><td colspan="3" class="text-center">No forecast data available</td></tr>';
-                return;
-            }
-
-            futureDates.forEach((date, i) => {
-                const forecast = ensembleForecast[i];
-                const upperBound = currentForecastData.upper_bound ? currentForecastData.upper_bound[i] : forecast * 1.05;
-                const lowerBound = currentForecastData.lower_bound ? currentForecastData.lower_bound[i] : forecast * 0.95;
-                
-                let rowHtml = `
-                    <td>${date}</td>
-                    <td><strong>$${forecast.toFixed(2)}</strong></td>
-                    <td>$${lowerBound.toFixed(2)} - $${upperBound.toFixed(2)}</td>
-                `;
-                tableBody.innerHTML += `<tr>${rowHtml}</tr>`;
+            // Add S&P 500 group
+            const spGroup = document.createElement('optgroup');
+            spGroup.label = 'S&P 500';
+            spStocks.forEach(stock => {
+                const option = document.createElement('option');
+                option.value = stock.value;
+                option.textContent = stock.text;
+                spGroup.appendChild(option);
             });
-        }
-
-        // External data functionality
-        showExternalDataBtn.addEventListener('click', function() {
-            if (externalDataSection.style.display === 'none') {
-                externalDataSection.style.display = 'block';
-                showExternalDataBtn.innerHTML = '<i class="fas fa-database me-2"></i>Hide External Data Factors';
-                loadExternalData();
-            } else {
-                externalDataSection.style.display = 'none';
-                showExternalDataBtn.innerHTML = '<i class="fas fa-database me-2"></i>Show External Data Factors';
-            }
-        });
-
-        refreshExternalDataBtn.addEventListener('click', loadExternalData);
-
-        function loadExternalData() {
-            if (!currentTicker) return;
+            assetSelect.appendChild(spGroup);
             
-            externalDataContent.innerHTML = '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>';
+        } else if (assetType === 'commodities') {
+            assetSelect.disabled = false;
+            assetSelect.innerHTML = '<option value="">Select a commodity...</option>';
             
-            fetch(`/api/external-data/${currentTicker}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        displayExternalData(data.external_factors);
-                    } else {
-                        externalDataContent.innerHTML = `<div class="alert alert-warning">${data.error}</div>`;
-                    }
-                })
-                .catch(error => {
-                    externalDataContent.innerHTML = `<div class="alert alert-danger">Error loading external data: ${error.message}</div>`;
+            // Group by category
+            const categories = [...new Set(commodities.map(c => c.category))];
+            
+            categories.forEach(category => {
+                const categoryGroup = document.createElement('optgroup');
+                categoryGroup.label = category;
+                
+                commodities.filter(c => c.category === category).forEach(commodity => {
+                    const option = document.createElement('option');
+                    option.value = commodity.value;
+                    option.textContent = commodity.text;
+                    categoryGroup.appendChild(option);
                 });
-        }
-
-        function displayExternalData(factors) {
-            const overallBias = factors.overall_bias;
-            const interpretation = factors.interpretation;
-            
-            externalDataContent.innerHTML = `
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="card mb-3">
-                            <div class="card-header"><h6><i class="fas fa-chart-line me-2"></i>Overall Market Bias</h6></div>
-                            <div class="card-body text-center">
-                                <h4 class="${overallBias > 0 ? 'text-success' : overallBias < 0 ? 'text-danger' : 'text-muted'}">
-                                    ${interpretation.bias_direction}
-                                </h4>
-                                <p class="text-muted">Bias: ${(overallBias * 100).toFixed(2)}%</p>
-                                <small class="text-muted">Confidence: ${interpretation.confidence}</small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="card mb-3">
-                            <div class="card-header"><h6><i class="fas fa-university me-2"></i>Economic Indicators</h6></div>
-                            <div class="card-body">
-                                <p><strong>Impact:</strong> ${(factors.economic.impact * 100).toFixed(2)}%</p>
-                                <small class="text-muted">${factors.economic.description}</small>
-                                ${factors.economic.current_data && Object.keys(factors.economic.current_data).length > 0 ? 
-                                    '<div class="mt-2">' + Object.entries(factors.economic.current_data).map(([key, value]) => 
-                                        `<div><strong>${key.replace('_', ' ').toUpperCase()}:</strong> ${typeof value === 'number' ? value.toFixed(2) : value}</div>`
-                                    ).join('') + '</div>' : ''
-                                }
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="card mb-3">
-                            <div class="card-header"><h6><i class="fas fa-heart me-2"></i>Market Sentiment</h6></div>
-                            <div class="card-body">
-                                <p><strong>Score:</strong> ${factors.sentiment.score.toFixed(3)}</p>
-                                <p><strong>Impact:</strong> ${(factors.sentiment.impact * 100).toFixed(2)}%</p>
-                                <small class="text-muted">${factors.sentiment.description}</small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card mb-3">
-                            <div class="card-header"><h6><i class="fas fa-calculator me-2"></i>Fundamentals</h6></div>
-                            <div class="card-body">
-                                <div class="small">
-                                    ${Object.entries(factors.fundamental.metrics).map(([key, value]) => 
-                                        `<div><strong>${key.replace('_', ' ').toUpperCase()}:</strong> ${typeof value === 'number' ? value.toFixed(2) : value}</div>`
-                                    ).join('')}
-                                </div>
-                                <small class="text-muted mt-2">${factors.fundamental.description}</small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card mb-3">
-                            <div class="card-header"><h6><i class="fas fa-chart-bar me-2"></i>Technical Analysis</h6></div>
-                            <div class="card-body">
-                                <p><strong>Impact:</strong> ${(factors.technical.impact * 100).toFixed(2)}%</p>
-                                <div class="small">
-                                    ${Object.entries(factors.technical.indicators).map(([key, value]) => 
-                                        `<div><strong>${key.replace('_', ' ').toUpperCase()}:</strong> ${typeof value === 'number' ? value.toFixed(2) : value}</div>`
-                                    ).join('')}
-                                </div>
-                                <small class="text-muted mt-2">${factors.technical.description}</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
+                
+                assetSelect.appendChild(categoryGroup);
+            });
+        } else {
+            assetSelect.disabled = true;
+            assetSelect.innerHTML = '<option value="">First select asset type...</option>';
         }
         
-        // Test function to debug API issues
-        window.testAPI = function() {
-            console.log('=== Starting API Test ===');
-            const testTicker = 'AAPL';
-            const testDays = 30;
-            const testAdvanced = true;
-            
-            console.log('Test parameters:', {ticker: testTicker, days: testDays, advanced: testAdvanced});
-            
-            fetch('/api/forecast-asset', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ticker: testTicker, days: testDays, advanced: testAdvanced })
-            })
-            .then(response => {
-                console.log('Response status:', response.status);
-                console.log('Response ok:', response.ok);
-                console.log('Response headers:', response.headers);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log('=== API Response Success ===');
-                console.log('Full response:', data);
-                console.log('Response keys:', Object.keys(data));
-                console.log('Has historical:', 'historical' in data && Array.isArray(data.historical) && data.historical.length > 0);
-                console.log('Has forecasts:', 'forecasts' in data && Object.keys(data.forecasts).length > 0);
-                console.log('Has future_dates:', 'future_dates' in data && Array.isArray(data.future_dates) && data.future_dates.length > 0);
-                
-                alert('API Test SUCCESS! Check console for details.');
-            })
-            .catch(error => {
-                console.log('=== API Response Error ===');
-                console.error('Error type:', typeof error);
-                console.error('Error:', error);
-                console.error('Error message:', error.message);
-                console.error('Error stack:', error.stack);
-                
-                alert('API Test FAILED: ' + (error.message || error));
-            });
+        // Update forecast button state
+        forecastBtn.disabled = !assetType;
+        
+        // Add event listener to asset select
+        assetSelect.onchange = function() {
+            forecastBtn.disabled = !this.value;
         };
-
-    });
+    }
+    
+    function generateForecast() {
+        const assetType = document.getElementById('assetType').value;
+        const assetSelect = document.getElementById('assetSelect').value;
+        const forecastDays = document.getElementById('forecastDays').value;
+        const historyPeriod = document.getElementById('historyPeriod').value;
+        
+        if (!assetSelect) {
+            alert('Please select an asset first');
+            return;
+        }
+        
+        // Show results section and loading state
+        document.getElementById('resultsSection').style.display = 'block';
+        document.getElementById('loadingState').style.display = 'block';
+        document.getElementById('resultsContent').style.display = 'none';
+        
+        // Update asset name
+        const selectedOption = document.getElementById('assetSelect').selectedOptions[0];
+        document.getElementById('selectedAssetName').textContent = selectedOption.textContent;
+        
+        // Scroll to results
+        document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+        
+        // Generate forecast using existing API with time period
+        fetch('/api/forecast-asset', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                ticker: assetSelect,
+                forecast_days: parseInt(forecastDays),
+                period: historyPeriod,
+                use_enhanced: false
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayForecastResults(data);
+            } else {
+                showError('Forecast generation failed: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showError('Error generating forecast: ' + error.message);
+        });
+    }
+    
+    function displayForecastResults(data) {
+        // Hide loading state
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('resultsContent').style.display = 'block';
+        
+        // Get the best forecast (using correct API structure)
+        const bestForecast = data.forecasts?.ensemble?.length > 0 ? data.forecasts.ensemble : 
+                            (data.forecasts?.prophet?.length > 0 ? data.forecasts.prophet : 
+                             (data.forecasts?.arima || []));
+        
+        const finalPrice = bestForecast.length > 0 ? bestForecast[bestForecast.length - 1] : 0;
+        const firstPrice = bestForecast.length > 0 ? bestForecast[0] : 0;
+        const trend = finalPrice > firstPrice ? 'Upward' : finalPrice < firstPrice ? 'Downward' : 'Sideways';
+        const trendColor = finalPrice > firstPrice ? 'success' : finalPrice < firstPrice ? 'danger' : 'warning';
+        
+        // Update summary
+        const summaryHTML = `
+            <div class="col-md-3">
+                <div class="text-center p-3 bg-light rounded">
+                    <div class="h4 text-primary mb-1">$${finalPrice.toFixed(2)}</div>
+                    <small class="text-muted">Final Predicted Price</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-center p-3 bg-light rounded">
+                    <div class="h4 text-${trendColor} mb-1">${trend}</div>
+                    <small class="text-muted">Forecast Trend</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-center p-3 bg-light rounded">
+                    <div class="h4 text-info mb-1">${data.forecasts?.dates?.length || 0}</div>
+                    <small class="text-muted">Forecast Days</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-center p-3 bg-light rounded">
+                    <div class="h4 text-success mb-1">${Math.abs(((finalPrice - firstPrice) / firstPrice) * 100).toFixed(1)}%</div>
+                    <small class="text-muted">Expected Change</small>
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('forecastSummary').innerHTML = summaryHTML;
+        
+        // Create chart
+        const traces = [];
+        
+        // Historical data
+        if (data.historical_data) {
+            traces.push({
+                x: data.historical_data.dates,
+                y: data.historical_data.prices,
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Historical Data',
+                line: { color: '#007bff', width: 2 }
+            });
+        }
+        
+        // Confidence intervals (if available)
+        if (data.confidence_intervals && data.confidence_intervals.lower && data.confidence_intervals.upper) {
+            traces.push({
+                x: data.forecasts?.dates || [],
+                y: data.confidence_intervals.upper,
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Upper Confidence (95%)',
+                line: { color: '#ff6b35', width: 1, dash: 'dot' },
+                showlegend: false,
+                hovertemplate: 'Upper 95%: $%{y:.2f}<extra></extra>'
+            });
+            
+            traces.push({
+                x: data.forecasts?.dates || [],
+                y: data.confidence_intervals.lower,
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Confidence Interval',
+                line: { color: '#ff6b35', width: 1, dash: 'dot' },
+                fill: 'tonexty',
+                fillcolor: 'rgba(255, 107, 53, 0.1)',
+                hovertemplate: 'Lower 95%: $%{y:.2f}<extra></extra>'
+            });
+        }
+        
+        // Forecast data
+        if (bestForecast.length > 0) {
+            traces.push({
+                x: data.forecasts?.dates || [],
+                y: bestForecast,
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Forecast',
+                line: { color: '#ff6b35', width: 3 }
+            });
+        }
+        
+        const layout = {
+            title: {
+                text: `${data.ticker} - Price Forecast`,
+                font: { size: 18 }
+            },
+            xaxis: { title: 'Date' },
+            yaxis: { title: 'Price ($)' },
+            margin: { t: 50, r: 30, b: 50, l: 60 },
+            hovermode: 'x unified',
+            legend: { x: 0.02, y: 0.98 }
+        };
+        
+        const config = {
+            responsive: true,
+            displayModeBar: true
+        };
+        
+        Plotly.newPlot('chartContainer', traces, layout, config);
+    }
+    
+    function showError(message) {
+        document.getElementById('loadingState').innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                ${message}
+            </div>
+        `;
+    }
+    
+    function viewDetailedAnalysis() {
+        const assetType = document.getElementById('assetType').value;
+        if (assetType === 'stocks') {
+            window.location.href = '/stocks';
+        } else if (assetType === 'commodities') {
+            window.location.href = '/commodities';
+        }
+    }
+    
+    function exportForecast() {
+        // Simple CSV export functionality
+        alert('Export functionality will download forecast data as CSV');
+    }
+    
+    function resetSelection() {
+        document.getElementById('resultsSection').style.display = 'none';
+        document.getElementById('assetSelectionForm').reset();
+        updateAssetOptions();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    
+    function goToStocksPage() {
+        window.location.href = '/stocks';
+    }
+    
+    function goToCommoditiesPage() {
+        window.location.href = '/commodities';
+    }
 </script>
 {% endblock %} 

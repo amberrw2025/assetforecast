@@ -23,14 +23,17 @@ for directory in [DATA_DIR, RAW_DATA_DIR, PROCESSED_DATA_DIR, MODELS_DIR, LOGS_D
     directory.mkdir(parents=True, exist_ok=True)
 
 # API Keys (load from environment variables)
-FRED_API_KEY = os.getenv("FRED_API_KEY", "")
-TWITTER_API_KEY = os.getenv("TWITTER_API_KEY", "")
-TWITTER_API_SECRET = os.getenv("TWITTER_API_SECRET", "")
-TWITTER_ACCESS_TOKEN = os.getenv("TWITTER_ACCESS_TOKEN", "")
-TWITTER_ACCESS_TOKEN_SECRET = os.getenv("TWITTER_ACCESS_TOKEN_SECRET", "")
+FRED_API_KEY = os.getenv("FRED_API_KEY", "f57a50634dba5f945b6cfbecc034a755")
+EIA_API_KEY = os.getenv("EIA_API_KEY", "")  # Optional - will skip if not provided
+TWITTER_API_KEY = os.getenv("TWITTER_API_KEY", "")  # Optional - will skip if not provided
+TWITTER_API_SECRET = os.getenv("TWITTER_API_SECRET", "")  # Optional - will skip if not provided
+TWITTER_ACCESS_TOKEN = os.getenv("TWITTER_ACCESS_TOKEN", "")  # Optional - will skip if not provided
+TWITTER_ACCESS_TOKEN_SECRET = os.getenv("TWITTER_ACCESS_TOKEN_SECRET", "")  # Optional - will skip if not provided
+
+# Reddit API keys (optional)
 REDDIT_CLIENT_ID = os.getenv("REDDIT_CLIENT_ID", "")
 REDDIT_CLIENT_SECRET = os.getenv("REDDIT_CLIENT_SECRET", "")
-REDDIT_USER_AGENT = os.getenv("REDDIT_USER_AGENT", "ForecastModel/1.0")
+REDDIT_USER_AGENT = os.getenv("REDDIT_USER_AGENT", "")
 
 # Data sources configuration
 DATA_SOURCES = {
@@ -44,10 +47,10 @@ DATA_SOURCES = {
 COMPANIES = {
     "ftse100": {
         "top_performers": [
-            "AAL.L", "ABF.L", "ADM.L", "AHT.L", "ANTO.L"  # Placeholder tickers
+            "AZN.L", "SHEL.L", "BP.L", "RR.L", "VOD.L"  # Major FTSE 100 stocks
         ],
         "bottom_performers": [
-            "BARC.L", "BDEV.L", "BKG.L", "BLND.L", "BT-A.L"  # Placeholder tickers
+            "AAL.L", "FRES.L", "STJ.L", "BATS.L", "ENT.L"  # 2023 worst performers still in FTSE 100
         ]
     },
     "sp500": {
@@ -84,11 +87,11 @@ ECONOMIC_INDICATORS = {
         "series_id": "IR3TIB01GBM156N",
         "description": "UK Base Rate"
     },
-    "oil_price": {
-        "source": "EIA",
-        "series_id": "RBRTE",
-        "description": "Brent Crude Oil Price"
-    },
+    # "oil_price": {
+    #     "source": "EIA",
+    #     "series_id": "RBRTE",
+    #     "description": "Brent Crude Oil Price"
+    # },
     "unemployment_us": {
         "source": "FRED",
         "series_id": "UNRATE", 
@@ -115,6 +118,9 @@ DVC_CONFIG = {
         "processed/merged_dataset.csv"
     ]
 }
+
+# Column names
+TICKER_COLUMN = "ticker"
 
 # Logging configuration
 LOGGING_CONFIG = {

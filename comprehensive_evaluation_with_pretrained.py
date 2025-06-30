@@ -13,6 +13,7 @@ from pathlib import Path
 from datetime import datetime
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error, r2_score
+from statsmodels.tsa.api import SimpleExpSmoothing, ExponentialSmoothing, AutoReg
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -110,12 +111,32 @@ class ComprehensiveEvaluator:
         
         # 2. Moving Average Baseline
         try:
-            ma_pred = [stock_train['Close'].tail(20).mean()] * len(stock_test)
+            # Tune window on a validation set (last 50 days of training)
+            ma_train_data = stock_train.iloc[:-50]
+            ma_val_data = stock_train.iloc[-50:]
+            best_window = 20
+            best_rmse = float('inf')
+
+            if len(ma_val_data) > 0:
+                for window in [10, 20, 30, 50, 100]:
+                    if len(ma_train_data) < window:
+                        continue
+                    
+                    # Predict for validation set
+                    ma_pred_val = [ma_train_data['Close'].tail(window).mean()] * len(ma_val_data)
+                    rmse_val = np.sqrt(mean_squared_error(ma_val_data['Close'], ma_pred_val))
+                    
+                    if rmse_val < best_rmse:
+                        best_rmse = rmse_val
+                        best_window = window
+            
+            # Predict for the actual test set using the best window
+            ma_pred = [stock_train['Close'].tail(best_window).mean()] * len(stock_test)
             rmse = np.sqrt(mean_squared_error(actual, ma_pred))
             r2 = r2_score(actual, ma_pred)
             
-            results['Moving Average'] = {'rmse': rmse, 'r2': r2, 'type': 'baseline'}
-            print(f"   ✅ Moving Average: RMSE={rmse:.2f}")
+            results[f'Moving Average (w={best_window})'] = {'rmse': rmse, 'r2': r2, 'type': 'baseline'}
+            print(f"   ✅ Moving Average (w={best_window}): RMSE={rmse:.2f}")
         except Exception as e:
             print(f"   ❌ Moving Average failed: {str(e)[:30]}")
         
@@ -161,24 +182,77 @@ class ComprehensiveEvaluator:
             except Exception as e:
                 print(f"   ❌ LSTM failed: {str(e)[:30]}")
         
-        # 4. Simple Prophet-like trend (since Prophet model needs specific format)
+        # 4. Optimized Exponential Smoothing
         try:
-            # Simple exponential smoothing as Prophet alternative
-            prices = stock_train['Close'].values
-            alpha = 0.3
-            smoothed = [prices[0]]
+            prices = stock_train['Close'].astype(float)
+            # Fit the model. `fit` will automatically find the optimal alpha.
+            ses_model = SimpleExpSmoothing(prices, initialization_method="estimated").fit()
+            ses_pred = ses_model.forecast(len(stock_test))
             
-            for i in range(1, len(prices)):
-                smoothed.append(alpha * prices[i] + (1 - alpha) * smoothed[-1])
+            rmse = np.sqrt(mean_squared_error(actual, ses_pred))
+            r2 = r2_score(actual, ses_pred)
             
-            prophet_pred = [smoothed[-1]] * len(stock_test)
-            rmse = np.sqrt(mean_squared_error(actual, prophet_pred))
-            r2 = r2_score(actual, prophet_pred)
+            alpha_val = ses_model.params.get('smoothing_level', 'N/A')
+            if isinstance(alpha_val, float):
+                alpha_val = f"{alpha_val:.2f}"
             
-            results['Prophet-like'] = {'rmse': rmse, 'r2': r2, 'type': 'baseline'}
-            print(f"   ✅ Prophet-like: RMSE={rmse:.2f}")
+            results[f'Exp. Smoothing (α={alpha_val})'] = {'rmse': rmse, 'r2': r2, 'type': 'baseline'}
+            print(f"   ✅ Exp. Smoothing (α={alpha_val}): RMSE={rmse:.2f}")
         except Exception as e:
-            print(f"   ❌ Prophet-like failed: {str(e)[:30]}")
+            print(f"   ❌ Exponential Smoothing failed: {str(e)[:30]}")
+        
+        # 5. Autoregressive (AR) Model
+        try:
+            # Select optimal lag 'p' using a validation set
+            ar_train_data = stock_train.iloc[:-50]['Close'].astype(float)
+            ar_val_data = stock_train.iloc[-50:]['Close'].astype(float)
+            best_lag = 5
+            best_rmse = float('inf')
+
+            if len(ar_val_data) > 0:
+                for lag in [1, 5, 10, 15, 25]:
+                    if len(ar_train_data) < lag:
+                        continue
+                    try:
+                        ar_model_val = AutoReg(ar_train_data, lags=lag, old_names=False).fit()
+                        ar_pred_val = ar_model_val.predict(start=len(ar_train_data), end=len(ar_train_data) + len(ar_val_data) - 1, dynamic=False)
+                        rmse_val = np.sqrt(mean_squared_error(ar_val_data, ar_pred_val))
+                        if rmse_val < best_rmse:
+                            best_rmse = rmse_val
+                            best_lag = lag
+                    except Exception:
+                        continue
+            
+            prices = stock_train['Close'].astype(float)
+            ar_model = AutoReg(prices, lags=best_lag, old_names=False).fit()
+            ar_pred = ar_model.predict(start=len(prices), end=len(prices) + len(stock_test) - 1, dynamic=False)
+
+            rmse = np.sqrt(mean_squared_error(actual, ar_pred))
+            r2 = r2_score(actual, ar_pred)
+            
+            results[f'AR (lags={best_lag})'] = {'rmse': rmse, 'r2': r2, 'type': 'baseline'}
+            print(f"   ✅ AR (lags={best_lag}): RMSE={rmse:.2f}")
+        except Exception as e:
+            print(f"   ❌ AR failed: {str(e)[:30]}")
+
+        # 6. Holt-Winters Exponential Smoothing
+        try:
+            prices = stock_train['Close'].astype(float)
+            seasonal_periods = 252
+
+            if len(prices) >= 2 * seasonal_periods:
+                hw_model = ExponentialSmoothing(prices, trend='mul', seasonal='mul', seasonal_periods=seasonal_periods).fit()
+            else:
+                hw_model = ExponentialSmoothing(prices, trend='mul', seasonal=None).fit()
+
+            hw_pred = hw_model.forecast(len(stock_test))
+            rmse = np.sqrt(mean_squared_error(actual, hw_pred))
+            r2 = r2_score(actual, hw_pred)
+            
+            results['Holt-Winters'] = {'rmse': rmse, 'r2': r2, 'type': 'baseline'}
+            print(f"   ✅ Holt-Winters: RMSE={rmse:.2f}")
+        except Exception as e:
+            print(f"   ❌ Holt-Winters failed: {str(e)[:30]}")
         
         return {'symbol': symbol, 'market': market, 'results': results}
     
@@ -256,7 +330,7 @@ class ComprehensiveEvaluator:
         print(model_perf)
         
         # Best models by type
-        print(f"\n�� BEST MODELS BY TYPE:")
+        print(f"\n BEST MODELS BY TYPE:")
         baseline_models = results_df[results_df['Type'] == 'baseline']
         pretrained_models = results_df[results_df['Type'] == 'pretrained']
         

@@ -90,14 +90,18 @@ class BaseForecastModel(ABC):
         if not self.is_fitted:
             raise ValueError("Model must be fitted before evaluation")
         
-        # Prepare data
-        X, y_true = self.prepare_data(df)
+        y_true = df[self.target_column].values
+        y_pred = self.predict_in_sample(df)
         
-        # Make predictions
-        y_pred = self.predict(df)
+        # Align y_true and y_pred
+        y_pred_nonan = y_pred[~np.isnan(y_pred)]
+        y_true_aligned = y_true[-len(y_pred_nonan):]
         
-        # Calculate metrics
-        metrics = self._calculate_metrics(y_true, y_pred)
+        min_len = min(len(y_true_aligned), len(y_pred_nonan))
+        y_true_final = y_true_aligned[-min_len:]
+        y_pred_final = y_pred_nonan[-min_len:]
+        
+        metrics = self._calculate_metrics(y_true_final, y_pred_final)
         
         logger.info(f"{self.name} evaluation metrics: {metrics}")
         return metrics

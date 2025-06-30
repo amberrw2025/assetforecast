@@ -58,11 +58,12 @@ class ForecastModelPipeline:
             # Process results as they complete
             try:
                 financial_data = future_financial.result()
-                if not financial_data.empty:
-                    self.raw_datasets['financial'] = financial_data
-                    logger.info(f"Financial data collected: {len(financial_data)} records")
+                if financial_data.empty:
+                    logger.warning("No financial data collected. Skipping financial data processing.")
+                    self.raw_datasets['financial'] = pd.DataFrame()
                 else:
-                    logger.warning("No financial data collected")
+                    logger.info(f"Financial data collected: {len(financial_data)} records")
+                    self.raw_datasets['financial'] = financial_data
 
                 economic_data = future_economic.result()
                 if economic_data:
@@ -73,12 +74,13 @@ class ForecastModelPipeline:
                     logger.warning("No economic data collected")
 
                 sentiment_data = future_sentiment.result()
-                if sentiment_data:
-                    self.raw_datasets.update(sentiment_data)
-                    total_sentiment_records = sum(len(df) for df in sentiment_data.values())
-                    logger.info(f"Sentiment data collected: {total_sentiment_records} records across {len(sentiment_data)} sources")
+                if not sentiment_data:
+                    logger.warning("No sentiment data collected. Skipping sentiment data processing.")
+                    self.raw_datasets['sentiment'] = pd.DataFrame()
                 else:
-                    logger.warning("No sentiment data collected")
+                    combined_sentiment_df = pd.concat(sentiment_data.values(), ignore_index=True)
+                    logger.info(f"Sentiment data collected: {len(combined_sentiment_df)} records")
+                    self.raw_datasets['sentiment'] = combined_sentiment_df
 
                 self._save_raw_data()
                 logger.info("Data acquisition phase completed successfully")
@@ -197,6 +199,8 @@ class ForecastModelPipeline:
                     filepath = RAW_DATA_DIR / filename
                     data.to_csv(filepath, index=False)
                     logger.info(f"Raw {name} data saved to {filepath}")
+                else:
+                    logger.warning(f"Skipping empty dataset: {name}")
         except Exception as e:
             logger.error(f"Error saving raw data: {str(e)}")
     

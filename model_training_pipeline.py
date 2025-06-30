@@ -1,12 +1,12 @@
 """
 Model Training Pipeline for Forecast Accuracy Assessment.
-Orchestrates training and evaluation of multiple forecasting models.
+Orchestrates training and evaluation of multiple forecasting models on a per-ticker basis.
 """
 
 import pandas as pd
 import numpy as np
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Dict, List, Optional, Any
 from loguru import logger
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -18,26 +18,21 @@ from models import (
 )
 
 # Import configuration
-from config import PROCESSED_DATA_DIR, MODELS_DIR
+from config import PROCESSED_DATA_DIR, MODELS_DIR, TICKER_COLUMN
 
 
 class ModelTrainingPipeline:
     """
-    Comprehensive model training pipeline for forecast accuracy assessment.
+    Comprehensive model training pipeline that trains and evaluates models for each ticker individually.
     """
     
     def __init__(self):
         """Initialize the training pipeline."""
         self.data = None
-        self.train_data = None
-        self.test_data = None
-        self.models = {}
-        self.evaluator = ModelEvaluator()
-        self.results = {}
+        self.tickers = []
+        self.target_column = 'close_price'
         
-        # Create models directory
         MODELS_DIR.mkdir(parents=True, exist_ok=True)
-        
         logger.info("Model training pipeline initialized")
     
     def load_data(self, data_path: Optional[str] = None) -> 'ModelTrainingPipeline':
@@ -56,7 +51,7 @@ class ModelTrainingPipeline:
         logger.info(f"Loading data from {data_path}")
         
         try:
-            self.data = pd.read_csv(data_path)
+            self.data = pd.read_csv(data_path, low_memory=False)
             self.data['date'] = pd.to_datetime(self.data['date'])
             self.data = self.data.sort_values('date')
             
@@ -68,343 +63,154 @@ class ModelTrainingPipeline:
         
         return self
     
-    def prepare_data(self, test_size: float = 0.2, 
-                    target_column: str = 'close_price') -> 'ModelTrainingPipeline':
+    def prepare_data(self) -> 'ModelTrainingPipeline':
         """
-        Prepare data for training and testing.
+        Prepare data by identifying unique tickers.
         
-        Args:
-            test_size (float): Proportion of data for testing
-            target_column (str): Target variable column
-            
         Returns:
             ModelTrainingPipeline: Self for chaining
         """
         logger.info("Preparing data for training")
         
-        # Remove rows with missing target values
-        self.data = self.data.dropna(subset=[target_column])
+        self.data = self.data.dropna(subset=[self.target_column])
         
-        # Split data by date
-        total_size = len(self.data)
-        test_samples = int(total_size * test_size)
-        
-        self.train_data = self.data.iloc[:-test_samples].copy()
-        self.test_data = self.data.iloc[-test_samples:].copy()
-        
-        logger.info(f"Training set: {len(self.train_data)} records")
-        logger.info(f"Test set: {len(self.test_data)} records")
-        logger.info(f"Date range - Train: {self.train_data['date'].min()} to {self.train_data['date'].max()}")
-        logger.info(f"Date range - Test: {self.test_data['date'].min()} to {self.test_data['date'].max()}")
-        
-        return self
-    
-    def initialize_models(self) -> 'ModelTrainingPipeline':
-        """
-        Initialize all forecasting models.
-        
-        Returns:
-            ModelTrainingPipeline: Self for chaining
-        """
-        logger.info("Initializing forecasting models")
-        
-        # ARIMA Model
-        arima_model = ARIMAModel(order=(1, 1, 1))
-        self.models['ARIMA'] = arima_model
-        self.evaluator.add_model(arima_model, 'ARIMA')
-        
-        # Prophet Model
-        prophet_model = ProphetModel(
-            yearly_seasonality=True,
-            weekly_seasonality=True,
-            daily_seasonality=False
-        )
-        self.models['Prophet'] = prophet_model
-        self.evaluator.add_model(prophet_model, 'Prophet')
-        
-        # LSTM Model
-        lstm_model = LSTMModel(
-            sequence_length=30,
-            units=50,
-            layers=2,
-            dropout=0.2,
-            learning_rate=0.001
-        )
-        self.models['LSTM'] = lstm_model
-        self.evaluator.add_model(lstm_model, 'LSTM')
-        
-        # Ensemble Model
-        ensemble_model = EnsembleModel(
-            models=[arima_model, prophet_model, lstm_model],
-            weights=[0.3, 0.3, 0.4],
-            ensemble_method='weighted_average'
-        )
-        self.models['Ensemble'] = ensemble_model
-        self.evaluator.add_model(ensemble_model, 'Ensemble')
-        
-        logger.info(f"Initialized {len(self.models)} models")
-        return self
-    
-    def train_models(self) -> 'ModelTrainingPipeline':
-        """
-        Train all models.
-        
-        Returns:
-            ModelTrainingPipeline: Self for chaining
-        """
-        logger.info("Starting model training")
-        
-        for model_name, model in self.models.items():
-            try:
-                logger.info(f"Training {model_name}...")
-                model.fit(self.train_data)
-                logger.info(f"{model_name} training completed")
-                
-            except Exception as e:
-                logger.error(f"Error training {model_name}: {e}")
-                continue
-        
-        return self
-    
-    def evaluate_models(self) -> 'ModelTrainingPipeline':
-        """
-        Evaluate all trained models.
-        
-        Returns:
-            ModelTrainingPipeline: Self for chaining
-        """
-        logger.info("Evaluating models")
-        
-        self.results = self.evaluator.evaluate_all_models(self.test_data)
-        
-        return self
-    
-    def generate_forecasts(self, steps: int = 30) -> Dict[str, np.ndarray]:
-        """
-        Generate forecasts for all models.
-        
-        Args:
-            steps (int): Number of steps to forecast
+        if TICKER_COLUMN not in self.data.columns:
+            raise ValueError(f"Ticker column '{TICKER_COLUMN}' not found in the dataset.")
             
-        Returns:
-            Dict[str, np.ndarray]: Forecasts for each model
-        """
-        logger.info(f"Generating {steps}-step forecasts")
-        
-        forecasts = {}
-        
-        for model_name, model in self.models.items():
-            try:
-                forecast = model.predict(self.test_data, steps)
-                forecasts[model_name] = forecast
-                logger.info(f"Generated forecast for {model_name}")
-                
-            except Exception as e:
-                logger.error(f"Error generating forecast for {model_name}: {e}")
-                continue
-        
-        return forecasts
-    
-    def save_models(self) -> 'ModelTrainingPipeline':
-        """
-        Save all trained models.
-        
-        Returns:
-            ModelTrainingPipeline: Self for chaining
-        """
-        logger.info("Saving trained models")
-        
-        for model_name, model in self.models.items():
-            try:
-                if model.is_fitted:
-                    model_path = MODELS_DIR / model_name.lower()
-                    model.save_model(str(model_path))
-                    logger.info(f"Saved {model_name} to {model_path}")
-                
-            except Exception as e:
-                logger.error(f"Error saving {model_name}: {e}")
-                continue
+        self.tickers = self.data[TICKER_COLUMN].unique()
+        logger.info(f"Found {len(self.tickers)} tickers. Starting processing for each.")
         
         return self
     
-    def create_visualizations(self, save_dir: Optional[str] = None) -> 'ModelTrainingPipeline':
+    def run_complete_pipeline(self, test_size: float = 0.2):
         """
-        Create comprehensive visualizations.
+        Run the complete training, evaluation, and saving pipeline for each ticker.
         
         Args:
-            save_dir (Optional[str]): Directory to save visualizations
-            
-        Returns:
-            ModelTrainingPipeline: Self for chaining
-        """
-        if save_dir is None:
-            save_dir = PROCESSED_DATA_DIR
-        
-        save_path = Path(save_dir)
-        save_path.mkdir(parents=True, exist_ok=True)
-        
-        logger.info("Creating visualizations")
-        
-        # Model comparison plot
-        try:
-            self.evaluator.plot_comparison('rmse', 
-                                         save_path / 'model_comparison_rmse.png')
-        except Exception as e:
-            logger.warning(f"Could not create RMSE comparison plot: {e}")
-        
-        # Predictions plot
-        try:
-            self.evaluator.plot_predictions(self.test_data, 
-                                          save_path / 'model_predictions.png')
-        except Exception as e:
-            logger.warning(f"Could not create predictions plot: {e}")
-        
-        # LSTM training history (if available)
-        if 'LSTM' in self.models and self.models['LSTM'].is_fitted:
-            try:
-                self.models['LSTM'].plot_training_history(
-                    save_path / 'lstm_training_history.png'
-                )
-            except Exception as e:
-                logger.warning(f"Could not create LSTM training history plot: {e}")
-        
-        # ARIMA diagnostics (if available)
-        if 'ARIMA' in self.models and self.models['ARIMA'].is_fitted:
-            try:
-                self.models['ARIMA'].plot_diagnostics(
-                    save_path / 'arima_diagnostics.png'
-                )
-            except Exception as e:
-                logger.warning(f"Could not create ARIMA diagnostics plot: {e}")
-        
-        return self
-    
-    def generate_report(self, save_path: Optional[str] = None) -> str:
-        """
-        Generate comprehensive training report.
-        
-        Args:
-            save_path (Optional[str]): Path to save the report
-            
-        Returns:
-            str: Report content
-        """
-        if save_path is None:
-            save_path = PROCESSED_DATA_DIR / "model_training_report.txt"
-        
-        report = self.evaluator.generate_report(save_path)
-        
-        # Add pipeline-specific information
-        additional_info = f"""
-PIPELINE INFORMATION
-===================
-Training Records: {len(self.train_data)}
-Test Records: {len(self.test_data)}
-Models Trained: {len([m for m in self.models.values() if m.is_fitted])}
-Training Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-
-DATA INFORMATION
-===============
-Target Variable: close_price
-Date Range: {self.data['date'].min()} to {self.data['date'].max()}
-Total Features: {len(self.data.columns)}
-Missing Values: {self.data.isnull().sum().sum()}
-
-MODEL CONFIGURATIONS
-===================
-"""
-        
-        for model_name, model in self.models.items():
-            additional_info += f"\n{model_name}:\n"
-            additional_info += f"  Parameters: {model.model_params}\n"
-            additional_info += f"  Fitted: {model.is_fitted}\n"
-        
-        # Append to report
-        with open(save_path, 'a') as f:
-            f.write(additional_info)
-        
-        logger.info(f"Training report saved to {save_path}")
-        return report
-    
-    def run_complete_pipeline(self, 
-                            data_path: Optional[str] = None,
-                            test_size: float = 0.2) -> Dict[str, Any]:
-        """
-        Run the complete model training pipeline.
-        
-        Args:
-            data_path (Optional[str]): Path to the cleaned dataset
             test_size (float): Proportion of data for testing
             
         Returns:
-            Dict[str, Any]: Pipeline results
+            Dict[str, Any]: Results for each ticker
         """
-        logger.info("Starting complete model training pipeline")
-        
-        try:
-            # Execute pipeline steps
-            (self.load_data(data_path)
-             .prepare_data(test_size)
-             .initialize_models()
-             .train_models()
-             .evaluate_models()
-             .save_models()
-             .create_visualizations()
-             .generate_report())
+        self.load_data()
+        self.prepare_data()
+
+        all_results = {}
+
+        for ticker in self.tickers:
+            logger.info(f"Processing ticker: {ticker}")
             
-            # Generate forecasts
-            forecasts = self.generate_forecasts()
+            ticker_data = self.data[self.data[TICKER_COLUMN] == ticker].copy()
+
+            if ticker_data['date'].duplicated().any():
+                logger.warning(f"Ticker {ticker} has duplicate dates. Dropping them.")
+                ticker_data = ticker_data.drop_duplicates(subset=['date'], keep='first')
+
+            if len(ticker_data) < 20:
+                logger.warning(f"Skipping ticker {ticker} due to insufficient data (< 20 records).")
+                continue
+
+            # 1. Split data
+            total_size = len(ticker_data)
+            test_samples = int(total_size * test_size)
+            train_data = ticker_data.iloc[:-test_samples].copy()
+            test_data = ticker_data.iloc[-test_samples:].copy()
+
+            # 2. Initialize models
+            arima_model = ARIMAModel(order=(5, 1, 0))
+            prophet_model = ProphetModel()
+            lstm_model = LSTMModel(sequence_length=30, units=50)
             
-            # Get best model
-            best_model, best_score = self.evaluator.get_best_model('rmse')
-            
-            results = {
-                'models_trained': len([m for m in self.models.values() if m.is_fitted]),
-                'evaluation_results': self.results,
-                'best_model': best_model,
-                'best_score': best_score,
-                'forecasts': forecasts,
-                'training_data_size': len(self.train_data),
-                'test_data_size': len(self.test_data)
+            models = {
+                'ARIMA': arima_model,
+                'Prophet': prophet_model,
+                'LSTM': lstm_model
             }
+
+            # 3. Train models
+            for model_name, model in models.items():
+                try:
+                    logger.info(f"Training {model_name} for {ticker}...")
+                    
+                    model.target_column = self.target_column 
+                    
+                    train_df = train_data.copy()
+                    if model_name in ['Prophet', 'LSTM']:
+                        train_df = train_df.rename(columns={'date': 'ds', self.target_column: 'y'})
+                        model.target_column = 'y'
+                        model.date_column = 'ds'
+
+                    if model_name == 'LSTM':
+                        model.fit(train_df, epochs=50)
+                    else:
+                        model.fit(train_df)
+
+                    logger.info(f"{model_name} for {ticker} trained successfully.")
+                except Exception as e:
+                    logger.error(f"Error training {model_name} for {ticker}: {e}")
+                    models[model_name] = None
+
+            # 4. Evaluate models
+            evaluator = ModelEvaluator()
+            for model_name, model in models.items():
+                if model and model.is_fitted:
+                    evaluator.add_model(model, model_name)
             
-            logger.info("Model training pipeline completed successfully")
-            logger.info(f"Best model: {best_model} (RMSE: {best_score:.4f})")
+            ticker_results = evaluator.evaluate_all_models(test_data)
+            all_results[ticker] = ticker_results
+            logger.info(f"Evaluation results for {ticker}: {ticker_results}")
+
+            # 5. Save models
+            for model_name, model in models.items():
+                if model and model.is_fitted:
+                    model_path = MODELS_DIR / ticker / model_name.lower()
+                    model.save_model(str(model_path))
+
+            # 6. Generate reports and visualizations
+            report_path = MODELS_DIR / ticker
+            report_path.mkdir(parents=True, exist_ok=True)
+            evaluator.generate_report(save_path=str(report_path / "evaluation_report.txt"))
+            evaluator.plot_comparison('rmse', save_path=str(report_path / "rmse_comparison.png"))
+            self.create_visualizations(evaluator, test_data, ticker, report_path)
             
-            return results
-            
+        logger.info("Completed processing all tickers.")
+        return all_results
+    
+    def create_visualizations(self, evaluator, test_data, ticker, save_path):
+        """
+        Create and save visualizations for a given ticker.
+        
+        Args:
+            evaluator (ModelEvaluator): Evaluator object for generating visualizations
+            test_data (pd.DataFrame): Test data for generating predictions
+            ticker (str): Ticker identifier
+            save_path (Path): Path to save visualizations
+        """
+        try:
+            logger.info(f"Creating prediction plot for {ticker}")
+            evaluator.plot_predictions(test_data, save_path=str(save_path / "prediction_plot.png"))
+
         except Exception as e:
-            logger.error(f"Error in training pipeline: {e}")
-            raise
+            logger.warning(f"Could not create predictions plot for {ticker}: {e}")
 
 
 def main():
-    """Main function to run the model training pipeline."""
-    print("=" * 60)
-    print("FORECAST MODEL TRAINING PIPELINE")
-    print("=" * 60)
+    """Main function to run the pipeline."""
+    logger.add("logs/model_training.log", rotation="500 MB")
+    logger.info("============================================================")
+    logger.info("STARTING FORECAST MODEL TRAINING PIPELINE")
+    logger.info("============================================================")
     
-    # Initialize pipeline
     pipeline = ModelTrainingPipeline()
-    
     try:
-        # Run complete pipeline
         results = pipeline.run_complete_pipeline()
-        
-        print("\n" + "=" * 60)
-        print("✅ MODEL TRAINING COMPLETED SUCCESSFULLY")
-        print("=" * 60)
-        print(f"📊 Models trained: {results['models_trained']}")
-        print(f"🏆 Best model: {results['best_model']}")
-        print(f"📈 Best RMSE: {results['best_score']:.4f}")
-        print(f"📁 Models saved to: {MODELS_DIR}")
-        print(f"📊 Results saved to: {PROCESSED_DATA_DIR}")
-        print("\n🚀 Ready for deployment and production use!")
-        print("=" * 60)
-        
+        logger.info("✅ Model training pipeline completed successfully.")
+        # Optionally print a summary of results
+        for ticker, result in results.items():
+            logger.info(f"Results for {ticker}: {result}")
+            
     except Exception as e:
-        print(f"\n❌ Model training failed: {e}")
-        print("Check the logs for detailed error information.")
+        logger.error(f"❌ Model training failed: {e}")
         raise
 
 

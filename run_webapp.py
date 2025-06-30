@@ -7,9 +7,12 @@ Starts the Flask web server with the interactive dashboard.
 import os
 import sys
 from pathlib import Path
+import logging
 
 # Add current directory to path
 sys.path.insert(0, str(Path(__file__).parent))
+
+logger = logging.getLogger(__name__)
 
 def main():
     """Main function to run the web application."""
@@ -24,17 +27,14 @@ def main():
         
         print("✅ Web application created successfully")
         print("🌐 Starting server...")
-        print("📱 Open your browser and go to: http://localhost:5001")
+        print("📱 Open your browser and go to: http://localhost:5003")
         print("🛑 Press Ctrl+C to stop the server")
         print("=" * 60)
         
         # Run the app
-        app.run(
-            debug=True,
-            host='0.0.0.0',
-            port=5001,
-            threaded=True
-        )
+        logger.info("Starting server...")
+        # Bind to 0.0.0.0 to make it accessible on the network
+        app.run(debug=True, host='0.0.0.0', port=5003)
         
     except ImportError as e:
         print(f"❌ Import error: {e}")

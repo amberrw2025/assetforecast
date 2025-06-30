@@ -189,7 +189,20 @@
                             </optgroup>
                         </select>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
+                        <label for="timePeriod" class="form-label">Time Period:</label>
+                        <select class="form-select" id="timePeriod" onchange="loadCommodityData()">
+                            <option value="1mo">1 Month</option>
+                            <option value="3mo">3 Months</option>
+                            <option value="6mo">6 Months</option>
+                            <option value="1y">1 Year</option>
+                            <option value="2y" selected>2 Years</option>
+                            <option value="5y">5 Years</option>
+                            <option value="10y">10 Years</option>
+                            <option value="max">Max</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
                         <label for="forecastDays" class="form-label">Forecast Days:</label>
                         <select class="form-select" id="forecastDays">
                             <option value="7">7 days</option>
@@ -199,7 +212,7 @@
                             <option value="90" selected>90 days</option>
                         </select>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label class="form-label">&nbsp;</label>
                         <button class="btn btn-primary w-100" onclick="generateCommodityForecast()">
                             <i class="fas fa-chart-line me-2"></i>
@@ -342,7 +355,9 @@
 
     function loadCommodityData() {
         const commoditySelect = document.getElementById('commoditySelect');
+        const timePeriodSelect = document.getElementById('timePeriod');
         const commodity = commoditySelect.value;
+        const timePeriod = timePeriodSelect.value;
         
         if (!commodity) {
             document.getElementById('commodityDataDisplay').innerHTML = `
@@ -351,6 +366,10 @@
                     Select a commodity above to view historical data and generate forecasts.
                 </div>
             `;
+            // Hide charts
+            document.getElementById('historicalChartContainer').style.display = 'none';
+            document.getElementById('volumeChartContainer').style.display = 'none';
+            document.getElementById('forecastResultsCard').style.display = 'none';
             return;
         }
 
@@ -362,21 +381,30 @@
                 <div class="spinner-border text-primary" role="status">
                     <span class="visually-hidden">Loading...</span>
                 </div>
-                <p class="mt-2">Loading ${commodity} data...</p>
+                <p class="mt-2">Loading ${commodity} data (${getTimePeriodLabel(timePeriod)})...</p>
             </div>
         `;
 
-        // Fetch commodity data
-        fetch(`/api/commodity-data/${commodity}`)
+        // Hide previous charts while loading
+        document.getElementById('historicalChartContainer').style.display = 'none';
+        document.getElementById('volumeChartContainer').style.display = 'none';
+        document.getElementById('forecastResultsCard').style.display = 'none';
+
+        // Fetch commodity data with time period parameter
+        fetch(`/api/commodity/${commodity}?period=${timePeriod}`)
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    commodityData = data.data;
-                    displayCommodityData(data.data, commodity);
-                    updateMarketAnalytics(data.data, commodity);
+                    commodityData = data;
+                    displayCommodityData(data, commodity);
+                    updateMarketAnalytics(data, commodity);
                     
-                    // Also fetch and display historical chart
-                    fetchAndDisplayHistoricalChart(commodity);
+                    // Display historical chart using the data we already have
+                    if (data.historical_data) {
+                        historicalChartData = data.historical_data;
+                        displayHistoricalChart(data.historical_data, commodity);
+                        displayVolumeChart(data.historical_data, commodity);
+                    }
                 } else {
                     showError('Failed to load commodity data: ' + (data.error || 'Unknown error'));
                 }
@@ -389,6 +417,13 @@
 
     function displayCommodityData(data, commodity) {
         const container = document.getElementById('commodityDataDisplay');
+        
+        // Calculate data points from historical data
+        const dataPoints = data.historical_data?.dates?.length || 0;
+        const dateRange = dataPoints > 0 ? {
+            start: data.historical_data.dates[0],
+            end: data.historical_data.dates[data.historical_data.dates.length - 1]
+        } : {start: '-', end: '-'};
         
         container.innerHTML = `
             <div class="row">
@@ -403,26 +438,26 @@
                         </div>
                         <div class="col-md-3">
                             <div class="bg-light p-3 rounded text-center">
-                                <div class="h5 text-success mb-1">${data.change_percent?.toFixed(2) || '-'}%</div>
-                                <small class="text-muted">24h Change</small>
+                                <div class="h5 text-success mb-1">${data.total_return?.toFixed(2) || '-'}%</div>
+                                <small class="text-muted">Total Return</small>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="bg-light p-3 rounded text-center">
-                                <div class="h5 text-warning mb-1">${data.volatility?.toFixed(2) || '-'}</div>
+                                <div class="h5 text-warning mb-1">${data.volatility?.toFixed(2) || '-'}%</div>
                                 <small class="text-muted">Volatility</small>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="bg-light p-3 rounded text-center">
-                                <div class="h5 text-info mb-1">${data.records || '-'}</div>
+                                <div class="h5 text-info mb-1">${dataPoints}</div>
                                 <small class="text-muted">Data Points</small>
                             </div>
                         </div>
                     </div>
                     <div class="mt-3">
                         <small class="text-muted">
-                            <strong>Data Range:</strong> ${data.date_range?.start || '-'} to ${data.date_range?.end || '-'}
+                            <strong>Data Range:</strong> ${dateRange.start} to ${dateRange.end}
                         </small>
                     </div>
                 </div>
@@ -433,47 +468,57 @@
     function updateMarketAnalytics(data, commodity) {
         const container = document.getElementById('marketAnalytics');
         
+        // Calculate metrics from historical data if available
+        const prices = data.historical_data?.prices || [];
+        const highs = data.historical_data?.highs || [];
+        const lows = data.historical_data?.lows || [];
+        
+        const yearHigh = highs.length > 0 ? Math.max(...highs) : null;
+        const yearLow = lows.length > 0 ? Math.min(...lows) : null;
+        const avgPrice = prices.length > 0 ? prices.reduce((a, b) => a + b, 0) / prices.length : null;
+        
         container.innerHTML = `
             <div class="mb-3">
                 <h6 class="small text-muted">PRICE METRICS</h6>
                 <div class="d-flex justify-content-between mb-2">
-                    <span class="small">52-Week High:</span>
-                    <strong>$${data.year_high?.toFixed(2) || '-'}</strong>
+                    <span class="small">Period High:</span>
+                    <strong>$${yearHigh?.toFixed(2) || '-'}</strong>
                 </div>
                 <div class="d-flex justify-content-between mb-2">
-                    <span class="small">52-Week Low:</span>
-                    <strong>$${data.year_low?.toFixed(2) || '-'}</strong>
+                    <span class="small">Period Low:</span>
+                    <strong>$${yearLow?.toFixed(2) || '-'}</strong>
                 </div>
                 <div class="d-flex justify-content-between mb-2">
                     <span class="small">Average Price:</span>
-                    <strong>$${data.avg_price?.toFixed(2) || '-'}</strong>
+                    <strong>$${avgPrice?.toFixed(2) || '-'}</strong>
                 </div>
             </div>
             <div class="mb-3">
-                <h6 class="small text-muted">VOLATILITY</h6>
+                <h6 class="small text-muted">PERFORMANCE</h6>
                 <div class="d-flex justify-content-between mb-2">
-                    <span class="small">30-Day Vol:</span>
-                    <strong>${data.vol_30d?.toFixed(2) || '-'}%</strong>
+                    <span class="small">Total Return:</span>
+                    <strong>${data.total_return?.toFixed(2) || '-'}%</strong>
                 </div>
                 <div class="d-flex justify-content-between mb-2">
-                    <span class="small">90-Day Vol:</span>
-                    <strong>${data.vol_90d?.toFixed(2) || '-'}%</strong>
+                    <span class="small">Volatility:</span>
+                    <strong>${data.volatility?.toFixed(2) || '-'}%</strong>
                 </div>
             </div>
         `;
 
         // Update risk metrics
         const riskContainer = document.getElementById('riskMetrics');
-        const riskLevel = data.volatility > 20 ? 'High' : data.volatility > 10 ? 'Medium' : 'Low';
-        const riskColor = data.volatility > 20 ? 'danger' : data.volatility > 10 ? 'warning' : 'success';
+        const volatility = data.volatility || 0;
+        const riskLevel = volatility > 2 ? 'High' : volatility > 1 ? 'Medium' : 'Low';
+        const riskColor = volatility > 2 ? 'danger' : volatility > 1 ? 'warning' : 'success';
         
         riskContainer.innerHTML = `
             <div class="text-center">
                 <div class="badge bg-${riskColor} mb-2">${riskLevel} Risk</div>
                 <div class="small">
-                    <div class="mb-2">Volatility: ${data.volatility?.toFixed(1) || '-'}%</div>
-                    <div class="mb-2">Max Drawdown: ${data.max_drawdown?.toFixed(1) || '-'}%</div>
-                    <div>Sharpe Ratio: ${data.sharpe_ratio?.toFixed(2) || '-'}</div>
+                    <div class="mb-2">Volatility: ${volatility?.toFixed(1) || '-'}%</div>
+                    <div class="mb-2">Data Points: ${prices.length || '-'}</div>
+                    <div>Current: $${data.current_price?.toFixed(2) || '-'}</div>
                 </div>
             </div>
         `;
@@ -486,6 +531,7 @@
         }
 
         const forecastDays = document.getElementById('forecastDays').value;
+        const timePeriod = document.getElementById('timePeriod').value;
         
         // Show forecast results card
         document.getElementById('forecastResultsCard').style.display = 'block';
@@ -494,37 +540,46 @@
                 <div class="spinner-border text-primary" role="status">
                     <span class="visually-hidden">Generating forecast...</span>
                 </div>
-                <p class="mt-2">Generating ${forecastDays}-day forecast for ${getCommodityName(selectedCommodity)}...</p>
+                <p class="mt-2">Generating ${forecastDays}-day forecast for ${getCommodityName(selectedCommodity)} (using ${getTimePeriodLabel(timePeriod)} historical data)...</p>
             </div>
         `;
 
-        // Generate forecast
-        fetch('/api/forecast-commodity', {
-            method: 'POST',
+        // Generate forecast with time period parameter
+        fetch(`/api/commodity-forecast/${selectedCommodity}?days=${forecastDays}&period=${timePeriod}`, {
+            method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                commodity: selectedCommodity,
-                days: parseInt(forecastDays)
-            })
+            }
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                displayForecastResults(data.forecast, selectedCommodity, forecastDays);
+                // Create forecast data structure for display
+                const forecastData = {
+                    dates: data.forecast_dates,
+                    values: data.ensemble_forecast.length > 0 ? data.ensemble_forecast : 
+                            (data.prophet_forecast.length > 0 ? data.prophet_forecast : data.arima_forecast)
+                };
+                
+                displayForecastResults(data, selectedCommodity, forecastDays);
                 
                 // Redraw the main chart with both historical and new forecast data
-                if (historicalChartData && data.forecast_data) {
-                    displayHistoricalChart(historicalChartData, selectedCommodity, data.forecast_data);
+                if (historicalChartData && forecastData.dates.length > 0) {
+                    displayHistoricalChart(historicalChartData, selectedCommodity, forecastData);
                 }
                 
-                if (data.model_forecasts) {
-                    displayModelComparisonChart(data.model_forecasts);
+                // Show model comparison
+                const modelForecasts = {};
+                if (data.arima_forecast.length > 0) modelForecasts['ARIMA'] = data.arima_forecast;
+                if (data.prophet_forecast.length > 0) modelForecasts['Prophet'] = data.prophet_forecast;
+                if (data.ensemble_forecast.length > 0) modelForecasts['Ensemble'] = data.ensemble_forecast;
+                
+                if (Object.keys(modelForecasts).length > 0) {
+                    displayModelComparisonChart(modelForecasts);
                 }
                 
-                if (data.forecast_data) {
-                    displayForecastTable(data.forecast_data);
+                if (forecastData.dates.length > 0) {
+                    displayForecastTable(forecastData);
                 }
             } else {
                 showError('Forecast generation failed: ' + (data.error || 'Unknown error'));
@@ -536,8 +591,21 @@
         });
     }
 
-    function displayForecastResults(forecast, commodity, days) {
+    function displayForecastResults(data, commodity, days) {
         const container = document.getElementById('forecastResults');
+        
+        // Get the best forecast (ensemble if available, otherwise prophet, then arima)
+        const bestForecast = data.ensemble_forecast.length > 0 ? data.ensemble_forecast : 
+                            (data.prophet_forecast.length > 0 ? data.prophet_forecast : data.arima_forecast);
+        
+        const finalPrice = bestForecast.length > 0 ? bestForecast[bestForecast.length - 1] : 0;
+        const modelsUsed = data.models_used.join(', ').toUpperCase();
+        const modelsCount = data.models_used.length;
+        
+        // Calculate trend
+        const firstPrice = bestForecast.length > 0 ? bestForecast[0] : 0;
+        const trend = finalPrice > firstPrice ? 'Upward' : finalPrice < firstPrice ? 'Downward' : 'Sideways';
+        const trendColor = finalPrice > firstPrice ? 'success' : finalPrice < firstPrice ? 'danger' : 'warning';
         
         container.innerHTML = `
             <div class="row">
@@ -547,41 +615,44 @@
                     <div class="row mb-3">
                         <div class="col-md-3">
                             <div class="text-center p-3 bg-light rounded">
-                                <div class="h5 text-primary mb-1">$${forecast.predicted_price?.toFixed(2) || '-'}</div>
-                                <small class="text-muted">Predicted Price</small>
+                                <div class="h5 text-primary mb-1">$${finalPrice.toFixed(2)}</div>
+                                <small class="text-muted">Final Price</small>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="text-center p-3 bg-light rounded">
-                                <div class="h5 text-success mb-1">${forecast.confidence?.toFixed(1) || '-'}%</div>
-                                <small class="text-muted">Confidence</small>
+                                <div class="h5 text-success mb-1">${modelsCount}</div>
+                                <small class="text-muted">Models Used</small>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="text-center p-3 bg-light rounded">
-                                <div class="h5 text-warning mb-1">${forecast.trend || '-'}</div>
+                                <div class="h5 text-${trendColor} mb-1">${trend}</div>
                                 <small class="text-muted">Trend</small>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="text-center p-3 bg-light rounded">
-                                <div class="h5 text-info mb-1">${forecast.models_used || '-'}</div>
-                                <small class="text-muted">Models Used</small>
+                                <div class="h5 text-info mb-1">${data.forecast_dates.length}</div>
+                                <small class="text-muted">Data Points</small>
                             </div>
                         </div>
                     </div>
                     
                     <div class="alert alert-light">
-                        <h6><i class="fas fa-lightbulb me-2"></i>Forecast Insights:</h6>
+                        <h6><i class="fas fa-lightbulb me-2"></i>Forecast Summary:</h6>
                         <ul class="mb-0">
-                            ${forecast.insights?.map(insight => `<li>${insight}</li>`).join('') || '<li>No specific insights available</li>'}
+                            <li><strong>Models:</strong> ${modelsUsed}</li>
+                            <li><strong>Forecast Period:</strong> ${data.forecast_dates[0]} to ${data.forecast_dates[data.forecast_dates.length - 1]}</li>
+                            <li><strong>Price Range:</strong> $${Math.min(...bestForecast).toFixed(2)} - $${Math.max(...bestForecast).toFixed(2)}</li>
+                            ${data.ensemble_forecast.length > 0 ? '<li><strong>Method:</strong> Ensemble averaging for improved accuracy</li>' : ''}
                         </ul>
                     </div>
                     
                     <div class="mt-3">
                         <small class="text-muted">
                             <strong>Forecast generated:</strong> ${new Date().toLocaleString()}<br>
-                            <strong>Models:</strong> ${forecast.model_details || 'Linear Regression, Moving Average, Exponential Smoothing'}
+                            <strong>Symbol:</strong> ${data.symbol}
                         </small>
                     </div>
                 </div>
@@ -902,6 +973,21 @@
         };
 
         Plotly.newPlot('volumeChart', [trace], layout, config);
+    }
+
+    // Helper functions
+    function getTimePeriodLabel(period) {
+        const labels = {
+            '1mo': '1 Month',
+            '3mo': '3 Months', 
+            '6mo': '6 Months',
+            '1y': '1 Year',
+            '2y': '2 Years',
+            '5y': '5 Years',
+            '10y': '10 Years',
+            'max': 'Maximum Available'
+        };
+        return labels[period] || period;
     }
 </script>
 {% endblock %} 

@@ -138,18 +138,13 @@ class DataCleaner:
         
         # Ensure date column is datetime and handle timezone issues
         try:
-            # Convert to datetime, making timezone-aware objects naive (in UTC)
-            if pd.api.types.is_datetime64_any_dtype(df[date_column]):
-                 if df[date_column].dt.tz is not None:
-                    df[date_column] = df[date_column].dt.tz_convert(None)
-            df[date_column] = pd.to_datetime(df[date_column], utc=False)
-
-        except Exception as e:
-            logger.error(f"Error converting date column: {e}")
-            # Fallback for mixed or problematic types
+            # Convert to datetime, coercing errors, and then remove timezone info
             df[date_column] = pd.to_datetime(df[date_column], errors='coerce', utc=True)
             df[date_column] = df[date_column].dt.tz_convert(None)
-
+        except Exception as e:
+            logger.error(f"Error converting date column: {e}")
+            # If there's still an issue, just return the dataframe
+            return df
         
         # Sort by date
         df = df.sort_values(date_column)
@@ -387,18 +382,62 @@ class DataCleaner:
         return df
     
     def clean_single_dataset(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Cleans a single dataframe."""
-        if 'date' not in df.columns:
-            # This is not a time series dataset, return as is
-            return df
-        
-        df = self.handle_missing_values(df)
-        df = self.detect_and_handle_outliers(df)
-        df = self.standardize_time_series(df)
-        return df
+        """
+        Run a standard cleaning pipeline on a single dataset.
 
+        Args:
+            df (pd.DataFrame): The input dataframe to be cleaned.
+
+        Returns:
+            pd.DataFrame: The cleaned dataframe.
+        """
+        if not isinstance(df, pd.DataFrame):
+            logger.warning(f"Input is not a pandas DataFrame, skipping. Type: {type(df)}")
+            return pd.DataFrame()
+
+        # --- 1. De-duplicate data ---
+        # Identify date and symbol columns for de-duplication
+        date_col = next((c for c in df.columns if 'date' in c.lower()), None)
+        symbol_col = next((c for c in df.columns if 'symbol' in c.lower() or 'ticker' in c.lower()), None)
+        
+        if date_col and symbol_col:
+            initial_rows = len(df)
+            df = df.sort_values(by=date_col, ascending=True)
+            df.drop_duplicates(subset=[date_col, symbol_col], keep='last', inplace=True)
+            removed_count = initial_rows - len(df)
+            if removed_count > 0:
+                logger.info(f"Removed {removed_count} duplicate rows based on date and symbol.")
+        
+        # --- 2. Standardize column names ---
+        df.columns = [col.lower().replace(' ', '_') for col in df.columns]
+        
+        # Rename common variations
+        rename_map = {'timestamp': 'date', 'ticker': 'symbol'}
+        df = df.rename(columns=rename_map)
+        
+        # --- 3. Handle missing values ---
+        df = self.handle_missing_values(df, strategy=self.cleaning_config.get("missing_value_strategy", "auto"))
+        
+        # --- 4. Standardize time series ---
+        if 'date' in df.columns:
+            df = self.standardize_time_series(df, date_column='date')
+        
+        # --- 5. Handle outliers ---
+        numeric_cols = df.select_dtypes(include=np.number).columns.tolist()
+        df = self.detect_and_handle_outliers(df, columns=numeric_cols)
+        
+        return df
+        
     def merge_datasets(self, datasets: list) -> pd.DataFrame:
-        """Merge multiple cleaned datasets."""
+        """
+        Merge multiple cleaned datasets.
+
+        Args:
+            datasets (list): List of cleaned datasets to merge.
+
+        Returns:
+            pd.DataFrame: Merged dataset.
+        """
         if not datasets:
             return pd.DataFrame()
         

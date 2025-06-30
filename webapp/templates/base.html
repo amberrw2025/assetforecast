@@ -15,31 +15,17 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
-        /* Global Font: Inter (as per general instructions) */
+        /* Global Black and White Theme */
         body {
             font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        :root {
-            --primary-color: #000000;
-            --secondary-color: #ffffff;
-            --accent-color: #000000;
-            --success-color: #000000; /* Re-evaluate if this should be a proper success color */
-            --warning-color: #000000; /* Re-evaluate if this should be a proper warning color */
-            --light-bg: #ffffff;
-            --dark-bg: #000000;
-        }
-        
-        body {
-            background-color: var(--light-bg);
+            background-color: #ffffff;
             color: #000000;
         }
-        
+
+        /* Navigation */
         .navbar {
-            background-color: var(--dark-bg);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-            border-bottom-left-radius: 0.5rem; /* Rounded corners for navbar */
-            border-bottom-right-radius: 0.5rem;
+            background-color: #000000 !important;
+            border: none;
         }
         
         .navbar-brand {
@@ -56,49 +42,183 @@
             color: #cccccc !important;
         }
         
+        /* Cards */
         .card {
             border: 2px solid #000000;
-            border-radius: 0.5rem; /* Rounded corners for cards */
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-            transition: transform 0.3s ease;
             background-color: #ffffff;
-        }
-        
-        .card:hover {
-            transform: translateY(-2px);
+            color: #000000;
         }
         
         .card-header {
-            background-color: var(--dark-bg);
-            color: white;
-            border-top-left-radius: 0.5rem !important; /* Rounded top corners for card header */
-            border-top-right-radius: 0.5rem !important;
-            font-weight: bold;
+            background-color: #000000 !important;
+            color: #ffffff !important;
             border-bottom: 2px solid #000000;
         }
         
-        .btn-primary, .btn-success, .btn-warning { /* Combined button styles for consistency */
-            background-color: #000000;
-            border: 2px solid #000000;
-            border-radius: 0.5rem; /* Rounded corners for buttons */
-            padding: 10px 25px;
-            font-weight: 500;
-            color: #ffffff;
-            transition: all 0.3s ease; /* Added transition for hover effect */
+        /* Buttons - All black and white */
+        .btn-primary, .btn-success, .btn-warning, .btn-info, .btn-danger {
+            background-color: #000000 !important;
+            border: 2px solid #000000 !important;
+            color: #ffffff !important;
         }
         
-        .btn-primary:hover, .btn-success:hover, .btn-warning:hover {
-            background-color: #ffffff;
+        .btn-primary:hover, .btn-success:hover, .btn-warning:hover, .btn-info:hover, .btn-danger:hover {
+            background-color: #ffffff !important;
+            color: #000000 !important;
+            border: 2px solid #000000 !important;
+        }
+        
+        .btn-outline-primary, .btn-outline-success, .btn-outline-warning, .btn-outline-info, .btn-outline-danger {
+            background-color: #ffffff !important;
+            border: 2px solid #000000 !important;
+            color: #000000 !important;
+        }
+        
+        .btn-outline-primary:hover, .btn-outline-success:hover, .btn-outline-warning:hover, .btn-outline-info:hover, .btn-outline-danger:hover {
+            background-color: #000000 !important;
+            color: #ffffff !important;
+            border: 2px solid #000000 !important;
+        }
+        
+        .btn-secondary {
+            background-color: #666666 !important;
+            border: 2px solid #666666 !important;
+            color: #ffffff !important;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #ffffff !important;
+            color: #666666 !important;
+            border: 2px solid #666666 !important;
+        }
+        
+        /* Forms */
+        .form-control, .form-select {
+            border: 2px solid #000000 !important;
+            background-color: #ffffff !important;
+            color: #000000 !important;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: #000000 !important;
+            box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.25) !important;
+            background-color: #ffffff !important;
+            color: #000000 !important;
+        }
+        
+        /* Alerts */
+        .alert {
+            border: 2px solid #000000 !important;
+        }
+        
+        .alert-info {
+            background-color: #f8f9fa !important;
+            color: #000000 !important;
+        }
+        
+        .alert-success {
+            background-color: #f8f9fa !important;
+            color: #000000 !important;
+        }
+        
+        .alert-warning {
+            background-color: #f8f9fa !important;
+            color: #000000 !important;
+        }
+        
+        .alert-danger {
+            background-color: #f8f9fa !important;
+            color: #000000 !important;
+        }
+        
+        /* Badges */
+        .badge {
+            background-color: #000000 !important;
+            color: #ffffff !important;
+        }
+        
+        .badge.bg-success, .badge.bg-primary, .badge.bg-warning, .badge.bg-danger, .badge.bg-info {
+            background-color: #000000 !important;
+            color: #ffffff !important;
+        }
+        
+        /* Tables */
+        .table {
             color: #000000;
-            border: 2px solid #000000;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
         }
         
+        .table thead th {
+            background-color: #000000 !important;
+            color: #ffffff !important;
+            border: 2px solid #000000;
+        }
+        
+        .table-dark {
+            background-color: #000000 !important;
+            color: #ffffff !important;
+        }
+        
+        .table-striped tbody tr:nth-of-type(odd) {
+            background-color: #f8f9fa;
+        }
+        
+        /* Text colors - override Bootstrap colors */
+        .text-primary, .text-success, .text-warning, .text-danger, .text-info {
+            color: #000000 !important;
+        }
+        
+        .text-muted {
+            color: #666666 !important;
+        }
+        
+        /* Background colors - override Bootstrap colors */
+        .bg-primary, .bg-success, .bg-warning, .bg-danger, .bg-info {
+            background-color: #000000 !important;
+            color: #ffffff !important;
+        }
+        
+        .bg-light {
+            background-color: #f8f9fa !important;
+            color: #000000 !important;
+        }
+        
+        .bg-dark {
+            background-color: #000000 !important;
+            color: #ffffff !important;
+        }
+        
+        /* Spinners */
+        .spinner-border {
+            border-color: #000000;
+            border-right-color: transparent;
+        }
+        
+        /* Footer */
+        .footer {
+            background-color: #000000 !important;
+            color: #ffffff !important;
+            padding: 20px 0;
+            margin-top: 50px;
+        }
+        
+        /* Borders */
+        .border-primary, .border-success, .border-warning, .border-danger, .border-info {
+            border-color: #000000 !important;
+        }
+        
+        /* Progress bars */
+        .progress {
+            background-color: #f8f9fa;
+        }
+        
+        .progress-bar {
+            background-color: #000000 !important;
+        }
+        
+        /* Stats cards */
         .stats-card {
             background-color: #000000;
-            color: white;
-            border-radius: 0.5rem; /* Rounded corners for stats card */
+            color: #ffffff;
             padding: 20px;
             margin-bottom: 20px;
             border: 2px solid #000000;
@@ -115,83 +235,12 @@
             opacity: 0.9;
         }
         
-        .upload-area {
-            border: 2px solid #000000;
-            border-radius: 0.5rem; /* Rounded corners for upload area */
-            padding: 40px;
-            text-align: center;
-            background-color: #ffffff;
-            transition: all 0.3s ease;
-        }
-        
-        .upload-area:hover {
-            background-color: #f8f9fa;
-        }
-        
-        .upload-area.dragover {
-            background-color: #e9ecef;
-        }
-        
-        .loading {
-            display: none;
-        }
-        
-        .loading.show {
-            display: block;
-        }
-        
-        .spinner-border-sm {
-            width: 1rem;
-            height: 1rem;
-        }
-        
-        .alert {
-            border-radius: 0.5rem; /* Rounded corners for alerts */
-            border: 2px solid #000000;
-        }
-        
-        .table {
-            border-radius: 0.5rem; /* Rounded corners for table container */
-            overflow: hidden; /* Ensures rounded corners apply to content */
-        }
-        
-        .table thead th {
-            background-color: var(--dark-bg);
-            color: white;
-            border: 2px solid #000000;
-        }
-        
-        .footer {
-            background: var(--dark-bg);
-            color: white;
-            padding: 20px 0;
-            margin-top: 50px;
-            border-top-left-radius: 0.5rem; /* Rounded corners for footer */
-            border-top-right-radius: 0.5rem;
-        }
-        
+        /* Chart containers - keep colorful */
         .chart-container {
             position: relative;
             height: 400px;
             margin: 20px 0;
-        }
-        
-        .model-card {
-            border-left: 4px solid #000000; /* Kept from Amber for model distinction */
-            border-radius: 0.5rem; /* Rounded corners for model cards */
-        }
-        
-        /* Specific model card colors (retained from Amber, using black as base) */
-        .model-card.arima {
-            border-left-color: #000000; /* Could be a different accent color */
-        }
-        
-        .model-card.prophet {
-            border-left-color: #000000; /* Could be a different accent color */
-        }
-        
-        .model-card.lstm { /* Keeping LSTM style even if model is not currently imported for display consistency */
-            border-left-color: #000000; /* Could be a different accent color */
+            /* Charts inside will retain their colors */
         }
     </style>
     
@@ -215,6 +264,9 @@
             </li>
             <li class="nav-item">
               <a class="nav-link" href="{{ url_for('stocks') }}">Stocks</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('commodities') }}">Commodities</a>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="{{ url_for('upload_page') }}">Upload Data</a>
@@ -350,3 +402,9 @@
             if (container) { // Ensure container exists
                 container.insertBefore(alertDiv, container.firstChild);
             }
+        }
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

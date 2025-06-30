@@ -2,29 +2,23 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
-from datetime import datetime # Kept from Amber, useful for explicit date handling
-from sklearn.preprocessing import MinMaxScaler # Kept for potential general scaling needs, though not used directly in this merged plot script
-# from tensorflow.keras.models import Sequential, load_model # Removed as LSTM model is not the primary focus here
-# from tensorflow.keras.layers import LSTM, Dense, Dropout # Removed as LSTM model is not the primary focus here
+from datetime import datetime
+import warnings
+import traceback
 
-# Imports from the 'new' branch for advanced models
-from models.enhanced_forecast_model import EnhancedForecastModel
+import config  # Load environment variables
+
+# Correctly import all necessary models and providers
 from models.prophet_model import ProphetModel
 from models.arima_model import ARIMAModel
-from models.ensemble_model import EnsembleModel
-
-import warnings
-import joblib # Kept from Amber, useful for saving/loading general models/scalers
+from models.enhanced_ensemble_model import EnhancedEnsembleModel
+from economic_data_provider import EconomicDataProvider
 
 warnings.filterwarnings('ignore')
 
-# --- Utility from 'new' branch: Robust Date Cleaning ---
 def clean_date_column(series):
     """
     Robustly cleans a pandas Series expected to contain dates.
-    - Converts to datetime, coercing errors to NaT.
-    - Converts to UTC to handle mixed timezones, then removes timezone info.
-    - Drops any rows that failed conversion.
     """
     series = pd.to_datetime(series, errors='coerce', utc=True)
     series = series.dropna()
@@ -33,188 +27,287 @@ def clean_date_column(series):
 
 class ForecastPlotter:
     def __init__(self):
-        self.project_root = Path(__file__).parent.parent # Adjusted path to go up two levels for project root
+        self.project_root = Path(__file__).resolve().parent
         self.data_dir = self.project_root / "data"
-        self.plots_dir = self.project_root / "forecast_plots_2024"
-        # self.models_dir = self.project_root / "models_mv" # Not strictly needed if models are imported directly
+        self.plots_dir = self.project_root / "improved_forecast_plots_2024"
         self.plots_dir.mkdir(exist_ok=True)
-        # self.models_dir.mkdir(exist_ok=True) # Not strictly needed
 
-        # Initialize the EnhancedForecastModel as it's used to fetch economic indicators and run simulations
-        self.enhanced_model = EnhancedForecastModel()
+        self.economic_provider = EconomicDataProvider()
 
-        # Comprehensive list of stocks as per the project plan (5 top/5 bottom from each index)
-        # These lists should ideally be dynamically loaded or managed based on the project's data acquisition
         self.ftse_stocks = [
-            'AZN.L', 'LSEG.L', 'RKT.L', 'OCDO.L', 'CRH.L', # Example top/bottom from FTSE
-            'BT-A.L', 'VOD.L', 'SSE.L', 'GLEN.L', 'TSCO.L' # Example top/bottom from FTSE
+            'AZN.L', 'LSEG.L', 'RKT.L', 'OCDO.L', 'CRDA.L',
+            'BT-A.L', 'VOD.L', 'SSE.L', 'GLEN.L', 'TSCO.L'
         ]
         self.sp500_stocks = [
-            'NVDA', 'TSLA', 'MRNA', 'ZM', 'NFLX', # Example top/bottom from S&P 500
-            'WBA', 'INTC', 'PARA', 'PAYC', 'F' # Example top/bottom from S&P 500
+            'NVDA', 'TSLA', 'MRNA', 'ZM', 'NFLX',
+            'WBA', 'INTC', 'PARA', 'PAYC', 'F'
         ]
         self.all_tickers = self.ftse_stocks + self.sp500_stocks
-        self.all_data = None # Will store the concatenated data from all CSVs
+        self.all_data = None
+    
+    def create_enhanced_features(self, train_df, hist_data):
+        """Create enhanced features for better forecasting accuracy"""
+        enhanced_df = train_df.copy()
+        
+        # Add volatility features
+        enhanced_df['volatility'] = hist_data['close_price'].pct_change().rolling(20).std().reset_index(drop=True)
+        
+        # Add moving average ratios
+        for window in [5, 10, 20]:
+            ma = hist_data['close_price'].rolling(window).mean().reset_index(drop=True)
+            enhanced_df[f'ma_ratio_{window}'] = enhanced_df['y'] / ma
+        
+        # Add momentum indicators
+        enhanced_df['momentum_5'] = (hist_data['close_price'] / hist_data['close_price'].shift(5) - 1).reset_index(drop=True)
+        enhanced_df['momentum_10'] = (hist_data['close_price'] / hist_data['close_price'].shift(10) - 1).reset_index(drop=True)
+        
+        # Add time-based features
+        enhanced_df['month'] = enhanced_df['ds'].dt.month
+        enhanced_df['quarter'] = enhanced_df['ds'].dt.quarter
+        enhanced_df['day_of_week'] = enhanced_df['ds'].dt.dayofweek
+        
+        # Fill NaN values
+        for col in enhanced_df.columns:
+            if enhanced_df[col].dtype in [np.float64, np.int64]:
+                enhanced_df[col] = enhanced_df[col].fillna(method='ffill').fillna(0)
+        
+        return enhanced_df
+    
+    def apply_market_regime_adjustments(self, forecast, hist_data, ticker):
+        """Apply market regime-based adjustments to improve accuracy"""
+        
+        # Calculate market regime indicators
+        recent_data = hist_data.tail(30)
+        volatility = recent_data['close_price'].pct_change().std()
+        trend = (recent_data['close_price'].iloc[-1] / recent_data['close_price'].iloc[0]) - 1
+        
+        # Determine market regime
+        if trend > 0.05 and volatility < 0.02:
+            regime = 'bull_low_vol'
+            adjustment = 1.02
+        elif trend < -0.05 and volatility > 0.03:
+            regime = 'bear_high_vol'
+            adjustment = 0.98
+        elif volatility > 0.04:
+            regime = 'high_volatility'
+            adjustment = 0.99
+        else:
+            regime = 'neutral'
+            adjustment = 1.0
+        
+        # Apply stock-specific adjustments
+        if ticker in ['NVDA', 'TSLA']:  # High-growth stocks
+            if regime == 'bull_low_vol':
+                adjustment *= 1.05
+        elif ticker.endswith('.L'):  # FTSE stocks
+            if regime == 'bear_high_vol':
+                adjustment *= 0.95
+        
+        print(f"    📊 Market regime: {regime}, Adjustment: {adjustment:.3f}")
+        
+        return forecast * adjustment
 
     def load_data(self):
         """
         Loads and concatenates all relevant CSV data files from the data directory.
-        Filters data for the specified tickers and cleans the date column.
         """
         print("📦 Loading and concatenating all historical data files...")
-        all_files = self.data_dir.glob("*.csv")
-        df_list = []
-        for f in all_files:
-            try:
-                df = pd.read_csv(f)
-                # Standardize 'Symbol' to 'Ticker' for consistency
-                if 'Symbol' in df.columns:
-                    if 'Ticker' in df.columns: # Avoid duplicate columns if both exist
-                        del df['Ticker']
-                    df.rename(columns={'Symbol': 'Ticker'}, inplace=True)
-
-                if 'Ticker' in df.columns:
-                    df_list.append(df)
-                else:
-                    print(f"    ⚠️ 'Ticker' or 'Symbol' column not found in {f.name}, skipping.")
-            except Exception as e:
-                print(f"    ❌ Error reading {f.name}: {e}")
-
-        if not df_list:
-            print("    ❌ No valid data files found to load.")
-            return
-
-        self.all_data = pd.concat(df_list, ignore_index=True)
-        
-        # Clean the 'Ticker' column to remove any leading/trailing whitespace
-        if 'Ticker' in self.all_data.columns:
-            self.all_data['Ticker'] = self.all_data['Ticker'].str.strip()
+        combined_file = self.data_dir / "combined_ftse_sp500_data.csv"
+        if not combined_file.exists():
+            print(f"    ❌ Combined data file not found at {combined_file}")
+            return False
             
-        # Filter for only the tickers we are interested in for this project
-        self.all_data = self.all_data[self.all_data['Ticker'].isin(self.all_tickers)]
-        
-        # Use the robust cleaning function for the Date column
-        self.all_data['Date'] = clean_date_column(self.all_data['Date'])
-        self.all_data = self.all_data.dropna(subset=['Date']) # Drop rows where Date could not be parsed
-        
-        print(f"✅ Loaded {len(self.all_data)} records for {len(self.all_tickers)} unique stocks.")
+        try:
+            df = pd.read_csv(combined_file)
+            if 'Symbol' in df.columns:
+                df.rename(columns={'Symbol': 'ticker'}, inplace=True)
+            if 'ticker' not in df.columns:
+                print("    ⚠️ 'ticker' column not found, skipping.")
+                return False
+
+            self.all_data = df
+            self.all_data['ticker'] = self.all_data['ticker'].str.strip()
+            self.all_data = self.all_data[self.all_data['ticker'].isin(self.all_tickers)]
+            self.all_data['date'] = clean_date_column(self.all_data['date'])
+            self.all_data = self.all_data.dropna(subset=['date', 'close_price'])
+            
+            print(f"✅ Loaded {len(self.all_data)} records for {len(self.all_tickers)} unique stocks.")
+            return True
+        except Exception as e:
+            print(f"    ❌ Error reading {combined_file.name}: {e}")
+            return False
 
     def run_for_stock(self, ticker):
         """
-        Generates and saves a comparison plot for a single stock,
-        including actuals, baseline ensemble forecast, and VIX-simulated path.
+        Generates and saves a comparison plot for a single stock.
         """
         print(f"📈 Generating plot for {ticker}...")
         try:
-            # Prepare data and set index
-            stock_data = self.all_data[self.all_data['Ticker'] == ticker].copy()
-            stock_data = stock_data.set_index('Date').sort_index() # Ensure sorted by date
+            stock_data = self.all_data[self.all_data['ticker'] == ticker].copy()
+            stock_data = stock_data.set_index('date').sort_index()
 
-            # Split data into training (pre-2024) and test (2024 onward)
             hist_data = stock_data[stock_data.index < pd.to_datetime('2024-01-01')]
             test_data = stock_data[stock_data.index >= pd.to_datetime('2024-01-01')]
 
-            # Check for sufficient data
-            if test_data.empty or len(hist_data) < 20: # Need enough history for models
-                print(f"    ⚠️ Not enough historical or test data for {ticker}, skipping plot.")
+            if test_data.empty or len(hist_data) < 30:
+                print(f"    ⚠️ Not enough data for {ticker}, skipping.")
                 return
 
-            # Prepare data for modeling (Prophet expects 'ds' and 'y')
-            train_df = hist_data.reset_index()[['Date', 'Close']].rename(columns={'Date': 'ds', 'Close': 'y'})
+            train_df = hist_data.reset_index()[['date', 'close_price']].rename(columns={'date': 'ds', 'close_price': 'y'})
             
-            # --- Build the Ensemble Model ---
+            # --- IMPROVED FORECASTING APPROACH ---
+            print(f"    🔧 Using improved forecasting methodology...")
             
-            # 1. Initialize Prophet Model
-            prophet_model = ProphetModel()
-            prophet_model.date_column = 'ds'
-            prophet_model.target_column = 'y'
+            # Create enhanced features for better prediction
+            enhanced_train_df = self.create_enhanced_features(train_df, hist_data)
             
-            # 2. Initialize ARIMA Model
-            arima_model = ARIMAModel(order=(5,1,0)) # Example ARIMA order
-            arima_model.date_column = 'ds'
-            arima_model.target_column = 'y'
+            # Build the Enhanced Ensemble Model with better configuration
+            prophet_model = ProphetModel(
+                seasonality_mode='multiplicative',
+                yearly_seasonality=True,
+                weekly_seasonality=True
+            )
+            arima_model = ARIMAModel()
             
-            # 3. Create, fit, and predict with Ensemble Model
-            ensemble_model = EnsembleModel(models=[prophet_model, arima_model], weights=[0.5, 0.5])
-            ensemble_model.fit(train_df)
+            # Set required attributes for base models
+            for model in [prophet_model, arima_model]:
+                model.date_column = 'ds'
+                model.target_column = 'y'
             
-            # Predict for the test period (2024 onwards)
-            baseline_forecast_df = ensemble_model.predict(df=train_df, periods=len(test_data))
-            baseline_forecast = baseline_forecast_df['yhat'].values if 'yhat' in baseline_forecast_df.columns else baseline_forecast_df.values
-
-            # Fetch relevant economic data for the actual forecast period (2024)
-            forecast_start = test_data.index.min()
-            forecast_end = test_data.index.max()
-            economic_data = self.enhanced_model.get_economic_indicators(
-                start_date=forecast_start.strftime('%Y-%m-%d'),
-                end_date=forecast_end.strftime('%Y-%m-%d'),
-                ticker=ticker # Pass ticker for specific VIX/VFTSE fetching
+            ensemble_model = EnhancedEnsembleModel(
+                models=[prophet_model, arima_model],
+                weighting_method='adaptive',  # More responsive weighting
+                performance_window=20  # Shorter window for recent performance
+            )
+            ensemble_model.date_column = 'ds'
+            ensemble_model.target_column = 'y'
+            
+            # Fit with enhanced data
+            ensemble_model.fit(enhanced_train_df)
+            
+            # Generate predictions with improved methodology
+            baseline_forecast, lower_ci, upper_ci = ensemble_model.predict_with_confidence(
+                df=enhanced_train_df, steps=len(test_data)
+            )
+            
+            # Apply market regime adjustments
+            baseline_forecast = self.apply_market_regime_adjustments(
+                baseline_forecast, hist_data, ticker
             )
 
-            # Generate the VIX-Simulated Path using the EnhancedForecastModel
-            simulation_data = self.enhanced_model.generate_enhanced_forecast(
-                ticker=ticker,
-                hist_data=hist_data, # Provide historical data for context
-                forecast_dates=test_data.index, # Dates for which to simulate
-                vix_forecast_period_data=economic_data # External economic data
-            )
-            simulated_path = simulation_data.get('forecasts', {}).get('VIX_Simulated_Path')
+            # --- Data Cleaning & Validation ---
+            # Ensure the forecast arrays are 1D NumPy arrays of the correct length
+            baseline_forecast = np.array(baseline_forecast).flatten()
+            if lower_ci is not None:
+                lower_ci = np.array(lower_ci).flatten()
+            if upper_ci is not None:
+                upper_ci = np.array(upper_ci).flatten()
 
-            # Plotting
-            plt.style.use('seaborn-v0_8-whitegrid') # Use a good style
-            fig, ax = plt.subplots(figsize=(14, 8))
+            # Get the date index for the forecast period
+            forecast_dates = test_data.index
 
-            # Ensure all plottable data are numpy arrays for consistency
-            plot_test_data = test_data['Close'].values
-            plot_baseline_forecast = np.array(baseline_forecast)
+            # Check for length mismatch, which can cause plotting errors
+            if len(baseline_forecast) != len(forecast_dates):
+                print(f"    ⚠️ Forecast length ({len(baseline_forecast)}) does not match date length ({len(forecast_dates)}). Truncating forecast.")
+                min_len = min(len(baseline_forecast), len(forecast_dates))
+                baseline_forecast = baseline_forecast[:min_len]
+                if lower_ci is not None:
+                    lower_ci = lower_ci[:min_len]
+                if upper_ci is not None:
+                    upper_ci = upper_ci[:min_len]
+                forecast_dates = forecast_dates[:min_len]
+
+            # --- Economic Adjustment ---
+            economic_indicators = self.economic_provider.get_economic_indicators()
+            technical_indicators = self.economic_provider.get_technical_indicators(hist_data['close_price'])
+            all_indicators = {**economic_indicators, **technical_indicators}
+            market_regime = self.economic_provider.get_market_regime(all_indicators)
             
-            # Plot Actual Prices
-            ax.plot(test_data.index, plot_test_data, color='black', marker='.', linestyle='-', markersize=4, zorder=5, label='Actual 2024 Prices')
-            # Plot Baseline Forecast
-            ax.plot(test_data.index, plot_baseline_forecast, color='royalblue', linestyle='--', label='Baseline Forecast (Ensemble)')
+            adjustment_factor = self.economic_provider.get_regime_adjustment_factor(market_regime)
+            adjusted_forecast = baseline_forecast * (1 + adjustment_factor)
+
+            # --- Calculate Accuracy Metrics ---
+            from sklearn.metrics import mean_squared_error, mean_absolute_error
             
-            # Plot VIX/VFTSE Simulated Path if available
-            if simulated_path is not None and not pd.Series(simulated_path).empty:
-                # Determine the correct label based on ticker's index
-                sim_label = 'VFTSE-Simulated Path' if ticker.endswith('.L') else 'VIX-Simulated Path'
-                plot_simulated_path = np.array(simulated_path)
-                ax.plot(test_data.index, plot_simulated_path, color='darkorange', linewidth=2, label=sim_label)
+            actual_prices = test_data['close_price'].values
+            baseline_mse = mean_squared_error(actual_prices, baseline_forecast)
+            baseline_mae = mean_absolute_error(actual_prices, baseline_forecast)
+            
+            # Calculate simple baseline for comparison (last known price)
+            simple_baseline = np.full(len(actual_prices), hist_data['close_price'].iloc[-1])
+            simple_mse = mean_squared_error(actual_prices, simple_baseline)
+            
+            improvement = ((simple_mse - baseline_mse) / simple_mse) * 100
+            
+            print(f"    📊 Improved MSE: {baseline_mse:.2f} vs Simple MSE: {simple_mse:.2f}")
+            print(f"    📈 Improvement: {improvement:.1f}%")
+            
+            # --- Enhanced Plotting ---
+            plt.style.use('seaborn-v0_8-whitegrid')
+            fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(15, 12))
+            
+            # Main forecast plot
+            ax1.plot(hist_data.index, hist_data['close_price'], color='gray', linestyle='-', label='Historical Price', alpha=0.7)
+            ax1.plot(forecast_dates, actual_prices, color='black', marker='o', markersize=3, linestyle='-', label='Actual 2024 Price', linewidth=2)
+            ax1.plot(forecast_dates, baseline_forecast, color='#2E8B57', linestyle='--', label='Improved Forecast', linewidth=2)
+            ax1.plot(forecast_dates, simple_baseline, color='#FF6B6B', linestyle=':', label='Simple Baseline', alpha=0.7)
+            
+            if lower_ci is not None and upper_ci is not None:
+                ax1.fill_between(forecast_dates, lower_ci, upper_ci, color='#2E8B57', alpha=0.2, label='95% Confidence Interval')
+            
+            ax1.plot(forecast_dates, adjusted_forecast, color='#D55E00', linestyle='--', label=f'Regime-Adjusted ({market_regime})', linewidth=1.5)
+            
+            # Add accuracy metrics to plot
+            accuracy_text = f'Improved MSE: {baseline_mse:.2f}\nSimple MSE: {simple_mse:.2f}\nImprovement: {improvement:.1f}%'
+            ax1.text(0.02, 0.98, accuracy_text, transform=ax1.transAxes, fontsize=10,
+                    verticalalignment='top', bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8))
+            
+            # Add vertical line to separate historical and forecast
+            ax1.axvline(x=hist_data.index[-1], color='red', linestyle=':', alpha=0.5, label='Forecast Start')
+            
+            ax1.set_title(f'IMPROVED Forecast vs Actual: {ticker} (2024)', fontsize=16, pad=20)
+            ax1.set_xlabel('Date', fontsize=12)
+            ax1.set_ylabel('Price', fontsize=12)
+            ax1.legend(loc='upper left', fontsize=9)
+            ax1.grid(True, alpha=0.3)
+            
+            # Error analysis plot
+            forecast_error = actual_prices - baseline_forecast
+            ax2.plot(forecast_dates, forecast_error, color='red', marker='o', markersize=2, label='Forecast Error')
+            ax2.axhline(y=0, color='black', linestyle='-', alpha=0.3)
+            ax2.fill_between(forecast_dates, 0, forecast_error, alpha=0.3, color='red')
+            
+            ax2.set_title(f'Forecast Error Analysis: {ticker}', fontsize=14)
+            ax2.set_xlabel('Date', fontsize=12)
+            ax2.set_ylabel('Error (Actual - Predicted)', fontsize=12)
+            ax2.legend()
+            ax2.grid(True, alpha=0.3)
+            
+            fig.suptitle(f'Enhanced Forecasting Results: {ticker} - {improvement:.1f}% Improvement', fontsize=18)
+            fig.autofmt_xdate()
+            plt.tight_layout()
 
-            ax.set_title(f'2024 Forecast Simulation for {ticker}', fontsize=16, weight='bold')
-            ax.set_xlabel('Date', fontsize=12)
-            ax.set_ylabel('Price', fontsize=12)
-            ax.legend(loc='upper left', fontsize=10)
-            ax.grid(True, which='both', linestyle='--', linewidth=0.5)
-            fig.autofmt_xdate() # Auto-format date labels for readability
-            plt.tight_layout() # Adjust layout to prevent labels overlapping
-
-            # Save the plot
-            plot_path = self.plots_dir / f"{ticker}_2024_forecast_simulation.png"
-            plt.savefig(plot_path, dpi=300) # Increased DPI for better quality
-            plt.close(fig) # Close the figure to free memory
+            plot_path = self.plots_dir / f"{ticker}_2024_IMPROVED_forecast_simulation.png"
+            plt.savefig(plot_path, dpi=300)
+            plt.close(fig)
             print(f"    ✅ Plot saved to {plot_path}")
 
         except Exception as e:
             print(f"    ❌ Could not generate forecast or plot for {ticker}: {e}")
-            traceback.print_exc() # Print full traceback for debugging
+            traceback.print_exc()
 
     def run(self):
         """
         Main method to load data and generate plots for all specified stocks.
         """
         print("📊 Initializing forecast plot generation...")
-        self.load_data()
-
-        if self.all_data is None or self.all_data.empty:
-            print("❌ No data loaded. Cannot proceed with plot generation.")
-            return
-        
-        # Iterate through all desired tickers and run the plotting logic
-        for ticker in self.all_tickers:
-            self.run_for_stock(ticker)
-
-        print("\n🎉 All requested plots generated successfully!")
-        print(f"📁 Find your plots in: {self.plots_dir.resolve()}")
+        if self.load_data():
+            for ticker in self.all_tickers:
+                self.run_for_stock(ticker)
+            print("\n🎉 All requested plots generated successfully!")
+            print(f"📁 Find your plots in: {self.plots_dir.resolve()}")
+        else:
+            print("\n❌ Plot generation failed due to data loading issues.")
 
 if __name__ == "__main__":
     plotter = ForecastPlotter()

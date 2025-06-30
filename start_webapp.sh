@@ -29,8 +29,8 @@ fi
 
 # Start the web application
 echo "✅ All checks passed. Starting web application..."
-echo "📱 The application will be available at: http://localhost:5001"
+echo "📱 The application will be available at: http://localhost:5003"
 echo "🛑 Press Ctrl+C to stop the server"
 echo "============================================================"
 
-python3 run_webapp.py 
+python3 run_webapp.py  

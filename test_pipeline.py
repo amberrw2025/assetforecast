@@ -33,15 +33,14 @@ def test_financial_data_collector():
     try:
         # Test company info
         info = collector.get_company_info(test_ticker)
+        assert info is not None and 'name' in info, "Company info should not be None"
         print(f"✓ Company info retrieved for {test_ticker}: {info['name']}")
         
         # Test financial metrics
         financial_data = collector.get_financial_metrics(test_ticker)
-        if not financial_data.empty:
-            print(f"✓ Financial data retrieved: {len(financial_data)} records")
-            print(f"  Columns: {list(financial_data.columns)}")
-        else:
-            print("⚠ No financial data retrieved")
+        assert not financial_data.empty, "Financial data should not be empty"
+        print(f"✓ Financial data retrieved: {len(financial_data)} records")
+        print(f"  Columns: {list(financial_data.columns)}")
         
         return True
         
@@ -58,17 +57,13 @@ def test_economic_data_collector():
     try:
         # Test FRED data (will use sample data if no API key)
         fred_data = collector.get_fred_data("FEDFUNDS", "Federal Funds Rate")
-        if not fred_data.empty:
-            print(f"✓ FRED data retrieved: {len(fred_data)} records")
-        else:
-            print("⚠ No FRED data retrieved")
+        assert not fred_data.empty, "FRED data should not be empty"
+        print(f"✓ FRED data retrieved: {len(fred_data)} records")
         
         # Test EIA data (will use sample data)
         eia_data = collector.get_eia_data("RBRTE", "Brent Crude Oil Price")
-        if not eia_data.empty:
-            print(f"✓ EIA data retrieved: {len(eia_data)} records")
-        else:
-            print("⚠ No EIA data retrieved")
+        assert not eia_data.empty, "EIA data should not be empty"
+        print(f"✓ EIA data retrieved: {len(eia_data)} records")
         
         return True
         
@@ -79,28 +74,43 @@ def test_economic_data_collector():
 def test_sentiment_data_collector():
     """Test the sentiment data collector with sample data."""
     print("\nTesting Sentiment Data Collector...")
-    
+
     collector = SentimentDataCollector()
-    
+    collector._initialize_twitter()
+    collector._initialize_reddit()
+
     try:
         # Test Twitter data (will use sample data if no API keys)
         keywords = ["inflation", "recession"]
-        twitter_data = collector.get_twitter_sentiment(keywords)
-        if not twitter_data.empty:
-            print(f"✓ Twitter data retrieved: {len(twitter_data)} records")
+        all_twitter_data = []
+        for keyword in keywords:
+            twitter_data = collector.get_tweets(keyword, limit=10)
+            if not twitter_data.empty:
+                all_twitter_data.append(twitter_data)
+
+        if all_twitter_data:
+            twitter_df = pd.concat(all_twitter_data)
+            print(f"✓ Twitter data retrieved: {len(twitter_df)} records")
         else:
             print("⚠ No Twitter data retrieved")
-        
+
         # Test Reddit data (will use sample data if no API keys)
         subreddits = ["investing", "stocks"]
-        reddit_data = collector.get_reddit_sentiment(subreddits, keywords)
-        if not reddit_data.empty:
-            print(f"✓ Reddit data retrieved: {len(reddit_data)} records")
+        all_reddit_data = []
+        for subreddit in subreddits:
+            for keyword in keywords:
+                reddit_data = collector.get_reddit_posts(subreddit, keyword, limit=10)
+                if not reddit_data.empty:
+                    all_reddit_data.append(reddit_data)
+        
+        if all_reddit_data:
+            reddit_df = pd.concat(all_reddit_data)
+            print(f"✓ Reddit data retrieved: {len(reddit_df)} records")
         else:
             print("⚠ No Reddit data retrieved")
-        
+
         return True
-        
+
     except Exception as e:
         print(f"✗ Error testing sentiment data collector: {str(e)}")
         return False

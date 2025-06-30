@@ -12,6 +12,7 @@ from tqdm import tqdm
 
 from config import COMPANIES, FINANCIAL_METRICS, DATA_SOURCES
 from utils.logger import get_logger
+from utils.decorators import retry
 
 logger = get_logger("financial_data")
 
@@ -24,6 +25,7 @@ class FinancialDataCollector:
         self.start_date = DATA_SOURCES["start_date"]
         self.end_date = DATA_SOURCES.get("end_date") or datetime.now().strftime("%Y-%m-%d")
         
+    @retry((ValueError, Exception), tries=3, delay=5, backoff=2)
     def get_company_info(self, ticker: str) -> Dict:
         """
         Fetch basic company information from yfinance.
@@ -38,6 +40,10 @@ class FinancialDataCollector:
             stock = yf.Ticker(ticker)
             info = stock.info
             
+            # Check for empty info dictionary
+            if not info or info.get('trailingPegRatio') is None: # trailingPegRatio is a canary for empty/bad data
+                raise ValueError(f"No data returned for {ticker}")
+
             return {
                 "ticker": ticker,
                 "name": info.get("longName", info.get("shortName", ticker)),
@@ -48,15 +54,10 @@ class FinancialDataCollector:
             }
         except Exception as e:
             logger.error(f"Error fetching info for {ticker}: {str(e)}")
-            return {
-                "ticker": ticker,
-                "name": ticker,
-                "sector": "Unknown",
-                "industry": "Unknown",
-                "market_cap": None,
-                "currency": "USD"
-            }
+            # Re-raise the exception to trigger the retry decorator
+            raise e
     
+    @retry((ValueError, Exception), tries=3, delay=5, backoff=2)
     def get_financial_metrics(self, ticker: str) -> pd.DataFrame:
         """
         Fetch financial metrics for a specific company.
@@ -72,6 +73,9 @@ class FinancialDataCollector:
             
             # Get historical data
             hist = stock.history(start=self.start_date, end=self.end_date)
+            if hist.empty:
+                raise ValueError(f"No historical data found for {ticker}")
+            logger.info(f"Historical data for {ticker}: {hist.head()}")
             
             # Get financial statements
             financials = stock.financials
@@ -80,6 +84,9 @@ class FinancialDataCollector:
             
             # Get company info for static metrics
             info = stock.info
+            if not info or info.get('trailingPegRatio') is None:
+                raise ValueError(f"No info data returned for {ticker}")
+            logger.info(f"Info for {ticker}: {info}")
             
             # Create metrics dictionary
             metrics = {
@@ -137,7 +144,8 @@ class FinancialDataCollector:
             
         except Exception as e:
             logger.error(f"Error fetching financial data for {ticker}: {str(e)}")
-            return pd.DataFrame()
+            # Re-raise exception to allow retry decorator to catch it
+            raise e
     
     def collect_all_companies_data(self) -> pd.DataFrame:
         """
@@ -172,10 +180,10 @@ class FinancialDataCollector:
                             all_data.append(financial_data)
                         
                         # Rate limiting to avoid API issues
-                        time.sleep(0.1)
+                        time.sleep(0.5)
                         
                     except Exception as e:
-                        logger.error(f"Error processing {ticker}: {str(e)}")
+                        logger.error(f"Error processing {ticker} after retries: {str(e)}")
                         continue
         
         if all_data:

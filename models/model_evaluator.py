@@ -56,7 +56,12 @@ class ModelEvaluator:
         model = self.models[model_name]
         
         try:
-            metrics = model.evaluate(df)
+            df_eval = df.copy()
+            if model_name in ["Prophet", "LSTM"] and model.target_column == 'y':
+                if 'date' in df_eval.columns and 'close_price' in df_eval.columns:
+                    df_eval = df_eval.rename(columns={'date': 'ds', 'close_price': 'y'})
+
+            metrics = model.evaluate(df_eval)
             self.results[model_name] = metrics
             logger.info(f"Evaluated {model_name}: {metrics}")
             return metrics
@@ -176,7 +181,7 @@ class ModelEvaluator:
         
         # Get true values
         true_values = df['close_price'].dropna()
-        dates = df['date'].dropna()
+        dates = pd.to_datetime(df['date'].dropna())
         
         plt.plot(dates, true_values, label='True Values', linewidth=2, color='black')
         

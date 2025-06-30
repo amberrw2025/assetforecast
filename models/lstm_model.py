@@ -258,24 +258,18 @@ class LSTMModel(BaseForecastModel):
         if not self.is_fitted:
             raise ValueError("Model must be fitted before prediction")
         
-        # Prepare data
         _, target_scaled = self.prepare_data(df)
-        
-        # Create sequences
         X, _ = self._create_sequences(target_scaled)
         X = X.reshape((X.shape[0], X.shape[1], 1))
         
-        # Make predictions
         predictions_scaled = self.model.predict(X, verbose=0)
-        
-        # Inverse transform
         predictions = self.scaler.inverse_transform(predictions_scaled)
         
-        # Pad with NaN for the first sequence_length values
-        full_predictions = np.full(len(target_scaled), np.nan)
-        full_predictions[self.sequence_length:] = predictions.flatten()
-        
-        return full_predictions
+        # Pad with NaNs to match original length
+        return np.concatenate([
+            np.full(self.sequence_length, np.nan),
+            predictions.flatten()
+        ])
     
     def plot_training_history(self, save_path: Optional[str] = None) -> None:
         """

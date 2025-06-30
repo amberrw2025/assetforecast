@@ -18,7 +18,7 @@ python3 -m pip install -r requirements.txt
 
 ```bash
 # Run quick test to verify everything works
-python3 quick_test.py
+python3 test_pipeline.py
 ```
 
 ### 3. Run the Pipeline
@@ -127,7 +127,7 @@ If you encounter issues:
 
 You know the setup is working when:
 
-- `python3 quick_test.py` shows "All tests passed"
+- `python3 test_pipeline.py` shows "All tests passed"
 - You can run `python3 run_pipeline.py` without errors
 - The `data/` directory is created with subdirectories
 - You see interactive HTML plots in `data/processed/`

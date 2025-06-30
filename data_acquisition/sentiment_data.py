@@ -11,280 +11,174 @@ import time
 from tqdm import tqdm
 
 from config import TWITTER_API_KEY, TWITTER_API_SECRET, TWITTER_ACCESS_TOKEN, TWITTER_ACCESS_TOKEN_SECRET
-from config import REDDIT_CLIENT_ID, REDDIT_CLIENT_SECRET, REDDIT_USER_AGENT
+from config import REDDIT_CLIENT_ID, REDDIT_CLIENT_SECRET, REDDIT_USER_AGENT, DATA_DIR
 from utils.logger import get_logger
 
 logger = get_logger("sentiment_data")
 
 class SentimentDataCollector:
     """
-    Collects sentiment data from social media platforms and news sources.
+    Collects sentiment data from Twitter and Reddit.
     """
-    
     def __init__(self):
-        self.start_date = "2023-01-01"
-        self.end_date = datetime.now().strftime("%Y-%m-%d")
+        # Twitter credentials
+        self.twitter_api_key = TWITTER_API_KEY
+        self.twitter_api_secret = TWITTER_API_SECRET
+        self.twitter_access_token = TWITTER_ACCESS_TOKEN
+        self.twitter_access_token_secret = TWITTER_ACCESS_TOKEN_SECRET
         
-    def get_twitter_sentiment(self, keywords: List[str], max_tweets: int = 1000) -> pd.DataFrame:
-        """
-        Fetch Twitter sentiment data for given keywords.
+        # Reddit credentials
+        self.reddit_client_id = REDDIT_CLIENT_ID
+        self.reddit_client_secret = REDDIT_CLIENT_SECRET
+        self.reddit_user_agent = REDDIT_USER_AGENT
         
-        Args:
-            keywords (List[str]): Keywords to search for
-            max_tweets (int): Maximum number of tweets to fetch per keyword
-            
-        Returns:
-            pd.DataFrame: Twitter sentiment data
-        """
+        self.twitter_client = None
+        self.reddit_client = None
+
+    def _initialize_twitter(self):
+        """Initialize Twitter client if credentials are provided."""
+        if not all([self.twitter_api_key, self.twitter_api_secret, 
+                    self.twitter_access_token, self.twitter_access_token_secret]):
+            logger.warning("Twitter API credentials not found. Skipping Twitter data.")
+            self.twitter_client = None
+            return
+
         try:
-            if not all([TWITTER_API_KEY, TWITTER_API_SECRET, TWITTER_ACCESS_TOKEN, TWITTER_ACCESS_TOKEN_SECRET]):
-                logger.warning("Twitter API credentials not provided. Using sample data.")
-                return self._generate_sample_twitter_data(keywords)
-            
             import tweepy
-            
-            # Authenticate with Twitter
-            auth = tweepy.OAuthHandler(TWITTER_API_KEY, TWITTER_API_SECRET)
-            auth.set_access_token(TWITTER_ACCESS_TOKEN, TWITTER_ACCESS_TOKEN_SECRET)
-            api = tweepy.API(auth, wait_on_rate_limit=True)
-            
-            all_tweets = []
-            
-            for keyword in tqdm(keywords, desc="Fetching Twitter data"):
-                try:
-                    # Search tweets
-                    tweets = tweepy.Cursor(
-                        api.search_tweets,
-                        q=keyword,
-                        lang="en",
-                        tweet_mode="extended",
-                        since_id=None
-                    ).items(max_tweets)
-                    
-                    keyword_tweets = []
-                    for tweet in tweets:
-                        tweet_data = {
-                            'date': tweet.created_at,
-                            'text': tweet.full_text,
-                            'user_followers': tweet.user.followers_count,
-                            'retweet_count': tweet.retweet_count,
-                            'favorite_count': tweet.favorite_count,
-                            'keyword': keyword,
-                            'source': 'Twitter'
-                        }
-                        keyword_tweets.append(tweet_data)
-                    
-                    all_tweets.extend(keyword_tweets)
-                    
-                    # Rate limiting
-                    time.sleep(1)
-                    
-                except Exception as e:
-                    logger.error(f"Error fetching Twitter data for {keyword}: {str(e)}")
-                    continue
-            
-            if all_tweets:
-                df = pd.DataFrame(all_tweets)
-                logger.info(f"Successfully fetched {len(df)} tweets")
-                return df
-            else:
-                return pd.DataFrame()
-                
+            self.twitter_client = tweepy.Client(
+                bearer_token=None,  # Adjust if you use a bearer token
+                consumer_key=self.twitter_api_key,
+                consumer_secret=self.twitter_api_secret,
+                access_token=self.twitter_access_token,
+                access_token_secret=self.twitter_access_token_secret
+            )
+            logger.info("Twitter client initialized successfully.")
         except ImportError:
-            logger.error("tweepy not installed. Please install with: pip install tweepy")
-            return self._generate_sample_twitter_data(keywords)
+            logger.error("tweepy is not installed. Please install it: pip install tweepy")
+            self.twitter_client = None
         except Exception as e:
-            logger.error(f"Error in Twitter data collection: {str(e)}")
-            return self._generate_sample_twitter_data(keywords)
-    
-    def _generate_sample_twitter_data(self, keywords: List[str]) -> pd.DataFrame:
-        """
-        Generate sample Twitter data for testing purposes.
-        
-        Args:
-            keywords (List[str]): Keywords to generate data for
+            logger.error(f"Error initializing Twitter client: {e}")
+            self.twitter_client = None
+
+    def _initialize_reddit(self):
+        """Initialize Reddit client if credentials are provided."""
+        if not all([self.reddit_client_id, self.reddit_client_secret, self.reddit_user_agent]):
+            logger.warning("Reddit API credentials not found. Skipping Reddit data.")
+            self.reddit_client = None
+            return
             
-        Returns:
-            pd.DataFrame: Sample Twitter data
-        """
-        start = pd.to_datetime(self.start_date)
-        end = pd.to_datetime(self.end_date)
-        dates = pd.date_range(start=start, end=end, freq='D')
-        
-        all_tweets = []
-        
-        for keyword in keywords:
-            # Generate 10-50 tweets per keyword
-            num_tweets = np.random.randint(10, 50)
-            
-            for _ in range(num_tweets):
-                # Random date
-                tweet_date = np.random.choice(dates)
-                
-                # Sample tweet texts
-                sample_texts = [
-                    f"Great news about {keyword}!",
-                    f"Concerned about {keyword} trends",
-                    f"{keyword} showing positive momentum",
-                    f"Market analysis on {keyword}",
-                    f"Interesting developments in {keyword}"
-                ]
-                
-                tweet_data = {
-                    'date': tweet_date,
-                    'text': np.random.choice(sample_texts),
-                    'user_followers': np.random.randint(100, 10000),
-                    'retweet_count': np.random.randint(0, 100),
-                    'favorite_count': np.random.randint(0, 500),
-                    'keyword': keyword,
-                    'source': 'Twitter (Sample)'
-                }
-                all_tweets.append(tweet_data)
-        
-        df = pd.DataFrame(all_tweets)
-        logger.info(f"Generated sample Twitter data for {len(keywords)} keywords")
-        return df
-    
-    def get_reddit_sentiment(self, subreddits: List[str], keywords: List[str], max_posts: int = 500) -> pd.DataFrame:
-        """
-        Fetch Reddit sentiment data for given subreddits and keywords.
-        
-        Args:
-            subreddits (List[str]): Subreddits to search in
-            keywords (List[str]): Keywords to search for
-            max_posts (int): Maximum number of posts to fetch per subreddit
-            
-        Returns:
-            pd.DataFrame: Reddit sentiment data
-        """
         try:
-            if not all([REDDIT_CLIENT_ID, REDDIT_CLIENT_SECRET, REDDIT_USER_AGENT]):
-                logger.warning("Reddit API credentials not provided. Using sample data.")
-                return self._generate_sample_reddit_data(subreddits, keywords)
-            
             import praw
+            self.reddit_client = praw.Reddit(
+                client_id=self.reddit_client_id,
+                client_secret=self.reddit_client_secret,
+                user_agent=self.reddit_user_agent
+            )
+            logger.info("Reddit client initialized successfully.")
+        except ImportError:
+            logger.error("praw is not installed. Please install it: pip install praw")
+            self.reddit_client = None
+        except Exception as e:
+            logger.error(f"Error initializing Reddit client: {e}")
+            self.reddit_client = None
             
-            # Initialize Reddit client
-            reddit = praw.Reddit(
-                client_id=REDDIT_CLIENT_ID,
-                client_secret=REDDIT_CLIENT_SECRET,
-                user_agent=REDDIT_USER_AGENT
+    def get_tweets(self, keyword: str, limit: int = 100) -> pd.DataFrame:
+        """
+        Fetch tweets for a given keyword.
+        
+        Args:
+            keyword (str): Keyword or hashtag to search for
+            limit (int): Number of tweets to fetch
+            
+        Returns:
+            pd.DataFrame: DataFrame of tweets
+        """
+        if not self.twitter_client:
+            logger.info(f"Skipping Twitter data for '{keyword}' due to missing client.")
+            return pd.DataFrame()
+
+        try:
+            tweets = self.twitter_client.search_recent_tweets(
+                query=keyword,
+                max_results=limit,
+                tweet_fields=["created_at", "text", "public_metrics"]
             )
             
-            all_posts = []
-            
-            for subreddit_name in tqdm(subreddits, desc="Fetching Reddit data"):
-                try:
-                    subreddit = reddit.subreddit(subreddit_name)
-                    
-                    # Search for posts containing keywords
-                    for keyword in keywords:
-                        search_query = f"{keyword}"
-                        posts = subreddit.search(search_query, limit=max_posts//len(keywords))
-                        
-                        for post in posts:
-                            post_data = {
-                                'date': datetime.fromtimestamp(post.created_utc),
-                                'title': post.title,
-                                'text': post.selftext,
-                                'score': post.score,
-                                'upvote_ratio': post.upvote_ratio,
-                                'num_comments': post.num_comments,
-                                'subreddit': subreddit_name,
-                                'keyword': keyword,
-                                'source': 'Reddit'
-                            }
-                            all_posts.append(post_data)
-                    
-                    # Rate limiting
-                    time.sleep(1)
-                    
-                except Exception as e:
-                    logger.error(f"Error fetching Reddit data for r/{subreddit_name}: {str(e)}")
-                    continue
-            
-            if all_posts:
-                df = pd.DataFrame(all_posts)
-                logger.info(f"Successfully fetched {len(df)} Reddit posts")
-                return df
-            else:
+            if not tweets.data:
                 return pd.DataFrame()
-                
-        except ImportError:
-            logger.error("praw not installed. Please install with: pip install praw")
-            return self._generate_sample_reddit_data(subreddits, keywords)
+            
+            tweet_data = [{
+                'date': tweet.created_at,
+                'text': tweet.text,
+                'source': 'Twitter',
+                'keyword': keyword,
+                'likes': tweet.public_metrics.get('like_count', 0),
+                'retweets': tweet.public_metrics.get('retweet_count', 0)
+            } for tweet in tweets.data]
+            
+            return pd.DataFrame(tweet_data)
+            
         except Exception as e:
-            logger.error(f"Error in Reddit data collection: {str(e)}")
-            return self._generate_sample_reddit_data(subreddits, keywords)
-    
-    def _generate_sample_reddit_data(self, subreddits: List[str], keywords: List[str]) -> pd.DataFrame:
+            logger.error(f"Error fetching tweets for '{keyword}': {e}")
+            return pd.DataFrame()
+
+    def get_reddit_posts(self, subreddit: str, keyword: str, limit: int = 100) -> pd.DataFrame:
         """
-        Generate sample Reddit data for testing purposes.
+        Fetch Reddit posts from a subreddit.
         
         Args:
-            subreddits (List[str]): Subreddits to generate data for
-            keywords (List[str]): Keywords to generate data for
+            subreddit (str): Subreddit to search in
+            keyword (str): Keyword to search for
+            limit (int): Number of posts to fetch
             
         Returns:
-            pd.DataFrame: Sample Reddit data
+            pd.DataFrame: DataFrame of Reddit posts
         """
-        start = pd.to_datetime(self.start_date)
-        end = pd.to_datetime(self.end_date)
-        dates = pd.date_range(start=start, end=end, freq='D')
+        if not self.reddit_client:
+            logger.info(f"Skipping Reddit data for '{keyword}' in r/{subreddit} due to missing client.")
+            return pd.DataFrame()
+            
+        try:
+            sub = self.reddit_client.subreddit(subreddit)
+            posts = sub.search(keyword, limit=limit)
+            
+            post_data = [{
+                'date': datetime.fromtimestamp(post.created_utc),
+                'text': f"{post.title} {post.selftext}",
+                'source': 'Reddit',
+                'keyword': keyword,
+                'score': post.score,
+                'comments': post.num_comments
+            } for post in posts]
+            
+            return pd.DataFrame(post_data)
+            
+        except Exception as e:
+            logger.error(f"Error fetching Reddit posts for '{keyword}': {e}")
+            return pd.DataFrame()
+
+    def _generate_sample_social_media_data(self, keyword: str, source: str, limit: int) -> pd.DataFrame:
+        """
+        Generate sample social media data for testing.
+        """
+        dates = [datetime.now() - timedelta(days=np.random.randint(0, 30)) for _ in range(limit)]
+        sentiments = ["positive", "negative", "neutral"]
         
-        all_posts = []
+        data = {
+            'date': dates,
+            'text': [f"Sample {np.random.choice(sentiments)} text about {keyword}" for _ in range(limit)],
+            'source': source,
+            'keyword': keyword
+        }
         
-        for subreddit in subreddits:
-            for keyword in keywords:
-                # Generate 5-20 posts per subreddit-keyword combination
-                num_posts = np.random.randint(5, 20)
-                
-                for _ in range(num_posts):
-                    # Random date
-                    post_date = np.random.choice(dates)
-                    
-                    # Sample post titles
-                    sample_titles = [
-                        f"Discussion: {keyword} trends",
-                        f"Analysis of {keyword} performance",
-                        f"Thoughts on {keyword}?",
-                        f"{keyword} - what's your take?",
-                        f"Market update: {keyword}"
-                    ]
-                    
-                    # Sample post texts
-                    sample_texts = [
-                        f"Looking at the recent {keyword} data...",
-                        f"What do you think about {keyword}?",
-                        f"Interesting developments in {keyword}.",
-                        f"Analysis of {keyword} market conditions.",
-                        f"Your thoughts on {keyword}?"
-                    ]
-                    
-                    post_data = {
-                        'date': post_date,
-                        'title': np.random.choice(sample_titles),
-                        'text': np.random.choice(sample_texts),
-                        'score': np.random.randint(-10, 100),
-                        'upvote_ratio': np.random.uniform(0.5, 1.0),
-                        'num_comments': np.random.randint(0, 50),
-                        'subreddit': subreddit,
-                        'keyword': keyword,
-                        'source': 'Reddit (Sample)'
-                    }
-                    all_posts.append(post_data)
-        
-        df = pd.DataFrame(all_posts)
-        logger.info(f"Generated sample Reddit data for {len(subreddits)} subreddits and {len(keywords)} keywords")
-        return df
-    
-    def calculate_sentiment_scores(self, df: pd.DataFrame, text_column: str = 'text') -> pd.DataFrame:
+        return pd.DataFrame(data)
+
+    def analyze_sentiment(self, df: pd.DataFrame) -> pd.DataFrame:
         """
         Calculate sentiment scores for text data.
         
         Args:
             df (pd.DataFrame): DataFrame containing text data
-            text_column (str): Name of the column containing text
             
         Returns:
             pd.DataFrame: DataFrame with sentiment scores added
@@ -300,7 +194,7 @@ class SentimentDataCollector:
                     return 0.0
             
             # Calculate sentiment scores
-            df['sentiment_score'] = df[text_column].apply(get_sentiment)
+            df['sentiment_score'] = df['text'].apply(get_sentiment)
             
             # Categorize sentiment
             df['sentiment_category'] = df['sentiment_score'].apply(
@@ -320,60 +214,83 @@ class SentimentDataCollector:
             df['sentiment_score'] = 0.0
             df['sentiment_category'] = 'neutral'
             return df
-    
+
     def collect_all_sentiment_data(self) -> Dict[str, pd.DataFrame]:
         """
-        Collect all sentiment data from various sources.
+        Collect sentiment data from all sources or use existing data.
         
         Returns:
-            Dict[str, pd.DataFrame]: Dictionary of sentiment data by source
+            Dict[str, pd.DataFrame]: Dictionary of sentiment dataframes
         """
         sentiment_data = {}
         
-        # Define keywords for sentiment analysis
-        keywords = ['inflation', 'recession', 'interest rates', 'oil prices', 'unemployment', 
-                   'stock market', 'economy', 'GDP', 'employment']
+        # Check if we have existing sentiment data
+        sentiment_dir = DATA_DIR / "sentiment"
+        if sentiment_dir.exists():
+            for file_path in sentiment_dir.glob("*.csv"):
+                try:
+                    df = pd.read_csv(file_path)
+                    if not df.empty:
+                        sentiment_data[file_path.stem] = df
+                        logger.info(f"Loaded existing sentiment data from {file_path.name}")
+                except Exception as e:
+                    logger.warning(f"Could not load {file_path.name}: {str(e)}")
         
-        # Collect Twitter sentiment data
-        logger.info("Collecting Twitter sentiment data...")
-        twitter_data = self.get_twitter_sentiment(keywords)
+        # If no existing data and API keys are available, try to collect new data
+        if not sentiment_data:
+            logger.info("No existing sentiment data found. Checking API credentials...")
+            
+            # Initialize clients
+            self._initialize_twitter()
+            self._initialize_reddit()
+            
+            all_data = []
+            
+            # Keywords to search for
+            keywords = ["FTSE", "S&P 500", "stock market", "economy", "inflation"]
+            
+            # Collect Twitter data if available
+            if self.twitter_client:
+                for keyword in tqdm(keywords, desc="Collecting Twitter data"):
+                    tweets = self.get_tweets(keyword, limit=50)
+                    if not tweets.empty:
+                        all_data.append(tweets)
+                    time.sleep(1)  # Rate limiting
+            
+            # Collect Reddit data if available
+            if self.reddit_client:
+                subreddits = ["investing", "stocks", "economy", "UKInvesting"]
+                for subreddit in tqdm(subreddits, desc="Collecting Reddit data"):
+                    for keyword in keywords[:2]:  # Limit keywords for Reddit
+                        posts = self.get_reddit_posts(subreddit, keyword, limit=25)
+                        if not posts.empty:
+                            all_data.append(posts)
+                        time.sleep(1)  # Rate limiting
+            
+            # Combine collected data
+            if all_data:
+                combined_data = pd.concat([df for df in all_data if not df.empty], ignore_index=True)
+                analyzed_data = self.analyze_sentiment(combined_data)
+                sentiment_data['social_media_sentiment'] = analyzed_data
+                logger.info(f"Collected {len(analyzed_data)} sentiment records")
+            else:
+                logger.info("No API credentials available for sentiment data collection. Skipping sentiment analysis.")
         
-        if not twitter_data.empty:
-            twitter_data = self.calculate_sentiment_scores(twitter_data, 'text')
-            sentiment_data['twitter'] = twitter_data
-        
-        # Collect Reddit sentiment data
-        logger.info("Collecting Reddit sentiment data...")
-        subreddits = ['investing', 'stocks', 'economics', 'finance', 'wallstreetbets']
-        reddit_data = self.get_reddit_sentiment(subreddits, keywords)
-        
-        if not reddit_data.empty:
-            reddit_data = self.calculate_sentiment_scores(reddit_data, 'text')
-            sentiment_data['reddit'] = reddit_data
-        
-        logger.info(f"Sentiment data collection completed. Sources: {list(sentiment_data.keys())}")
         return sentiment_data
-    
-    def save_sentiment_data(self, sentiment_data: Dict[str, pd.DataFrame]):
+
+    def save_sentiment_data(self, sentiment_data: pd.DataFrame):
         """
         Save sentiment data to CSV files.
         
         Args:
-            sentiment_data (Dict[str, pd.DataFrame]): Sentiment data by source
+            sentiment_data (pd.DataFrame): Sentiment data
         """
         from config import RAW_DATA_DIR
         
-        saved_files = []
-        
-        for source, data in sentiment_data.items():
-            if not data.empty:
-                filename = f"sentiment_{source}.csv"
-                filepath = RAW_DATA_DIR / filename
-                data.to_csv(filepath, index=False)
-                saved_files.append(filepath)
-                logger.info(f"Sentiment data saved to {filepath}")
-        
-        return saved_files
+        filename = "sentiment_data.csv"
+        filepath = RAW_DATA_DIR / filename
+        sentiment_data.to_csv(filepath, index=False)
+        logger.info(f"Sentiment data saved to {filepath}")
 
 def main():
     """
@@ -384,18 +301,17 @@ def main():
     # Collect all sentiment data
     sentiment_data = collector.collect_all_sentiment_data()
     
-    if sentiment_data:
+    if not sentiment_data.empty:
         # Save data
-        saved_files = collector.save_sentiment_data(sentiment_data)
-        logger.info(f"Sentiment data collection completed. Files saved: {saved_files}")
+        collector.save_sentiment_data(sentiment_data)
+        logger.info("Sentiment data collection completed.")
         
         # Print summary
         print(f"\nSentiment Data Collection Summary:")
-        for source, data in sentiment_data.items():
-            print(f"{source.upper()}: {len(data)} records")
-            if 'sentiment_score' in data.columns:
-                print(f"  Average sentiment: {data['sentiment_score'].mean():.3f}")
-                print(f"  Sentiment distribution: {data['sentiment_category'].value_counts().to_dict()}")
+        print(f"  Total records: {len(sentiment_data)}")
+        if 'sentiment_score' in sentiment_data.columns:
+            print(f"  Average sentiment: {sentiment_data['sentiment_score'].mean():.3f}")
+            print(f"  Sentiment distribution: {sentiment_data['sentiment_category'].value_counts().to_dict()}")
     else:
         logger.error("No sentiment data collected. Please check your configuration and API access.")
 

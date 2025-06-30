@@ -7,13 +7,28 @@ import numpy as np
 from typing import Dict, Any, Optional, List
 import yfinance as yf
 from datetime import datetime, timedelta
-from fredapi import Fred
 import os
 from dotenv import load_dotenv
 from pathlib import Path
 import logging
+import sys
+
+# Add economic data provider
+sys.path.append(str(Path(__file__).parent.parent))
+try:
+    from economic_data_provider import EconomicDataProvider
+    ECONOMIC_DATA_AVAILABLE = True
+except ImportError:
+    ECONOMIC_DATA_AVAILABLE = False
+    print("⚠️ Economic data provider not available")
 
 # Optional imports for enhanced functionality
+try:
+    from fredapi import Fred
+    FRED_AVAILABLE = True
+except ImportError:
+    FRED_AVAILABLE = False
+
 try:
     from textblob import TextBlob
     TEXTBLOB_AVAILABLE = True
@@ -38,6 +53,12 @@ class EnhancedForecastModel:
             'technical': 0.4,
             'fundamental': 0.1
         }
+        
+        # Initialize economic data provider
+        if ECONOMIC_DATA_AVAILABLE:
+            self.economic_provider = EconomicDataProvider()
+        else:
+            self.economic_provider = None
         
     def get_economic_indicators(self, start_date: str, end_date: str, ticker: str = "") -> pd.DataFrame:
         """

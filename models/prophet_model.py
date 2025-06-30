@@ -8,6 +8,7 @@ from typing import Dict, Any, Optional, Tuple
 from loguru import logger
 from prophet import Prophet
 from .base_model import BaseForecastModel
+import ruptures as rpt
 
 
 class ProphetModel(BaseForecastModel):
@@ -19,6 +20,7 @@ class ProphetModel(BaseForecastModel):
                  yearly_seasonality: bool = True,
                  weekly_seasonality: bool = True,
                  daily_seasonality: bool = False,
+                 n_changepoints: int = 25,
                  **kwargs):
         """
         Initialize Prophet model.
@@ -27,23 +29,29 @@ class ProphetModel(BaseForecastModel):
             yearly_seasonality (bool): Enable yearly seasonality
             weekly_seasonality (bool): Enable weekly seasonality
             daily_seasonality (bool): Enable daily seasonality
+            n_changepoints (int): Number of potential changepoints to include
             **kwargs: Additional Prophet parameters
         """
         super().__init__("Prophet", 
                         yearly_seasonality=yearly_seasonality,
                         weekly_seasonality=weekly_seasonality,
                         daily_seasonality=daily_seasonality,
+                        n_changepoints=n_changepoints,
                         **kwargs)
         
         self.yearly_seasonality = yearly_seasonality
         self.weekly_seasonality = weekly_seasonality
         self.daily_seasonality = daily_seasonality
+        self.n_changepoints = n_changepoints
         
-        # Initialize Prophet model
+        # Initialize Prophet model with improved settings
         self.model = Prophet(
             yearly_seasonality=yearly_seasonality,
             weekly_seasonality=weekly_seasonality,
             daily_seasonality=daily_seasonality,
+            n_changepoints=n_changepoints,
+            changepoint_prior_scale=0.05,  # More sensitive to trend changes
+            seasonality_prior_scale=10.0,  # More flexible seasonality
             **kwargs
         )
     
@@ -67,6 +75,9 @@ class ProphetModel(BaseForecastModel):
         # Create Prophet format (ds, y)
         prophet_df = df[[self.date_column, self.target_column]].copy()
         prophet_df.columns = ['ds', 'y']
+        
+        # Ensure 'ds' is datetime
+        prophet_df['ds'] = pd.to_datetime(prophet_df['ds'])
         
         # Remove NaN values
         prophet_df = prophet_df.dropna()
@@ -141,7 +152,7 @@ class ProphetModel(BaseForecastModel):
     
     def predict_in_sample(self, df: pd.DataFrame) -> np.ndarray:
         """
-        Make in-sample predictions.
+        Make in-sample predictions with Prophet model.
         
         Args:
             df (pd.DataFrame): Input data
@@ -151,17 +162,11 @@ class ProphetModel(BaseForecastModel):
         """
         if not self.is_fitted:
             raise ValueError("Model must be fitted before prediction")
+
+        future = self.model.make_future_dataframe(periods=0)
+        forecast = self.model.predict(future)
         
-        # Prepare data
-        _, prophet_df = self.prepare_data(df)
-        
-        # Make forecast for historical data
-        forecast = self.model.predict(prophet_df)
-        
-        # Get fitted values
-        predictions = forecast['yhat'].values
-        
-        return predictions
+        return forecast['yhat'].values
     
     def add_regressors(self, df: pd.DataFrame, regressor_columns: list) -> 'ProphetModel':
         """

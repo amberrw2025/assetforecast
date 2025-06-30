@@ -7,6 +7,7 @@ This script provides an easy way to execute the pipeline with different options.
 import sys
 import argparse
 from pathlib import Path
+import config  # Load environment variables
 
 # Add project root to path
 project_root = Path(__file__).parent
