@@ -131,6 +131,8 @@ def create_app():
         plots_dir = Path(os.path.dirname(__file__)).parent / 'forecast_plots_2024'
         improved_plots_dir = Path(os.path.dirname(__file__)).parent / 'improved_forecast_plots_2024'
         unified_plots_dir = Path(os.path.dirname(__file__)).parent / 'unified_mape_plots_2024'
+        # NEW: directory for unified ensemble plots
+        new_unified_dir = Path(os.path.dirname(__file__)).parent / 'forecast_plots_2024' / 'unified'
         
         # Smart filtering: Prioritize comprehensive plots, then fallback to others
         all_plots = []
@@ -197,7 +199,22 @@ def create_app():
                             'priority': 'fallback'
                         })
         
-        # Unified MAPE plots
+        # NEW PRIMARY: Unified ensemble plots (single methodology)
+        if new_unified_dir.exists():
+            for f in os.listdir(new_unified_dir):
+                if f.endswith('.png'):
+                    ticker = f.replace('_2024_unified_forecast.png', '')
+                    comprehensive_plots.add(ticker)
+                    all_plots.append({
+                        'filename': f,
+                        'ticker': ticker,
+                        'type': 'Unified Forecast',
+                        'source': 'forecast_plots_2024/unified',
+                        'market': '🇺🇸 S&P 500' if not ticker.endswith('.L') else '🇬🇧 FTSE 100',
+                        'priority': 'primary'
+                    })
+        
+        # Unified MAPE plots (legacy)
         if unified_plots_dir.exists():
             for f in os.listdir(unified_plots_dir):
                 if f.endswith('.png'):
@@ -229,6 +246,12 @@ def create_app():
         if allowed_tickers is not None and len(allowed_tickers) > 0:
             all_plots = [p for p in all_plots if p['ticker'] in allowed_tickers]
         
+        # ----------------------------------------------------------------------
+        #  ⚙️  FILTER: Show only Unified Forecast plots
+        # ----------------------------------------------------------------------
+
+        all_plots = [p for p in all_plots if p.get('type') == 'Unified Forecast']
+
         # Deduplicate by (ticker, type) keeping first occurrence (primary preferred)
         seen_keys = set()
         deduped_plots = []
@@ -345,6 +368,11 @@ def create_app():
         for directory in directories:
             if directory.exists() and (directory / filename).exists():
                 return send_from_directory(directory, filename)
+        
+        # Check new unified directory
+        new_unified_directory = Path(os.path.dirname(__file__)).parent / 'forecast_plots_2024' / 'unified'
+        if new_unified_directory.exists() and (new_unified_directory / filename).exists():
+            return send_from_directory(new_unified_directory, filename)
         
         return "Plot not found", 404
 

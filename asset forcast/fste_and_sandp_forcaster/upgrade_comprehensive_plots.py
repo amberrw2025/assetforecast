@@ -63,15 +63,34 @@ def generate_forecast(ticker):
         if not model_info:
             return None
         
-        # Simple prediction
-        df_feat = create_features(train)
-        last_feat = df_feat[model_info['features']].tail(1).values
-        last_scaled = model_info['scaler'].transform(last_feat)
-        
+        # --- Iterative prediction ---
+        forecast_days = len(actual)
+        if forecast_days == 0:
+            return None
+
         predictions = []
-        for i in range(min(100, len(actual))):
-            pred = model_info['model'].predict(last_scaled)[0]
-            predictions.append(pred)
+        cur_df = train.copy()
+
+        for step in range(forecast_days):
+            # Create/update features for current data
+            df_feat = create_features(cur_df)
+            # Use the most recent row's features for prediction
+            last_feat = df_feat[model_info['features']].tail(1).values
+            last_scaled = model_info['scaler'].transform(last_feat)
+
+            # Predict next day's closing price
+            pred_price = model_info['model'].predict(last_scaled)[0]
+            predictions.append(pred_price)
+
+            # Append predicted price as the next day's Close to cur_df
+            if step < forecast_days:
+                next_date = actual.index[step]
+            else:
+                # If actual index shorter than forecast horizon, increment last date by 1 day
+                next_date = cur_df.index[-1] + pd.Timedelta(days=1)
+
+            new_row = pd.DataFrame({'Close': [pred_price]}, index=[next_date])
+            cur_df = pd.concat([cur_df, new_row])
         
         return {'train': train, 'actual': actual, 'predictions': predictions}
     except:
@@ -98,14 +117,16 @@ def create_plot(ticker, data):
     ax.grid(True, alpha=0.3)
     plt.tight_layout()
     
-    # Save to both directories
-    Path('comprehensive_plots_2024/option1_standard').mkdir(parents=True, exist_ok=True)
-    Path('comprehensive_plots_2024/option2_mape_enhanced').mkdir(parents=True, exist_ok=True)
-    
-    plt.savefig(f'comprehensive_plots_2024/option1_standard/{ticker}_2024_vs_actual.png', 
-                dpi=300, bbox_inches='tight')
-    plt.savefig(f'comprehensive_plots_2024/option2_mape_enhanced/{ticker}_unified_mape_forecast_2024.png', 
-                dpi=300, bbox_inches='tight')
+    # Determine base directory relative to this script so web app can locate plots
+    base_dir = Path(__file__).resolve().parent / 'comprehensive_plots_2024'
+    option1_dir = base_dir / 'option1_standard'
+    option2_dir = base_dir / 'option2_mape_enhanced'
+
+    option1_dir.mkdir(parents=True, exist_ok=True)
+    option2_dir.mkdir(parents=True, exist_ok=True)
+
+    plt.savefig(option1_dir / f'{ticker}_2024_vs_actual.png', dpi=300, bbox_inches='tight')
+    plt.savefig(option2_dir / f'{ticker}_unified_mape_forecast_2024.png', dpi=300, bbox_inches='tight')
     plt.close()
 
 def main():
