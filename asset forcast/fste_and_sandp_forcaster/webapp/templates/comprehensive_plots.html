@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+
+{% block title %}Comprehensive Dual Plot Solution{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="fas fa-layer-group me-2"></i>
+            Comprehensive Dual Plot Solution
+        </h2>
+        <div>
+            <a href="{{ url_for('forecast_plots') }}" class="btn btn-outline-primary">
+                <i class="fas fa-chart-line me-2"></i>
+                View All Forecast Plots
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h4>{{ option1_plots|length }}</h4>
+                    <p class="mb-0">Option 1 (Standard)</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h4>{{ option2_plots|length }}</h4>
+                    <p class="mb-0">Option 2 (MAPE Enhanced)</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h4>{{ summary|length }}</h4>
+                    <p class="mb-0">Total Stocks</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <h4>{{ summary|selectattr('both_available')|list|length }}</h4>
+                    <p class="mb-0">Both Available</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stock Summary Table -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-table me-2"></i>
+                        Stock Coverage Summary
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Ticker</th>
+                                    <th>Market</th>
+                                    <th>Option 1 (Standard)</th>
+                                    <th>Option 2 (MAPE Enhanced)</th>
+                                    <th>Both Available</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for stock in summary %}
+                                <tr>
+                                    <td><strong>{{ stock.ticker }}</strong></td>
+                                    <td>{{ stock.market }}</td>
+                                    <td>
+                                        {% if stock.option1_available %}
+                                        <span class="badge bg-success">✅ Available</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">❌ Missing</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if stock.option2_available %}
+                                        <span class="badge bg-success">✅ Available</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">❌ Missing</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if stock.both_available %}
+                                        <span class="badge bg-primary">✅ Yes</span>
+                                        {% else %}
+                                        <span class="badge bg-warning">❌ No</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Option 1: Standard Plots -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h3>
+                <i class="fas fa-chart-line me-2"></i>
+                Option 1: Standard Comparison Plots
+            </h3>
+            <p class="text-muted">Baseline comparison across all stocks for fair cross-market analysis</p>
+        </div>
+    </div>
+
+    <div class="row">
+        {% for plot in option1_plots %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>{{ plot.ticker }}</strong>
+                        <br>
+                        <small class="text-muted">{{ plot.market }}</small>
+                    </div>
+                    <span class="badge bg-secondary">Standard</span>
+                </div>
+                <div class="card-body text-center p-2">
+                    <a href="{{ url_for('get_plot_image', filename=plot.filename) }}" target="_blank" class="text-decoration-none">
+                        <img src="{{ url_for('get_plot_image', filename=plot.filename) }}" 
+                             class="img-fluid rounded" 
+                             alt="Standard forecast for {{ plot.ticker }}"
+                             style="max-height: 200px; width: auto;">
+                    </a>
+                </div>
+                <div class="card-footer text-center">
+                    <small class="text-muted">
+                        <i class="fas fa-balance-scale me-1"></i>
+                        Baseline Comparison
+                    </small>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                No standard plots available yet.
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Option 2: MAPE Enhanced Plots -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h3>
+                <i class="fas fa-star me-2"></i>
+                Option 2: MAPE-Enhanced Plots
+            </h3>
+            <p class="text-muted">Optimized performance with MAPE metrics for best accuracy</p>
+        </div>
+    </div>
+
+    <div class="row">
+        {% for plot in option2_plots %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>{{ plot.ticker }}</strong>
+                        <br>
+                        <small class="text-muted">{{ plot.market }}</small>
+                    </div>
+                    <span class="badge bg-success">MAPE Enhanced</span>
+                </div>
+                <div class="card-body text-center p-2">
+                    <a href="{{ url_for('get_plot_image', filename=plot.filename) }}" target="_blank" class="text-decoration-none">
+                        <img src="{{ url_for('get_plot_image', filename=plot.filename) }}" 
+                             class="img-fluid rounded" 
+                             alt="MAPE enhanced forecast for {{ plot.ticker }}"
+                             style="max-height: 200px; width: auto;">
+                    </a>
+                </div>
+                <div class="card-footer text-center">
+                    <small class="text-muted">
+                        <i class="fas fa-bullseye me-1"></i>
+                        Optimized Performance
+                    </small>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                No MAPE enhanced plots available yet.
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Benefits Section -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card bg-light">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-lightbulb me-2"></i>
+                        Benefits of Dual Plot Solution
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-balance-scale me-2"></i>Option 1: Standard Comparison</h6>
+                            <ul>
+                                <li>Consistent methodology across all stocks</li>
+                                <li>Fair cross-market comparison</li>
+                                <li>Baseline performance measurement</li>
+                                <li>Reproducible results</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-star me-2"></i>Option 2: MAPE Enhanced</h6>
+                            <ul>
+                                <li>Optimized for accuracy</li>
+                                <li>Enhanced performance metrics</li>
+                                <li>Market-specific adjustments</li>
+                                <li>Best-in-class forecasting</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,993 @@
+{% extends "base.html" %}
+
+{% block title %}Commodity Price Forecasting - Asset Forecaster{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Page Header -->
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>
+                <i class="fas fa-coins me-2"></i>
+                Commodity Price Forecasting
+            </h2>
+            <div>
+                <button class="btn btn-primary" onclick="refreshCommodityData()">
+                    <i class="fas fa-sync-alt me-2"></i>
+                    Refresh Data
+                </button>
+                <button class="btn btn-success" onclick="exportCommodityData()">
+                    <i class="fas fa-download me-2"></i>
+                    Export
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Commodity Overview -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-warning">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-line me-2"></i>
+                    Commodity Market Overview
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h6><i class="fas fa-bullseye me-2 text-warning"></i>Commodity Forecasting System</h6>
+                        <p class="mb-3">
+                            This platform provides <strong>multi-model commodity price forecasting</strong> for major 
+                            commodities including precious metals, energy, and agricultural products. 
+                            Our advanced analytics help traders and investors make informed decisions.
+                        </p>
+                        
+                        <h6><i class="fas fa-cogs me-2 text-success"></i>Forecasting Models</h6>
+                        <ul class="mb-3">
+                            <li><strong>Linear Regression:</strong> Captures long-term price trends</li>
+                            <li><strong>Moving Averages:</strong> Short to medium-term trend analysis</li>
+                            <li><strong>Exponential Smoothing:</strong> Adapts to recent price movements</li>
+                            <li><strong>Seasonal Models:</strong> Accounts for commodity cycles</li>
+                            <li><strong>Volatility Analysis:</strong> Risk assessment and price bands</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="bg-light p-3 rounded">
+                            <h6><i class="fas fa-chart-bar me-2 text-info"></i>Market Coverage</h6>
+                            <div class="row text-center">
+                                <div class="col-6">
+                                    <div class="h4 text-warning mb-0">8</div>
+                                    <small class="text-muted">Commodities</small>
+                                </div>
+                                <div class="col-6">
+                                    <div class="h4 text-success mb-0">5</div>
+                                    <small class="text-muted">Models</small>
+                                </div>
+                                <div class="col-6 mt-2">
+                                    <div class="h4 text-danger mb-0">3</div>
+                                    <small class="text-muted">Categories</small>
+                                </div>
+                                <div class="col-6 mt-2">
+                                    <div class="h4 text-info mb-0">24/7</div>
+                                    <small class="text-muted">Monitoring</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Commodity Categories -->
+<div class="row mb-4">
+    <!-- Precious Metals -->
+    <div class="col-md-4">
+        <div class="card h-100 border-warning">
+            <div class="card-header bg-dark text-white">
+                <h6 class="mb-0"><i class="fas fa-gem me-2"></i>Precious Metals</h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <strong>GC=F</strong> - Gold Futures
+                        <small class="text-muted d-block">Safe haven asset</small>
+                    </li>
+                    <li class="mb-2">
+                        <strong>SI=F</strong> - Silver Futures
+                        <small class="text-muted d-block">Industrial & investment</small>
+                    </li>
+                    <li class="mb-2">
+                        <strong>PL=F</strong> - Platinum Futures
+                        <small class="text-muted d-block">Automotive catalyst</small>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Energy -->
+    <div class="col-md-4">
+        <div class="card h-100 border-danger">
+            <div class="card-header bg-dark text-white">
+                <h6 class="mb-0"><i class="fas fa-fire me-2"></i>Energy</h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <strong>CL=F</strong> - Crude Oil WTI
+                        <small class="text-muted d-block">West Texas Intermediate</small>
+                    </li>
+                    <li class="mb-2">
+                        <strong>BZ=F</strong> - Brent Crude Oil
+                        <small class="text-muted d-block">European benchmark</small>
+                    </li>
+                    <li class="mb-2">
+                        <strong>NG=F</strong> - Natural Gas
+                        <small class="text-muted d-block">Heating & power generation</small>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Agricultural -->
+    <div class="col-md-4">
+        <div class="card h-100 border-success">
+            <div class="card-header bg-dark text-white">
+                <h6 class="mb-0"><i class="fas fa-seedling me-2"></i>Agricultural</h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <strong>ZC=F</strong> - Corn Futures
+                        <small class="text-muted d-block">Staple grain crop</small>
+                    </li>
+                    <li class="mb-2">
+                        <strong>ZW=F</strong> - Wheat Futures
+                        <small class="text-muted d-block">Global food security</small>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Commodity Selection and Analysis -->
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-search me-2"></i>
+                    Select Commodity for Analysis
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="commoditySelect" class="form-label">Choose Commodity:</label>
+                        <select class="form-select" id="commoditySelect" onchange="loadCommodityData()">
+                            <option value="">Select a commodity...</option>
+                            <optgroup label="Precious Metals">
+                                <option value="GC=F">Gold Futures (GC=F)</option>
+                                <option value="SI=F">Silver Futures (SI=F)</option>
+                                <option value="PL=F">Platinum Futures (PL=F)</option>
+                            </optgroup>
+                            <optgroup label="Energy">
+                                <option value="CL=F">Crude Oil WTI (CL=F)</option>
+                                <option value="BZ=F">Brent Crude Oil (BZ=F)</option>
+                                <option value="NG=F">Natural Gas (NG=F)</option>
+                            </optgroup>
+                            <optgroup label="Agricultural">
+                                <option value="ZC=F">Corn Futures (ZC=F)</option>
+                                <option value="ZW=F">Wheat Futures (ZW=F)</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="timePeriod" class="form-label">Time Period:</label>
+                        <select class="form-select" id="timePeriod" onchange="loadCommodityData()">
+                            <option value="1mo">1 Month</option>
+                            <option value="3mo">3 Months</option>
+                            <option value="6mo">6 Months</option>
+                            <option value="1y">1 Year</option>
+                            <option value="2y" selected>2 Years</option>
+                            <option value="5y">5 Years</option>
+                            <option value="10y">10 Years</option>
+                            <option value="max">Max</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="forecastDays" class="form-label">Forecast Days:</label>
+                        <select class="form-select" id="forecastDays">
+                            <option value="7">7 days</option>
+                            <option value="14">14 days</option>
+                            <option value="30">30 days</option>
+                            <option value="60">60 days</option>
+                            <option value="90" selected>90 days</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">&nbsp;</label>
+                        <button class="btn btn-primary w-100" onclick="generateCommodityForecast()">
+                            <i class="fas fa-chart-line me-2"></i>
+                            Generate Forecast
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Commodity Data Display -->
+                <div id="commodityDataDisplay">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Select a commodity above to view historical data and generate forecasts.
+                    </div>
+                </div>
+                
+                <!-- Historical Price Chart -->
+                <div id="historicalChartContainer" style="display: none;">
+                    <h6 class="mt-4"><i class="fas fa-chart-line me-2"></i>Historical Price Chart</h6>
+                    <div id="historicalChart" style="height: 400px;"></div>
+                </div>
+                
+                <!-- Volume Chart -->
+                <div id="volumeChartContainer" style="display: none;">
+                    <h6 class="mt-4"><i class="fas fa-chart-bar me-2"></i>Trading Volume</h6>
+                    <div id="volumeChart" style="height: 250px;"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Forecast Results -->
+        <div class="card" id="forecastResultsCard" style="display: none;">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-crystal-ball me-2"></i>
+                    Forecast Results
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="forecastResults">
+                    <!-- Forecast results will be displayed here -->
+                </div>
+                
+                <!-- Forecast Table -->
+                <div id="forecastTableContainer" class="mt-4" style="display: none;">
+                    <!-- Forecast table will be injected here -->
+                </div>
+                
+                <!-- Model Comparison Chart -->
+                <div id="modelComparisonContainer" style="display: none;">
+                    <h6 class="mt-4"><i class="fas fa-layer-group me-2"></i>Model Comparison</h6>
+                    <div id="modelComparisonChart" style="height: 300px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Commodity Analytics Sidebar -->
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header bg-dark text-white">
+                <h6 class="mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>
+                    Market Analytics
+                </h6>
+            </div>
+            <div class="card-body">
+                <div id="marketAnalytics">
+                    <div class="text-center">
+                        <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">Select a commodity to view analytics</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Trends -->
+        <div class="card mb-4">
+            <div class="card-header bg-dark text-white">
+                <h6 class="mb-0">
+                    <i class="fas fa-trending-up me-2"></i>
+                    Recent Trends
+                </h6>
+            </div>
+            <div class="card-body">
+                <div id="recentTrends">
+                    <div class="small">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Gold</span>
+                            <span class="badge bg-success">+2.3%</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Silver</span>
+                            <span class="badge bg-success">+1.8%</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Oil WTI</span>
+                            <span class="badge bg-danger">-0.7%</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Natural Gas</span>
+                            <span class="badge bg-success">+3.2%</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>Corn</span>
+                            <span class="badge bg-danger">-1.1%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Risk Metrics -->
+        <div class="card">
+            <div class="card-header bg-dark text-white">
+                <h6 class="mb-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Risk Metrics
+                </h6>
+            </div>
+            <div class="card-body">
+                <div id="riskMetrics">
+                    <div class="text-center">
+                        <i class="fas fa-shield-alt fa-2x text-muted mb-2"></i>
+                        <p class="text-muted small">Risk analysis will appear here</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Commodity data and forecasting functions
+    let selectedCommodity = null;
+    let commodityData = null;
+    let historicalChartData = null; // Store historical data for combined chart
+
+    function loadCommodityData() {
+        const commoditySelect = document.getElementById('commoditySelect');
+        const timePeriodSelect = document.getElementById('timePeriod');
+        const commodity = commoditySelect.value;
+        const timePeriod = timePeriodSelect.value;
+        
+        if (!commodity) {
+            document.getElementById('commodityDataDisplay').innerHTML = `
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Select a commodity above to view historical data and generate forecasts.
+                </div>
+            `;
+            // Hide charts
+            document.getElementById('historicalChartContainer').style.display = 'none';
+            document.getElementById('volumeChartContainer').style.display = 'none';
+            document.getElementById('forecastResultsCard').style.display = 'none';
+            return;
+        }
+
+        selectedCommodity = commodity;
+        
+        // Show loading state
+        document.getElementById('commodityDataDisplay').innerHTML = `
+            <div class="text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Loading ${commodity} data (${getTimePeriodLabel(timePeriod)})...</p>
+            </div>
+        `;
+
+        // Hide previous charts while loading
+        document.getElementById('historicalChartContainer').style.display = 'none';
+        document.getElementById('volumeChartContainer').style.display = 'none';
+        document.getElementById('forecastResultsCard').style.display = 'none';
+
+        // Fetch commodity data with time period parameter
+        fetch(`/api/commodity/${commodity}?period=${timePeriod}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    commodityData = data;
+                    displayCommodityData(data, commodity);
+                    updateMarketAnalytics(data, commodity);
+                    
+                    // Display historical chart using the data we already have
+                    if (data.historical_data) {
+                        historicalChartData = data.historical_data;
+                        displayHistoricalChart(data.historical_data, commodity);
+                        displayVolumeChart(data.historical_data, commodity);
+                    }
+                } else {
+                    showError('Failed to load commodity data: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showError('Error loading commodity data: ' + error.message);
+            });
+    }
+
+    function displayCommodityData(data, commodity) {
+        const container = document.getElementById('commodityDataDisplay');
+        
+        // Calculate data points from historical data
+        const dataPoints = data.historical_data?.dates?.length || 0;
+        const dateRange = dataPoints > 0 ? {
+            start: data.historical_data.dates[0],
+            end: data.historical_data.dates[data.historical_data.dates.length - 1]
+        } : {start: '-', end: '-'};
+        
+        container.innerHTML = `
+            <div class="row">
+                <div class="col-md-12">
+                    <h6><i class="fas fa-chart-line me-2"></i>${getCommodityName(commodity)} Data Summary</h6>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="bg-light p-3 rounded text-center">
+                                <div class="h5 text-primary mb-1">$${data.current_price?.toFixed(2) || '-'}</div>
+                                <small class="text-muted">Current Price</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="bg-light p-3 rounded text-center">
+                                <div class="h5 text-success mb-1">${data.total_return?.toFixed(2) || '-'}%</div>
+                                <small class="text-muted">Total Return</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="bg-light p-3 rounded text-center">
+                                <div class="h5 text-warning mb-1">${data.volatility?.toFixed(2) || '-'}%</div>
+                                <small class="text-muted">Volatility</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="bg-light p-3 rounded text-center">
+                                <div class="h5 text-info mb-1">${dataPoints}</div>
+                                <small class="text-muted">Data Points</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <small class="text-muted">
+                            <strong>Data Range:</strong> ${dateRange.start} to ${dateRange.end}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function updateMarketAnalytics(data, commodity) {
+        const container = document.getElementById('marketAnalytics');
+        
+        // Calculate metrics from historical data if available
+        const prices = data.historical_data?.prices || [];
+        const highs = data.historical_data?.highs || [];
+        const lows = data.historical_data?.lows || [];
+        
+        const yearHigh = highs.length > 0 ? Math.max(...highs) : null;
+        const yearLow = lows.length > 0 ? Math.min(...lows) : null;
+        const avgPrice = prices.length > 0 ? prices.reduce((a, b) => a + b, 0) / prices.length : null;
+        
+        container.innerHTML = `
+            <div class="mb-3">
+                <h6 class="small text-muted">PRICE METRICS</h6>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="small">Period High:</span>
+                    <strong>$${yearHigh?.toFixed(2) || '-'}</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="small">Period Low:</span>
+                    <strong>$${yearLow?.toFixed(2) || '-'}</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="small">Average Price:</span>
+                    <strong>$${avgPrice?.toFixed(2) || '-'}</strong>
+                </div>
+            </div>
+            <div class="mb-3">
+                <h6 class="small text-muted">PERFORMANCE</h6>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="small">Total Return:</span>
+                    <strong>${data.total_return?.toFixed(2) || '-'}%</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="small">Volatility:</span>
+                    <strong>${data.volatility?.toFixed(2) || '-'}%</strong>
+                </div>
+            </div>
+        `;
+
+        // Update risk metrics
+        const riskContainer = document.getElementById('riskMetrics');
+        const volatility = data.volatility || 0;
+        const riskLevel = volatility > 2 ? 'High' : volatility > 1 ? 'Medium' : 'Low';
+        const riskColor = volatility > 2 ? 'danger' : volatility > 1 ? 'warning' : 'success';
+        
+        riskContainer.innerHTML = `
+            <div class="text-center">
+                <div class="badge bg-${riskColor} mb-2">${riskLevel} Risk</div>
+                <div class="small">
+                    <div class="mb-2">Volatility: ${volatility?.toFixed(1) || '-'}%</div>
+                    <div class="mb-2">Data Points: ${prices.length || '-'}</div>
+                    <div>Current: $${data.current_price?.toFixed(2) || '-'}</div>
+                </div>
+            </div>
+        `;
+    }
+
+    function generateCommodityForecast() {
+        if (!selectedCommodity) {
+            showError('Please select a commodity first');
+            return;
+        }
+
+        const forecastDays = document.getElementById('forecastDays').value;
+        const timePeriod = document.getElementById('timePeriod').value;
+        
+        // Show forecast results card
+        document.getElementById('forecastResultsCard').style.display = 'block';
+        document.getElementById('forecastResults').innerHTML = `
+            <div class="text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Generating forecast...</span>
+                </div>
+                <p class="mt-2">Generating ${forecastDays}-day forecast for ${getCommodityName(selectedCommodity)} (using ${getTimePeriodLabel(timePeriod)} historical data)...</p>
+            </div>
+        `;
+
+        // Generate forecast with time period parameter
+        fetch(`/api/commodity-forecast/${selectedCommodity}?days=${forecastDays}&period=${timePeriod}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Create forecast data structure for display
+                const forecastData = {
+                    dates: data.forecast_dates,
+                    values: data.ensemble_forecast.length > 0 ? data.ensemble_forecast : 
+                            (data.prophet_forecast.length > 0 ? data.prophet_forecast : data.arima_forecast)
+                };
+                
+                displayForecastResults(data, selectedCommodity, forecastDays);
+                
+                // Redraw the main chart with both historical and new forecast data
+                if (historicalChartData && forecastData.dates.length > 0) {
+                    displayHistoricalChart(historicalChartData, selectedCommodity, forecastData);
+                }
+                
+                // Show model comparison
+                const modelForecasts = {};
+                if (data.arima_forecast.length > 0) modelForecasts['ARIMA'] = data.arima_forecast;
+                if (data.prophet_forecast.length > 0) modelForecasts['Prophet'] = data.prophet_forecast;
+                if (data.ensemble_forecast.length > 0) modelForecasts['Ensemble'] = data.ensemble_forecast;
+                
+                if (Object.keys(modelForecasts).length > 0) {
+                    displayModelComparisonChart(modelForecasts);
+                }
+                
+                if (forecastData.dates.length > 0) {
+                    displayForecastTable(forecastData);
+                }
+            } else {
+                showError('Forecast generation failed: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showError('Error generating forecast: ' + error.message);
+        });
+    }
+
+    function displayForecastResults(data, commodity, days) {
+        const container = document.getElementById('forecastResults');
+        
+        // Get the best forecast (ensemble if available, otherwise prophet, then arima)
+        const bestForecast = data.ensemble_forecast.length > 0 ? data.ensemble_forecast : 
+                            (data.prophet_forecast.length > 0 ? data.prophet_forecast : data.arima_forecast);
+        
+        const finalPrice = bestForecast.length > 0 ? bestForecast[bestForecast.length - 1] : 0;
+        const modelsUsed = data.models_used.join(', ').toUpperCase();
+        const modelsCount = data.models_used.length;
+        
+        // Calculate trend
+        const firstPrice = bestForecast.length > 0 ? bestForecast[0] : 0;
+        const trend = finalPrice > firstPrice ? 'Upward' : finalPrice < firstPrice ? 'Downward' : 'Sideways';
+        const trendColor = finalPrice > firstPrice ? 'success' : finalPrice < firstPrice ? 'danger' : 'warning';
+        
+        container.innerHTML = `
+            <div class="row">
+                <div class="col-12">
+                    <h6><i class="fas fa-crystal-ball me-2"></i>${days}-Day Forecast for ${getCommodityName(commodity)}</h6>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <div class="text-center p-3 bg-light rounded">
+                                <div class="h5 text-primary mb-1">$${finalPrice.toFixed(2)}</div>
+                                <small class="text-muted">Final Price</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center p-3 bg-light rounded">
+                                <div class="h5 text-success mb-1">${modelsCount}</div>
+                                <small class="text-muted">Models Used</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center p-3 bg-light rounded">
+                                <div class="h5 text-${trendColor} mb-1">${trend}</div>
+                                <small class="text-muted">Trend</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center p-3 bg-light rounded">
+                                <div class="h5 text-info mb-1">${data.forecast_dates.length}</div>
+                                <small class="text-muted">Data Points</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-light">
+                        <h6><i class="fas fa-lightbulb me-2"></i>Forecast Summary:</h6>
+                        <ul class="mb-0">
+                            <li><strong>Models:</strong> ${modelsUsed}</li>
+                            <li><strong>Forecast Period:</strong> ${data.forecast_dates[0]} to ${data.forecast_dates[data.forecast_dates.length - 1]}</li>
+                            <li><strong>Price Range:</strong> $${Math.min(...bestForecast).toFixed(2)} - $${Math.max(...bestForecast).toFixed(2)}</li>
+                            ${data.ensemble_forecast.length > 0 ? '<li><strong>Method:</strong> Ensemble averaging for improved accuracy</li>' : ''}
+                        </ul>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <small class="text-muted">
+                            <strong>Forecast generated:</strong> ${new Date().toLocaleString()}<br>
+                            <strong>Symbol:</strong> ${data.symbol}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function getCommodityName(symbol) {
+        const names = {
+            'GC=F': 'Gold Futures',
+            'SI=F': 'Silver Futures', 
+            'PL=F': 'Platinum Futures',
+            'CL=F': 'Crude Oil WTI',
+            'BZ=F': 'Brent Crude Oil',
+            'NG=F': 'Natural Gas',
+            'ZC=F': 'Corn Futures',
+            'ZW=F': 'Wheat Futures'
+        };
+        return names[symbol] || symbol;
+    }
+
+    function showError(message) {
+        document.getElementById('commodityDataDisplay').innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                ${message}
+            </div>
+        `;
+        document.getElementById('forecastResultsCard').style.display = 'none';
+    }
+
+    function refreshCommodityData() {
+        if (selectedCommodity) {
+            loadCommodityData();
+        }
+        
+        // Show refresh feedback
+        const btn = event.target.closest('button');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Refreshing...';
+        btn.disabled = true;
+        
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }, 2000);
+    }
+
+    function exportCommodityData() {
+        if (!commodityData) {
+            alert('No data to export. Please select a commodity first.');
+            return;
+        }
+        
+        const exportData = {
+            commodity: selectedCommodity,
+            data: commodityData,
+            timestamp: new Date().toISOString()
+        };
+        
+        const dataStr = JSON.stringify(exportData, null, 2);
+        const dataBlob = new Blob([dataStr], {type: 'application/json'});
+        
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(dataBlob);
+        link.download = `commodity_${selectedCommodity.replace('=', '_')}_${new Date().toISOString().split('T')[0]}.json`;
+        link.click();
+    }
+
+    // Chart functions
+    function fetchAndDisplayHistoricalChart(commodity) {
+        fetch(`/api/commodity-historical/${commodity}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    historicalChartData = data.data; // Store data
+                    displayHistoricalChart(data.data, commodity); // Initial draw
+                    displayVolumeChart(data.data, commodity);
+                } else {
+                    console.error('Failed to load historical data:', data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching historical data:', error);
+            });
+    }
+
+    function displayHistoricalChart(historicalData, commodity, forecastData = null) {
+        const container = document.getElementById('historicalChartContainer');
+        container.style.display = 'block';
+
+        const traces = [];
+
+        // Historical trace
+        if (historicalData) {
+            const historicalTrace = {
+                x: historicalData.dates,
+                y: historicalData.prices,
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Historical',
+                line: {
+                    color: '#007bff',
+                    width: 2
+                },
+                hovertemplate: '<b>Historical</b><br>' +
+                              'Date: %{x}<br>' +
+                              'Price: $%{y:.2f}<br>' +
+                              '<extra></extra>'
+            };
+            traces.push(historicalTrace);
+        }
+
+        // Add forecast traces if available
+        if (forecastData) {
+            const forecastTrace = {
+                x: forecastData.dates,
+                y: forecastData.values,
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Forecast',
+                line: { color: 'rgb(255, 165, 0)' }
+            };
+
+            const upperBand = {
+                x: forecastData.dates,
+                y: forecastData.upper_band,
+                fill: 'tonexty',
+                fillcolor: 'rgba(0, 100, 80, 0.2)',
+                line: { color: 'transparent' },
+                name: '95% Confidence Interval',
+                showlegend: true,
+                hoverinfo: 'none'
+            };
+
+            const lowerBand = {
+                x: forecastData.dates,
+                y: forecastData.lower_band,
+                fill: 'none',
+                line: { color: 'transparent' },
+                name: 'Lower Bound',
+                showlegend: false,
+                hoverinfo: 'none'
+            };
+            
+            traces.push(lowerBand, upperBand, forecastTrace);
+        }
+
+        const layout = {
+            title: {
+                text: `${getCommodityName(commodity)} - Price History & Forecast`,
+                font: { size: 16 }
+            },
+            xaxis: {
+                title: 'Date',
+                type: 'date'
+            },
+            yaxis: {
+                title: 'Price ($)',
+                tickformat: '.2f'
+            },
+            margin: { t: 50, r: 30, b: 50, l: 60 },
+            hovermode: 'x unified',
+            legend: {
+                x: 0.02,
+                y: 0.98,
+                bgcolor: 'rgba(255, 255, 255, 0.8)'
+            },
+            showlegend: true
+        };
+
+        const config = {
+            responsive: true,
+            displayModeBar: true,
+            modeBarButtonsToRemove: ['pan2d', 'select2d', 'lasso2d', 'autoScale2d']
+        };
+
+        Plotly.newPlot('historicalChart', traces, layout, config);
+    }
+
+    function displayForecastTable(forecastData) {
+        const container = document.getElementById('forecastTableContainer');
+        container.style.display = 'block';
+
+        let tableHtml = `
+            <h6><i class="fas fa-table me-2"></i>90-Day Price Forecast</h6>
+            <div class="table-responsive" style="max-height: 300px; overflow-y: auto; border: 1px solid #dee2e6;">
+                <table class="table table-striped table-sm table-hover mb-0">
+                    <thead class="table-dark" style="position: sticky; top: 0;">
+                        <tr>
+                            <th>Date</th>
+                            <th>Predicted Price</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+
+        for (let i = 0; i < forecastData.dates.length; i++) {
+            tableHtml += `
+                <tr>
+                    <td>${forecastData.dates[i]}</td>
+                    <td>$${forecastData.values[i].toFixed(2)}</td>
+                </tr>
+            `;
+        }
+
+        tableHtml += `
+                    </tbody>
+                </table>
+            </div>
+        `;
+
+        container.innerHTML = tableHtml;
+    }
+
+    function displayModelComparisonChart(modelForecasts) {
+        const container = document.getElementById('modelComparisonContainer');
+        container.style.display = 'block';
+
+        const traces = [];
+        const colors = ['#007bff', '#28a745', '#ffc107', '#dc3545', '#6f42c1'];
+        let colorIndex = 0;
+
+        for (const [modelName, forecast] of Object.entries(modelForecasts)) {
+            if (Array.isArray(forecast) && forecast.length > 0) {
+                const dates = Array.from({length: forecast.length}, (_, i) => {
+                    const date = new Date();
+                    date.setDate(date.getDate() + i + 1);
+                    return date.toISOString().split('T')[0];
+                });
+
+                traces.push({
+                    x: dates,
+                    y: forecast,
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: modelName,
+                    line: {
+                        color: colors[colorIndex % colors.length],
+                        width: 2
+                    }
+                });
+                colorIndex++;
+            }
+        }
+
+        const layout = {
+            title: {
+                text: 'Model Comparison - Forecast Predictions',
+                font: { size: 16 }
+            },
+            xaxis: {
+                title: 'Forecast Date',
+                type: 'date'
+            },
+            yaxis: {
+                title: 'Predicted Price ($)',
+                tickformat: '.2f'
+            },
+            margin: { t: 50, r: 30, b: 50, l: 60 },
+            hovermode: 'x unified',
+            legend: {
+                x: 0.02,
+                y: 0.98,
+                bgcolor: 'rgba(255, 255, 255, 0.8)'
+            }
+        };
+
+        const config = {
+            responsive: true,
+            displayModeBar: true,
+            modeBarButtonsToRemove: ['pan2d', 'select2d', 'lasso2d', 'autoScale2d']
+        };
+
+        Plotly.newPlot('modelComparisonChart', traces, layout, config);
+    }
+
+    function displayVolumeChart(data, commodity) {
+        const container = document.getElementById('volumeChartContainer');
+        container.style.display = 'block';
+
+        const trace = {
+            x: data.dates,
+            y: data.volumes,
+            type: 'bar',
+            name: 'Volume',
+            marker: {
+                color: '#17a2b8',
+                opacity: 0.7
+            },
+            hovertemplate: '<b>Volume</b><br>' +
+                          'Date: %{x}<br>' +
+                          'Volume: %{y:,.0f}<br>' +
+                          '<extra></extra>'
+        };
+
+        const layout = {
+            title: {
+                text: `${getCommodityName(commodity)} - Trading Volume`,
+                font: { size: 16 }
+            },
+            xaxis: {
+                title: 'Date',
+                type: 'date'
+            },
+            yaxis: {
+                title: 'Volume',
+                tickformat: ',.0f'
+            },
+            margin: { t: 50, r: 30, b: 50, l: 60 },
+            showlegend: false
+        };
+
+        const config = {
+            responsive: true,
+            displayModeBar: true,
+            modeBarButtonsToRemove: ['pan2d', 'select2d', 'lasso2d', 'autoScale2d']
+        };
+
+        Plotly.newPlot('volumeChart', [trace], layout, config);
+    }
+
+    // Helper functions
+    function getTimePeriodLabel(period) {
+        const labels = {
+            '1mo': '1 Month',
+            '3mo': '3 Months', 
+            '6mo': '6 Months',
+            '1y': '1 Year',
+            '2y': '2 Years',
+            '5y': '5 Years',
+            '10y': '10 Years',
+            'max': 'Maximum Available'
+        };
+        return labels[period] || period;
+    }
+</script>
+{% endblock %} 

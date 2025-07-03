@@ -1,0 +1,521 @@
+{% extends "base.html" %}
+
+{% block title %}Asset Forecaster - Home{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center align-items-center min-vh-100">
+        <div class="col-md-10 col-lg-8">
+            <!-- Header Section -->
+            <div class="text-center mb-5">
+                <h1 class="display-3 fw-bold mb-3 text-dark">
+                    <i class="fas fa-chart-line me-3"></i>
+                    Asset Forecaster
+                </h1>
+                <p class="lead text-muted">
+                    Advanced AI-powered forecasting for stocks and commodities using ARIMA, Prophet, and Ensemble models
+                </p>
+            </div>
+            
+            <!-- Main Selection Card -->
+            <div class="card shadow-lg border-0 mb-4">
+                <div class="card-header bg-dark text-white text-center">
+                    <h4 class="mb-0">
+                        <i class="fas fa-search me-2"></i>
+                        Select Asset for Forecasting
+                    </h4>
+                </div>
+                <div class="card-body p-5">
+                    <form id="assetSelectionForm">
+                        <div class="row mb-4">
+                            <!-- Asset Type Selection -->
+                            <div class="col-md-6">
+                                <label for="assetType" class="form-label fw-bold">Asset Type:</label>
+                                <select class="form-select form-select-lg" id="assetType" onchange="updateAssetOptions()">
+                                    <option value="">Choose asset type...</option>
+                                    <option value="stocks">📈 Stocks (FTSE 100 & S&P 500)</option>
+                                    <option value="commodities">🥇 Commodities (Precious Metals, Energy, Agricultural)</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Asset Selection -->
+                            <div class="col-md-6">
+                                <label for="assetSelect" class="form-label fw-bold">Select Asset:</label>
+                                <select class="form-select form-select-lg" id="assetSelect" disabled>
+                                    <option value="">First select asset type...</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Forecast Parameters -->
+                        <div class="row mb-4">
+                            <div class="col-md-3">
+                                <label for="historyPeriod" class="form-label fw-bold">Historical Data:</label>
+                                <select class="form-select" id="historyPeriod">
+                                    <option value="1mo">1 Month</option>
+                                    <option value="3mo">3 Months</option>
+                                    <option value="6mo">6 Months</option>
+                                    <option value="1y">1 Year</option>
+                                    <option value="2y" selected>2 Years</option>
+                                    <option value="5y">5 Years</option>
+                                    <option value="max">Maximum</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <label for="forecastDays" class="form-label fw-bold">Forecast Period:</label>
+                                <select class="form-select" id="forecastDays">
+                                    <option value="7">7 days</option>
+                                    <option value="14">14 days</option>
+                                    <option value="30" selected>30 days</option>
+                                    <option value="60">60 days</option>
+                                    <option value="90">90 days</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <label for="modelType" class="form-label fw-bold">Model Type:</label>
+                                <select class="form-select" id="modelType">
+                                    <option value="advanced" selected>🧠 Advanced (ARIMA + Prophet + Ensemble)</option>
+                                    <option value="basic">📊 Basic (Linear Trend)</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-3 d-flex align-items-end">
+                                <button type="button" 
+                                        class="btn btn-dark btn-lg w-100" 
+                                        onclick="generateForecast()"
+                                        id="forecastBtn"
+                                        disabled>
+                                    <i class="fas fa-crystal-ball me-2"></i>
+                                    Generate Forecast
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Quick Actions -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <button type="button" 
+                                        class="btn btn-outline-primary w-100"
+                                        onclick="goToStocksPage()">
+                                    <i class="fas fa-chart-line me-2"></i>
+                                    Go to Stocks Page
+                                </button>
+                            </div>
+                            <div class="col-md-6">
+                                <button type="button" 
+                                        class="btn btn-outline-success w-100"
+                                        onclick="goToCommoditiesPage()">
+                                    <i class="fas fa-coins me-2"></i>
+                                    Go to Commodities Page
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+
+            
+            <!-- Forecast Results Section -->
+            <div id="resultsSection" class="card shadow-lg" style="display: none;">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-area me-2"></i>
+                        Forecast Results for <span id="selectedAssetName"></span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Loading State -->
+                    <div id="loadingState" class="text-center py-5">
+                        <div class="spinner-border text-dark" role="status" style="width: 3rem; height: 3rem;">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-3 h5">Generating forecast...</p>
+                    </div>
+                    
+                    <!-- Results Content -->
+                    <div id="resultsContent" style="display: none;">
+                        <!-- Summary Stats -->
+                        <div id="forecastSummary" class="row mb-4">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
+                        
+                        <!-- Chart -->
+                        <div id="chartContainer" style="height: 500px;" class="mb-4">
+                            <!-- Chart will be rendered here -->
+                        </div>
+                        
+                        <!-- Actions -->
+                        <div class="text-center">
+                            <button class="btn btn-primary me-2" onclick="viewDetailedAnalysis()">
+                                <i class="fas fa-chart-line me-2"></i>
+                                View Detailed Analysis
+                            </button>
+                            <button class="btn btn-success me-2" onclick="exportForecast()">
+                                <i class="fas fa-download me-2"></i>
+                                Export Data
+                            </button>
+                            <button class="btn btn-secondary" onclick="resetSelection()">
+                                <i class="fas fa-undo me-2"></i>
+                                New Forecast
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Home page black and white styling */
+    body {
+        background-color: #ffffff;
+        color: #000000;
+        min-height: 100vh;
+    }
+    
+    .display-3 {
+        color: #000000 !important;
+    }
+    
+    .text-muted {
+        color: #666666 !important;
+    }
+    
+    .bg-light {
+        background-color: #f8f9fa !important;
+        color: #000000 !important;
+    }
+    
+    /* Override any remaining color classes */
+    .text-primary, .text-success, .text-info, .text-warning, .text-danger {
+        color: #000000 !important;
+    }
+</style>
+
+<script>
+    // Asset data
+    const stocks = [
+        // FTSE 100
+        {value: 'AZN.L', text: 'AstraZeneca PLC (AZN.L)', market: 'FTSE 100'},
+        {value: 'SHEL.L', text: 'Shell plc (SHEL.L)', market: 'FTSE 100'},
+        {value: 'BP.L', text: 'BP p.l.c. (BP.L)', market: 'FTSE 100'},
+        {value: 'RR.L', text: 'Rolls-Royce Holdings (RR.L)', market: 'FTSE 100'},
+        {value: 'VOD.L', text: 'Vodafone Group (VOD.L)', market: 'FTSE 100'},
+        {value: 'AAL.L', text: 'Anglo American plc (AAL.L)', market: 'FTSE 100'},
+        {value: 'FRES.L', text: 'Fresnillo plc (FRES.L)', market: 'FTSE 100'},
+        {value: 'STJ.L', text: 'St. James\'s Place (STJ.L)', market: 'FTSE 100'},
+        {value: 'BATS.L', text: 'British American Tobacco (BATS.L)', market: 'FTSE 100'},
+        {value: 'ENT.L', text: 'Entain Plc (ENT.L)', market: 'FTSE 100'},
+        
+        // S&P 500
+        {value: 'AAPL', text: 'Apple Inc. (AAPL)', market: 'S&P 500'},
+        {value: 'MSFT', text: 'Microsoft Corporation (MSFT)', market: 'S&P 500'},
+        {value: 'GOOGL', text: 'Alphabet Inc. (GOOGL)', market: 'S&P 500'},
+        {value: 'AMZN', text: 'Amazon.com Inc. (AMZN)', market: 'S&P 500'},
+        {value: 'NVDA', text: 'NVIDIA Corporation (NVDA)', market: 'S&P 500'},
+        {value: 'XOM', text: 'Exxon Mobil Corporation (XOM)', market: 'S&P 500'},
+        {value: 'CVX', text: 'Chevron Corporation (CVX)', market: 'S&P 500'},
+        {value: 'KO', text: 'The Coca-Cola Company (KO)', market: 'S&P 500'},
+        {value: 'PEP', text: 'PepsiCo Inc. (PEP)', market: 'S&P 500'},
+        {value: 'WMT', text: 'Walmart Inc. (WMT)', market: 'S&P 500'}
+    ];
+    
+    const commodities = [
+        // Precious Metals
+        {value: 'GC=F', text: 'Gold Futures (GC=F)', category: 'Precious Metals'},
+        {value: 'SI=F', text: 'Silver Futures (SI=F)', category: 'Precious Metals'},
+        {value: 'PL=F', text: 'Platinum Futures (PL=F)', category: 'Precious Metals'},
+        
+        // Energy
+        {value: 'CL=F', text: 'Crude Oil WTI (CL=F)', category: 'Energy'},
+        {value: 'BZ=F', text: 'Brent Crude Oil (BZ=F)', category: 'Energy'},
+        {value: 'NG=F', text: 'Natural Gas (NG=F)', category: 'Energy'},
+        
+        // Agricultural
+        {value: 'ZC=F', text: 'Corn Futures (ZC=F)', category: 'Agricultural'},
+        {value: 'ZW=F', text: 'Wheat Futures (ZW=F)', category: 'Agricultural'}
+    ];
+    
+    function updateAssetOptions() {
+        const assetType = document.getElementById('assetType').value;
+        const assetSelect = document.getElementById('assetSelect');
+        const forecastBtn = document.getElementById('forecastBtn');
+        
+        // Clear current options
+        assetSelect.innerHTML = '';
+        
+        if (assetType === 'stocks') {
+            assetSelect.disabled = false;
+            assetSelect.innerHTML = '<option value="">Select a stock...</option>';
+            
+            // Group by market
+            const ftseStocks = stocks.filter(s => s.market === 'FTSE 100');
+            const spStocks = stocks.filter(s => s.market === 'S&P 500');
+            
+            // Add FTSE 100 group
+            const ftseGroup = document.createElement('optgroup');
+            ftseGroup.label = 'FTSE 100';
+            ftseStocks.forEach(stock => {
+                const option = document.createElement('option');
+                option.value = stock.value;
+                option.textContent = stock.text;
+                ftseGroup.appendChild(option);
+            });
+            assetSelect.appendChild(ftseGroup);
+            
+            // Add S&P 500 group
+            const spGroup = document.createElement('optgroup');
+            spGroup.label = 'S&P 500';
+            spStocks.forEach(stock => {
+                const option = document.createElement('option');
+                option.value = stock.value;
+                option.textContent = stock.text;
+                spGroup.appendChild(option);
+            });
+            assetSelect.appendChild(spGroup);
+            
+        } else if (assetType === 'commodities') {
+            assetSelect.disabled = false;
+            assetSelect.innerHTML = '<option value="">Select a commodity...</option>';
+            
+            // Group by category
+            const categories = [...new Set(commodities.map(c => c.category))];
+            
+            categories.forEach(category => {
+                const categoryGroup = document.createElement('optgroup');
+                categoryGroup.label = category;
+                
+                commodities.filter(c => c.category === category).forEach(commodity => {
+                    const option = document.createElement('option');
+                    option.value = commodity.value;
+                    option.textContent = commodity.text;
+                    categoryGroup.appendChild(option);
+                });
+                
+                assetSelect.appendChild(categoryGroup);
+            });
+        } else {
+            assetSelect.disabled = true;
+            assetSelect.innerHTML = '<option value="">First select asset type...</option>';
+        }
+        
+        // Update forecast button state
+        forecastBtn.disabled = !assetType;
+        
+        // Add event listener to asset select
+        assetSelect.onchange = function() {
+            forecastBtn.disabled = !this.value;
+        };
+    }
+    
+    function generateForecast() {
+        const assetType = document.getElementById('assetType').value;
+        const assetSelect = document.getElementById('assetSelect').value;
+        const forecastDays = document.getElementById('forecastDays').value;
+        const historyPeriod = document.getElementById('historyPeriod').value;
+        
+        if (!assetSelect) {
+            alert('Please select an asset first');
+            return;
+        }
+        
+        // Show results section and loading state
+        document.getElementById('resultsSection').style.display = 'block';
+        document.getElementById('loadingState').style.display = 'block';
+        document.getElementById('resultsContent').style.display = 'none';
+        
+        // Update asset name
+        const selectedOption = document.getElementById('assetSelect').selectedOptions[0];
+        document.getElementById('selectedAssetName').textContent = selectedOption.textContent;
+        
+        // Scroll to results
+        document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+        
+        // Generate forecast using existing API with time period
+        fetch('/api/forecast-asset', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                ticker: assetSelect,
+                forecast_days: parseInt(forecastDays),
+                period: historyPeriod,
+                use_enhanced: false
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayForecastResults(data);
+            } else {
+                showError('Forecast generation failed: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showError('Error generating forecast: ' + error.message);
+        });
+    }
+    
+    function displayForecastResults(data) {
+        // Hide loading state
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('resultsContent').style.display = 'block';
+        
+        // Get the best forecast (using correct API structure)
+        const bestForecast = data.forecasts?.ensemble?.length > 0 ? data.forecasts.ensemble : 
+                            (data.forecasts?.prophet?.length > 0 ? data.forecasts.prophet : 
+                             (data.forecasts?.arima || []));
+        
+        const finalPrice = bestForecast.length > 0 ? bestForecast[bestForecast.length - 1] : 0;
+        const firstPrice = bestForecast.length > 0 ? bestForecast[0] : 0;
+        const trend = finalPrice > firstPrice ? 'Upward' : finalPrice < firstPrice ? 'Downward' : 'Sideways';
+        const trendColor = finalPrice > firstPrice ? 'success' : finalPrice < firstPrice ? 'danger' : 'warning';
+        
+        // Update summary
+        const summaryHTML = `
+            <div class="col-md-3">
+                <div class="text-center p-3 bg-light rounded">
+                    <div class="h4 text-primary mb-1">$${finalPrice.toFixed(2)}</div>
+                    <small class="text-muted">Final Predicted Price</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-center p-3 bg-light rounded">
+                    <div class="h4 text-${trendColor} mb-1">${trend}</div>
+                    <small class="text-muted">Forecast Trend</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-center p-3 bg-light rounded">
+                    <div class="h4 text-info mb-1">${data.forecasts?.dates?.length || 0}</div>
+                    <small class="text-muted">Forecast Days</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-center p-3 bg-light rounded">
+                    <div class="h4 text-success mb-1">${Math.abs(((finalPrice - firstPrice) / firstPrice) * 100).toFixed(1)}%</div>
+                    <small class="text-muted">Expected Change</small>
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('forecastSummary').innerHTML = summaryHTML;
+        
+        // Create chart
+        const traces = [];
+        
+        // Historical data
+        if (data.historical_data) {
+            traces.push({
+                x: data.historical_data.dates,
+                y: data.historical_data.prices,
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Historical Data',
+                line: { color: '#007bff', width: 2 }
+            });
+        }
+        
+        // Confidence intervals (if available)
+        if (data.confidence_intervals && data.confidence_intervals.lower && data.confidence_intervals.upper) {
+            traces.push({
+                x: data.forecasts?.dates || [],
+                y: data.confidence_intervals.upper,
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Upper Confidence (95%)',
+                line: { color: '#ff6b35', width: 1, dash: 'dot' },
+                showlegend: false,
+                hovertemplate: 'Upper 95%: $%{y:.2f}<extra></extra>'
+            });
+            
+            traces.push({
+                x: data.forecasts?.dates || [],
+                y: data.confidence_intervals.lower,
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Confidence Interval',
+                line: { color: '#ff6b35', width: 1, dash: 'dot' },
+                fill: 'tonexty',
+                fillcolor: 'rgba(255, 107, 53, 0.1)',
+                hovertemplate: 'Lower 95%: $%{y:.2f}<extra></extra>'
+            });
+        }
+        
+        // Forecast data
+        if (bestForecast.length > 0) {
+            traces.push({
+                x: data.forecasts?.dates || [],
+                y: bestForecast,
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Forecast',
+                line: { color: '#ff6b35', width: 3 }
+            });
+        }
+        
+        const layout = {
+            title: {
+                text: `${data.ticker} - Price Forecast`,
+                font: { size: 18 }
+            },
+            xaxis: { title: 'Date' },
+            yaxis: { title: 'Price ($)' },
+            margin: { t: 50, r: 30, b: 50, l: 60 },
+            hovermode: 'x unified',
+            legend: { x: 0.02, y: 0.98 }
+        };
+        
+        const config = {
+            responsive: true,
+            displayModeBar: true
+        };
+        
+        Plotly.newPlot('chartContainer', traces, layout, config);
+    }
+    
+    function showError(message) {
+        document.getElementById('loadingState').innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                ${message}
+            </div>
+        `;
+    }
+    
+    function viewDetailedAnalysis() {
+        const assetType = document.getElementById('assetType').value;
+        if (assetType === 'stocks') {
+            window.location.href = '/stocks';
+        } else if (assetType === 'commodities') {
+            window.location.href = '/commodities';
+        }
+    }
+    
+    function exportForecast() {
+        // Simple CSV export functionality
+        alert('Export functionality will download forecast data as CSV');
+    }
+    
+    function resetSelection() {
+        document.getElementById('resultsSection').style.display = 'none';
+        document.getElementById('assetSelectionForm').reset();
+        updateAssetOptions();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    
+    function goToStocksPage() {
+        window.location.href = '/stocks';
+    }
+    
+    function goToCommoditiesPage() {
+        window.location.href = '/commodities';
+    }
+</script>
+{% endblock %} 
