@@ -65,9 +65,16 @@
     </div>
     {% endif %}
 
+    <!-- Market Filter Buttons -->
+    <div class="btn-group mb-3" role="group" id="marketFilter">
+        <button type="button" class="btn btn-outline-secondary active" data-filter="all">All</button>
+        <button type="button" class="btn btn-outline-secondary" data-filter="🇬🇧 FTSE 100">FTSE 100</button>
+        <button type="button" class="btn btn-outline-secondary" data-filter="🇺🇸 S&P 500">S&P 500</button>
+    </div>
+
     <div class="row">
         {% for plot in plots %}
-        <div class="col-md-6 col-lg-4 mb-4">
+        <div class="col-md-6 col-lg-4 mb-4" data-market="{{ plot.market }}">
             <div class="card h-100 shadow-sm {% if plot.priority == 'primary' %}border-success{% else %}border-info{% endif %}">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <div>
@@ -91,12 +98,12 @@
                         </span>
                     </div>
                 </div>
-                <div class="card-body text-center p-2">
-                    <a href="{{ url_for('get_plot_image', filename=plot.filename) }}" target="_blank" class="text-decoration-none">
-                        <img src="{{ url_for('get_plot_image', filename=plot.filename) }}" 
-                             class="img-fluid rounded" 
+                <div class="ratio ratio-16x9">
+                    <a href="{{ url_for('get_plot_image', filename=plot.filename) }}" target="_blank" class="text-decoration-none w-100 h-100">
+                        <img data-src="{{ url_for('get_plot_image', filename=plot.filename) }}"
+                             class="lazy-load skeleton rounded w-100 h-100"
                              alt="Forecast plot for {{ plot.ticker }}"
-                             style="max-height: 200px; width: auto;">
+                             style="object-fit: cover;">
                     </a>
                 </div>
                 <div class="card-footer text-center">
